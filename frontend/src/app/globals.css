@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+
+:root {
+  /* Primary Colors */
+  --p: #800020;
+  --pl: #A32845;
+  --pd: #5C0018;
+  --acc: #E12D45;
+  --acc2: #FF5A72;
+
+  /* Background Colors */
+  --bg: #FDF8F8;
+  --bg2: #FFFFFF;
+  --card: #FFFFFF;
+
+  /* Text Colors */
+  --txt: #1A2332;
+  --muted: #6B7280;
+
+  /* Status Colors */
+  --ok: #16A34A;
+  --warn: #F59E0B;
+  --err: #E12D45;
+  --info: #2563EB;
+
+  /* Borders */
+  --brd: rgba(128, 0, 32, 0.12);
+  --brd2: #ECECEC;
+}
+
+@theme {
+  --color-p: var(--p);
+  --color-pl: var(--pl);
+  --color-pd: var(--pd);
+  --color-acc: var(--acc);
+  --color-acc2: var(--acc2);
+
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-card: var(--card);
+
+  --color-txt: var(--txt);
+  --color-muted: var(--muted);
+
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-err: var(--err);
+  --color-info: var(--info);
+
+  --color-brd: var(--brd);
+  --color-brd2: var(--brd2);
+
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --shadow-custom: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04);
+  --shadow-custom-hover: 0 8px 24px rgba(128,0,32,0.08);
+  --shadow-modal: 0 32px 80px rgba(92,0,24,0.2);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--txt);
+  font-family: var(--font-sans);
+}
+
+/* Custom design system utilities */
+.page-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--p);
+  font-family: var(--font-sans);
+}
+
+.card-value {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--txt);
+  font-family: var(--font-sans);
+}
+
+.section-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--txt);
+  font-family: var(--font-sans);
+}
+
+.table-header {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--p);
+  background-color: #FBEAEA;
+}
+
+/* Add custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

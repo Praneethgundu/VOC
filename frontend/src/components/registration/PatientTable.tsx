@@ -1,0 +1,207 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { getPatients } from "@/services/patientService";
+import { Table, THead, TBody, Th, Tr, Td, Badge } from "@/components/ui/Table";
+import { Search, RefreshCw, Printer } from "lucide-react";
+
+export default function PatientTable() {
+  const [patients, setPatients] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPatients();
+  }, []);
+
+  const fetchPatients = async () => {
+    setLoading(true);
+    try {
+      const data = await getPatients();
+      setPatients(data);
+    } catch {
+      /* silence */
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filtered = patients.filter(
+    (p) =>
+      p.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+      p.opNumber?.toLowerCase().includes(search.toLowerCase()) ||
+      p.doctor?.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handlePrintOpSlip = (patient: any) => {
+    const slipWindow = window.open("", "_blank");
+    if (!slipWindow) return;
+    slipWindow.document.write(`
+      <html>
+        <head>
+          <title>OP Slip - ${patient.opNumber}</title>
+          <style>
+            body { font-family: sans-serif; padding: 20px; }
+            h1 { text-align: center; }
+            .details { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
+          </style>
+        </head>
+        <body>
+          <h1>Hospital OP Slip</h1>
+          <div class="details">
+            <p><strong>OP Number:</strong> ${patient.opNumber}</p>
+            <p><strong>Patient Name:</strong> ${patient.fullName}</p>
+            <p><strong>Age/Gender:</strong> ${patient.age} / ${patient.gender}</p>
+            <p><strong>Doctor:</strong> ${patient.doctor}</p>
+            <p><strong>Date:</strong> ${new Date(patient.createdAt).toLocaleDateString()}</p>
+          </div>
+          <script>
+            window.print();
+            window.onfocus = function () { window.close(); }
+          </script>
+        </body>
+      </html>
+    `);
+    slipWindow.document.close();
+  };
+
+  return (
+    <div
+      className="bg-white rounded-xl border border-[#ECECEC] p-6"
+      style={{
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)",
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="section-heading">Registered Patients</h2>
+          <p className="text-[12px] text-[#6B7280] mt-0.5">
+            {patients.length} patients on record
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Search */}
+          <div className="flex items-center gap-2 bg-[#FDF8F8] border border-[#ECECEC] rounded-lg px-3 h-9">
+            <Search size={13} className="text-[#6B7280] shrink-0" />
+            <input
+              type="text"
+              placeholder="Search…"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+              className="bg-transparent outline-none text-[13px] text-[#1A2332] placeholder:text-[#9CA3AF] w-36"
+            />
+          </div>
+          <button
+            onClick={fetchPatients}
+            className="w-9 h-9 flex items-center justify-center rounded-lg border border-[#ECECEC] text-[#6B7280] hover:border-[#E12D45] hover:text-[#E12D45] transition-colors"
+          >
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="py-16 flex flex-col items-center gap-3 text-[#6B7280]">
+          <RefreshCw size={24} className="animate-spin text-[#E12D45]" />
+          <p className="text-[13px]">Loading patients…</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="py-16 text-center text-[#6B7280] text-[13px]">
+          No patients found.
+        </div>
+      ) : (
+        <>
+          <Table>
+            <THead>
+              <tr>
+                <Th>OP Number</Th>
+                <Th>Patient Name</Th>
+                <Th>Age / Gender</Th>
+                <Th>Phone</Th>
+                <Th>Doctor</Th>
+                <Th align="center">Blood Group</Th>
+                <Th align="right">Actions</Th>
+              </tr>
+            </THead>
+            <TBody>
+              {paginated.map((patient, i) => (
+                <Tr key={patient.id || `${patient.opNumber}-${i}`} index={i}>
+                  <Td>
+                    <span className="font-mono text-[13px] font-semibold text-[#800020]">
+                      {patient.opNumber}
+                    </span>
+                  </Td>
+                  <Td>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#E12D45] to-[#800020] flex items-center justify-center text-white text-[11px] font-bold shrink-0">
+                        {patient.fullName?.charAt(0) ?? "?"}
+                      </div>
+                      <span className="font-medium text-[#1A2332]">
+                        {patient.fullName}
+                      </span>
+                    </div>
+                  </Td>
+                  <Td>
+                    <span className="text-[#1A2332]">{patient.age}</span>
+                    <span className="text-[#6B7280] ml-1 text-[12px]">
+                      / {patient.gender}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span className="font-mono text-[13px]">{patient.phone}</span>
+                  </Td>
+                  <Td>{patient.doctor}</Td>
+                  <Td align="center">
+                    {patient.bloodGroup && (
+                      <Badge status="error">{patient.bloodGroup}</Badge>
+                    )}
+                  </Td>
+                  <Td align="right">
+                    <button
+                      onClick={() => handlePrintOpSlip(patient)}
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-[#FDF8F8] border border-[#ECECEC] text-[#E12D45] text-[11px] font-semibold hover:border-[rgba(128,0,32,0.2)] hover:text-[#800020] transition-colors ml-auto"
+                    >
+                      <Printer size={12} />
+                      OP Slip
+                    </button>
+                  </Td>
+                </Tr>
+              ))}
+            </TBody>
+          </Table>
+
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center mt-4 text-[13px] text-[#6B7280]">
+              <div>
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length}
+              </div>
+              <div className="flex gap-1">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                  className="px-3 py-1 border border-[#ECECEC] rounded disabled:opacity-50 hover:bg-gray-50"
+                >
+                  Prev
+                </button>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  className="px-3 py-1 border border-[#ECECEC] rounded disabled:opacity-50 hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
