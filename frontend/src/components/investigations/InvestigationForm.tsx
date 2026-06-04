@@ -1,88 +1,163 @@
-"use client";
+import React, { useState, useEffect } from 'react';
+import { Microscope, X } from 'lucide-react';
+import { addInvestigation } from '@/services/investigationService';
+import { getPatients } from '@/services/patientService';
 
-import { useState } from "react";
-import { addInvestigation } from "@/services/investigationService";
-import { Input, Select } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { Microscope } from "lucide-react";
+interface InvestigationFormProps {
+  onClose: () => void;
+  onSuccess: () => void;
+}
 
-export default function InvestigationForm() {
-  const [formData, setFormData] = useState({
-    opNumber: "",
-    patientName: "",
-    testName: "",
-    doctor: "",
-    amount: "",
-    status: "Pending",
-  });
+const TESTS = [
+  { name: 'X-Ray Knee AP/Lat', price: 400 },
+  { name: 'X-Ray Pelvis AP', price: 300 },
+  { name: 'MRI Lumbar Spine', price: 4000 },
+  { name: 'MRI Cervical Spine', price: 4000 },
+  { name: 'DEXA Bone Density Scan', price: 1500 },
+  { name: 'CT Scan Joint', price: 2500 },
+  { name: 'Serum Uric Acid', price: 200 },
+  { name: 'Serum Calcium', price: 150 },
+  { name: 'CRP (C-Reactive Protein)', price: 300 },
+  { name: 'Rheumatoid Factor (RA Test)', price: 350 },
+  { name: 'Complete Blood Count (CBC)', price: 250 }
+];
+
+const DOCTORS = [
+  'Dr. Meera Patel',
+  'Dr. Ramesh Kumar',
+  'Dr. Anil Reddy',
+  'Dr. Sarah John'
+];
+
+export default function InvestigationForm({ onClose, onSuccess }: InvestigationFormProps) {
+  const [opNumber, setOpNumber] = useState('');
+  const [patientName, setPatientName] = useState('');
+  const [testName, setTestName] = useState(TESTS[0].name);
+  const [doctor, setDoctor] = useState(DOCTORS[0]);
   const [loading, setLoading] = useState(false);
+  
+  const [patients, setPatients] = useState<any[]>([]);
 
-  const handleChange = (e: any) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    getPatients().then(setPatients).catch(console.error);
+  }, []);
 
-  const handleSubmit = async (e: any) => {
+  useEffect(() => {
+    if (opNumber) {
+      const patient = patients.find(p => p.opNumber === opNumber);
+      if (patient) {
+        setPatientName(patient.fullName);
+      } else {
+        setPatientName('');
+      }
+    }
+  }, [opNumber, patients]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!opNumber || !patientName || !testName || !doctor) return;
+    
+    const selectedTest = TESTS.find(t => t.name === testName);
+    
     setLoading(true);
     try {
-      await addInvestigation(formData);
-      alert("Investigation Ordered");
-      setFormData({ opNumber: "", patientName: "", testName: "", doctor: "", amount: "", status: "Pending" });
-    } catch (err) {
-      console.log(err);
+      await addInvestigation({
+        opNumber,
+        patientName,
+        testName,
+        doctor,
+        amount: selectedTest?.price || 0,
+        status: 'Pending'
+      });
+      alert("Test Ordered Successfully!");
+      onSuccess();
+      onClose();
+    } catch (e: any) {
+      alert("Failed to order test: " + (e.response?.data?.message || e.message));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white rounded-xl border border-[#ECECEC] p-6"
-      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)" }}
-    >
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6 pb-5 border-b border-[#ECECEC]">
-        <div className="w-10 h-10 rounded-xl bg-[#FFF0F2] flex items-center justify-center">
-          <Microscope size={18} className="text-[#E12D45]" />
-        </div>
-        <div>
-          <h2 className="page-title !text-[20px]">Investigation Order</h2>
-          <p className="text-[12px] text-[#6B7280] mt-0.5">Order lab tests and radiology investigations</p>
-        </div>
-      </div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2 text-[#1A2332]">
+              <span className="text-[#800020] text-xl">🔬</span>
+              <h2 className="text-xl font-bold">Order Investigation</h2>
+            </div>
+            <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700">
+              <X size={20} />
+            </button>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <Input label="OP Number" name="opNumber" value={formData.opNumber} onChange={handleChange} placeholder="e.g. OP/2025/001" required />
-        <Input label="Patient Name" name="patientName" value={formData.patientName} onChange={handleChange} placeholder="Full name" required />
-        <Select label="Investigation Type" name="testName" value={formData.testName} onChange={handleChange} required>
-          <option value="">Select Test</option>
-          <option>X-Ray</option>
-          <option>MRI</option>
-          <option>CT Scan</option>
-          <option>Blood Test</option>
-          <option>Urine Analysis</option>
-          <option>ECG</option>
-          <option>Ultrasound</option>
-          <option>Bone Density Scan</option>
-        </Select>
-        <Input label="Consulting Doctor" name="doctor" value={formData.doctor} onChange={handleChange} placeholder="e.g. Dr. Reddy" required />
-        <Input label="Amount (₹)" type="number" name="amount" value={formData.amount} onChange={handleChange} placeholder="0.00" />
-        <Select label="Status" name="status" value={formData.status} onChange={handleChange}>
-          <option>Pending</option>
-          <option>In Progress</option>
-          <option>Completed</option>
-          <option>Cancelled</option>
-        </Select>
-      </div>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">OP Number *</label>
+              <input 
+                value={opNumber} 
+                onChange={(e) => setOpNumber(e.target.value)} 
+                placeholder="OP-2024-001" 
+                className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#E12D45] text-sm"
+                required 
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Patient Name *</label>
+              <input 
+                value={patientName} 
+                onChange={(e) => setPatientName(e.target.value)} 
+                placeholder="Full name" 
+                className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#E12D45] text-sm"
+                required
+              />
+            </div>
+          </div>
 
-      <div className="mt-6 flex gap-3">
-        <Button type="submit" loading={loading} size="lg">Order Investigation</Button>
-        <Button type="button" variant="outline" size="lg"
-          onClick={() => setFormData({ opNumber: "", patientName: "", testName: "", doctor: "", amount: "", status: "Pending" })}>
-          Clear
-        </Button>
-      </div>
-    </form>
+          <div className="flex flex-col gap-1.5 mb-4">
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Test</label>
+            <select 
+              value={testName} 
+              onChange={(e) => setTestName(e.target.value)} 
+              className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#E12D45] text-sm bg-white"
+              required
+            >
+              {TESTS.map((t, i) => (
+                <option key={i} value={t.name}>
+                  {t.name} — ₹{t.price}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex flex-col gap-1.5 mb-6">
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ordered By</label>
+            <select 
+              value={doctor} 
+              onChange={(e) => setDoctor(e.target.value)} 
+              className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#E12D45] text-sm bg-white"
+              required
+            >
+              {DOCTORS.map((d, i) => (
+                <option key={i} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex gap-4 mt-6">
+            <button type="submit" disabled={loading} className="flex-1 h-10 bg-[#E12D45] text-white font-bold rounded-lg hover:bg-[#C01D35] transition-colors text-sm">
+              {loading ? "Ordering..." : "Order Test"}
+            </button>
+            <button type="button" onClick={onClose} className="w-[100px] h-10 border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 rounded-lg transition-colors text-sm bg-white shadow-sm">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 }

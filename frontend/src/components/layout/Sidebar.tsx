@@ -26,15 +26,16 @@ const menuItems = [
   { name: "Pharmacy", icon: Pill, path: "/pharmacy" },
   { name: "Billing", icon: Receipt, path: "/billing" },
   { name: "Reports", icon: FileText, path: "/reports" },
+  { name: "EOD Report", icon: FileText, path: "/reports/eod" },
   { name: "Financials", icon: TrendingUp, path: "/financials" },
   { name: "Settings", icon: Settings, path: "/settings" },
 ];
 
 const roleRouteMap: Record<string, string[]> = {
-  RECEPTIONIST: ["/dashboard", "/registration", "/billing"],
-  DOCTOR: ["/dashboard", "/consultation", "/investigations", "/ot", "/reports"],
-  PHARMACIST: ["/dashboard", "/pharmacy"],
-  ADMIN: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/financials", "/settings"],
+  RECEPTIONIST: ["/dashboard", "/registration", "/billing", "/reports/eod"],
+  DOCTOR: ["/dashboard", "/consultation", "/investigations", "/ot", "/reports", "/reports/eod"],
+  PHARMACIST: ["/dashboard", "/pharmacy", "/reports/eod"],
+  ADMIN: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/financials", "/settings"],
 };
 
 export default function Sidebar() {

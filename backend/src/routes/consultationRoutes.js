@@ -1,29 +1,13 @@
 const express = require("express");
+const { createConsultation, getConsultations, updateStatus } = require("../controllers/consultationController");
+const authMiddleware = require("../middleware/auth.middleware");
 
-const {
-  getConsultations,
-  addConsultation,
-  getConsultationByOP,
-} = require(
-  "../controllers/consultationController"
-);
+const router = express.Router();
 
-const router =
-  express.Router();
+router.use(authMiddleware);
 
-router.get(
-  "/",
-  getConsultations
-);
-
-router.post(
-  "/",
-  addConsultation
-);
-
-router.get(
-  "/:opNumber",
-  getConsultationByOP
-);
+router.post("/", createConsultation);
+router.get("/", getConsultations);
+router.put("/:id/status", updateStatus);
 
 module.exports = router;

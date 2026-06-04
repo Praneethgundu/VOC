@@ -4,11 +4,10 @@ import { useState } from "react";
 import { addMedicine } from "@/services/pharmacyService";
 import { Input, Select } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Pill } from "lucide-react";
+import { Pill, X } from "lucide-react";
 
-export default function PharmacyForm() {
+export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, onAdd: () => void }) {
   const [formData, setFormData] = useState({
-    medicineId: "",
     medicineName: "",
     category: "",
     quantity: "",
@@ -27,56 +26,62 @@ export default function PharmacyForm() {
     try {
       await addMedicine(formData);
       alert("Medicine Added Successfully");
-      setFormData({ medicineId: "", medicineName: "", category: "", quantity: "", price: "", expiryDate: "" });
+      onAdd();
+      onClose();
     } catch (error) {
       console.log(error);
+      alert("Failed to add medicine");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white rounded-xl border border-[#ECECEC] p-6"
-      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)" }}
-    >
-      <div className="flex items-center gap-3 mb-6 pb-5 border-b border-[#ECECEC]">
-        <div className="w-10 h-10 rounded-xl bg-[#FFF0F2] flex items-center justify-center">
-          <Pill size={18} className="text-[#E12D45]" />
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl relative overflow-hidden"
+      >
+        <div className="bg-[#800020] p-5 text-white flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Pill size={24} />
+            <h2 className="text-lg font-bold">Add New Medicine</h2>
+          </div>
+          <button type="button" onClick={onClose} className="hover:bg-white/20 p-1.5 rounded-lg transition-colors">
+            <X size={20} />
+          </button>
         </div>
-        <div>
-          <h2 className="page-title !text-[20px]">Add Medicine</h2>
-          <p className="text-[12px] text-[#6B7280] mt-0.5">Add new medicine to the inventory</p>
+
+        <div className="p-6 space-y-4">
+          <Input label="Medicine Name" name="medicineName" value={formData.medicineName} onChange={handleChange} placeholder="e.g. Paracetamol 500mg" required />
+          <div className="grid grid-cols-2 gap-4">
+            <Select label="Category" name="category" value={formData.category} onChange={handleChange as any} required>
+              <option value="">Select Category</option>
+              <option>Analgesic</option>
+              <option>Antibiotic</option>
+              <option>Anti-inflammatory</option>
+              <option>Muscle Relaxant</option>
+              <option>Supplement</option>
+              <option>NSAID</option>
+              <option>Other</option>
+            </Select>
+            <Input label="Expiry Date" type="month" name="expiryDate" value={formData.expiryDate} onChange={handleChange} required />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Initial Quantity" type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="0" required />
+            <Input label="Price per Unit (₹)" type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" required />
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <Input label="Medicine ID" name="medicineId" value={formData.medicineId} onChange={handleChange} placeholder="e.g. MED001" required />
-        <Input label="Medicine Name" name="medicineName" value={formData.medicineName} onChange={handleChange} placeholder="Generic name" required />
-        <Select label="Category" name="category" value={formData.category} onChange={handleChange as any} required>
-          <option value="">Select Category</option>
-          <option>Analgesic</option>
-          <option>Antibiotic</option>
-          <option>Anti-inflammatory</option>
-          <option>Muscle Relaxant</option>
-          <option>Calcium Supplement</option>
-          <option>Vitamin</option>
-          <option>Antacid</option>
-          <option>Other</option>
-        </Select>
-        <Input label="Quantity" type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="0" required />
-        <Input label="Price per Unit (₹)" type="number" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" required />
-        <Input label="Expiry Date" type="date" name="expiryDate" value={formData.expiryDate} onChange={handleChange} required />
-      </div>
-
-      <div className="mt-6 flex gap-3">
-        <Button type="submit" loading={loading} size="lg">Save Medicine</Button>
-        <Button type="button" variant="outline" size="lg"
-          onClick={() => setFormData({ medicineId: "", medicineName: "", category: "", quantity: "", price: "", expiryDate: "" })}>
-          Clear
-        </Button>
-      </div>
-    </form>
+        <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
+          <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition-colors">
+            Cancel
+          </button>
+          <button type="submit" disabled={loading} className="px-5 py-2.5 bg-[#E12D45] text-white font-bold rounded-xl hover:bg-[#800020] transition-colors flex items-center gap-2">
+            {loading ? "Saving..." : "Add Medicine"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

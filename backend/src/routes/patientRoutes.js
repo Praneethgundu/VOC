@@ -1,29 +1,12 @@
 const express = require("express");
+const { createPatient, getAllPatients } = require("../controllers/patientController");
+const authMiddleware = require("../middleware/auth.middleware");
 
-const {
-  getPatients,
-  addPatient,
-  getPatientByOP,
-} = require(
-  "../controllers/patientController"
-);
+const router = express.Router();
 
-const router =
-  express.Router();
+router.use(authMiddleware);
 
-router.get(
-  "/",
-  getPatients
-);
-
-router.post(
-  "/",
-  addPatient
-);
-
-router.get(
-  "/:opNumber",
-  getPatientByOP
-);
+router.post("/", createPatient);
+router.get("/", getAllPatients);
 
 module.exports = router;

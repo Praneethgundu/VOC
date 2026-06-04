@@ -1,133 +1,60 @@
-const {
-  getPharmacySheet,
-} = require(
-  "../services/pharmacyService"
-);
+const pharmacyService = require("../services/pharmacyService");
+const auditService = require("../services/auditService");
 
-exports.getMedicines =
-  async (req, res) => {
-    try {
-      const { sheet } =
-        await getPharmacySheet();
+const getInventory = async (req, res) => {
+  try {
+    const inventory = await pharmacyService.getInventory();
+    res.status(200).json(inventory);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch inventory", error: error.message });
+  }
+};
 
-      const medicines = [];
+const getDispenseHistory = async (req, res) => {
+  try {
+    const history = await pharmacyService.getDispenseHistory();
+    res.status(200).json(history);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch dispense history", error: error.message });
+  }
+};
 
-      sheet.eachRow(
-        (row, rowNumber) => {
-          if (rowNumber === 1) return;
+const addMedicine = async (req, res) => {
+  try {
+    const medicine = await pharmacyService.addMedicine(req.body);
+    await auditService.logAction(req.user?.username, req.user?.role, "ADD_MEDICINE", `Added medicine ${medicine.medicineName}`);
+    res.status(201).json({ message: "Medicine added", medicine });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to add medicine", error: error.message });
+  }
+};
 
-          medicines.push({
-            medicineId:
-              row.getCell(1).value,
-            medicineName:
-              row.getCell(2).value,
-            category:
-              row.getCell(3).value,
-            quantity:
-              row.getCell(4).value,
-            price:
-              row.getCell(5).value,
-            expiryDate:
-              row.getCell(6).value,
-            createdAt:
-              row.getCell(7).value,
-          });
-        }
-      );
+const dispenseMedicine = async (req, res) => {
+  try {
+    const record = await pharmacyService.dispenseMedicine(req.body);
+    await auditService.logAction(req.user?.username, req.user?.role, "DISPENSE_MEDICINE", `Dispensed medicine ${record.medicineId} to OP ${record.opNumber}`);
+    res.status(200).json({ message: "Medicine dispensed", record });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to dispense medicine", error: error.message });
+  }
+};
 
-      res.json(medicines);
-    } catch (error) {
-      res.status(500).json({
-        error: error.message,
-      });
-    }
-  };
+const restockMedicine = async (req, res) => {
+  try {
+    const { medicineId, quantity } = req.body;
+    const updated = await pharmacyService.updateStock(medicineId, Number(quantity));
+    if (!updated) return res.status(404).json({ message: "Medicine not found" });
+    await auditService.logAction(req.user?.username, req.user?.role, "RESTOCK_MEDICINE", `Restocked medicine ${medicineId} with ${quantity} units`);
+    res.status(200).json({ message: "Medicine restocked successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to restock medicine", error: error.message });
+  }
+};
 
-exports.addMedicine =
-  async (req, res) => {
-    try {
-      const {
-        workbook,
-        sheet,
-        filePath,
-      } =
-        await getPharmacySheet();
-
-      sheet.addRow([
-        req.body.medicineId,
-        req.body.medicineName,
-        req.body.category,
-        req.body.quantity,
-        req.body.price,
-        req.body.expiryDate,
-        new Date().toLocaleString(),
-      ]);
-
-      await workbook.xlsx.writeFile(
-        filePath
-      );
-
-      res.status(201).json({
-        success: true,
-        message:
-          "Medicine Added Successfully",
-      });
-    } catch (error) {
-      res.status(500).json({
-        error: error.message,
-      });
-    }
-  };
-
-exports.updateStock =
-  async (req, res) => {
-    try {
-      const {
-        workbook,
-        sheet,
-        filePath,
-      } =
-        await getPharmacySheet();
-
-      let found = false;
-
-      sheet.eachRow(
-        (row, rowNumber) => {
-          if (rowNumber === 1) return;
-
-          if (
-            row.getCell(1).value ===
-            req.params.medicineId
-          ) {
-            row.getCell(4).value =
-              req.body.quantity;
-
-            found = true;
-          }
-        }
-      );
-
-      if (!found) {
-        return res
-          .status(404)
-          .json({
-            message:
-              "Medicine not found",
-          });
-      }
-
-      await workbook.xlsx.writeFile(
-        filePath
-      );
-
-      res.json({
-        success: true,
-        message:
-          "Stock Updated",
-      });
-    } catch (error) {
-      res.status(500).json({
-        error: error.message,
-      });
-    }
-  };
+module.exports = {
+  getInventory,
+  addMedicine,
+  dispenseMedicine,
+  restockMedicine,
+  getDispenseHistory,
+};

@@ -1,35 +1,13 @@
 const express = require("express");
+const { createInvestigation, getInvestigations, updateInvestigation } = require("../controllers/investigationController");
+const authMiddleware = require("../middleware/auth.middleware");
 
-const {
-  getInvestigations,
-  addInvestigation,
-  getInvestigationByOP,
-  updateStatus,
-} = require(
-  "../controllers/investigationController"
-);
+const router = express.Router();
 
-const router =
-  express.Router();
+router.use(authMiddleware);
 
-router.get(
-  "/",
-  getInvestigations
-);
-
-router.post(
-  "/",
-  addInvestigation
-);
-
-router.get(
-  "/:opNumber",
-  getInvestigationByOP
-);
-
-router.put(
-  "/status/:opNumber",
-  updateStatus
-);
+router.post("/", createInvestigation);
+router.get("/", getInvestigations);
+router.put("/:id", updateInvestigation);
 
 module.exports = router;

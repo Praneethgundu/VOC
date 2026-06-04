@@ -7,7 +7,7 @@ import { Input, Select } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { UserPlus } from "lucide-react";
 
-export default function RegistrationForm() {
+export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void }) {
   const [formData, setFormData] = useState({
     opNumber: generateOP(),
     fullName: "",
@@ -46,6 +46,7 @@ export default function RegistrationForm() {
         doctor: "",
         fee: 500,
       });
+      onSuccess?.();
     } catch (error) {
       console.log(error);
     } finally {
@@ -187,7 +188,7 @@ export default function RegistrationForm() {
             })
           }
         >
-          Clear
+          Cancel
         </Button>
       </div>
     </form>

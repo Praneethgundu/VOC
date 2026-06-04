@@ -1,163 +1,167 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
-import Navbar from "@/components/layout/Navbar";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import { useState, useEffect } from "react";
-import { scheduleProcedure, getProcedures } from "@/services/otService";
+import OTForm from "@/components/ot/OTForm";
+import api from "@/services/api";
+import { Plus, Database, CalendarDays, CheckSquare, User, Activity } from "lucide-react";
 
-export default function OTPage() {
-  const [formData, setFormData] = useState({
-    patientName: "",
-    doctor: "",
-    procedure: "",
-    date: "",
-    time: "",
-  });
+export default function OTProceduresPage() {
   const [procedures, setProcedures] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetchProcedures();
-  }, []);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const fetchProcedures = async () => {
-    try {
-      const data = await getProcedures();
-      setProcedures(data);
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleChange = (e: any) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
     setLoading(true);
     try {
-      await scheduleProcedure(formData);
-      alert("Procedure scheduled");
-      setFormData({ patientName: "", doctor: "", procedure: "", date: "", time: "" });
-      fetchProcedures();
-    } catch (err) {
-      console.log(err);
+      const res = await api.get("/ot");
+      setProcedures(res.data);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchProcedures();
+  }, []);
+
+  const handleAdd = async (data: any) => {
+    await api.post("/ot", data);
+    setShowAddModal(false);
+    fetchProcedures();
+  };
+
+  const markCompleted = async (id: string) => {
+    try {
+      await api.put(`/ot/${id}/status`, { status: "COMPLETED" });
+      fetchProcedures();
+    } catch (e) {
+      alert("Failed to update status");
+    }
+  };
+
+  const todaysCases = procedures.length;
+  const inProgressCases = procedures.filter(p => p.status?.toUpperCase() === "IN PROGRESS" || p.status?.toUpperCase() === "SCHEDULED").length;
+  const completedCases = procedures.filter(p => p.status?.toUpperCase() === "COMPLETED").length;
+
   return (
-    <ProtectedRoute>
-      <div className="flex bg-[#FDF8F8] min-h-screen">
-        <Sidebar />
-
-        <div className="ml-[248px] flex-1 flex flex-col min-h-screen">
-          <Navbar pageTitle="OT Procedures" breadcrumb="Clinical" />
-
-          <main className="flex-1 p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="page-title">OT Scheduling & Procedures</h1>
-                <p className="text-[#6B7280] text-[13px] mt-1">
-                  Manage operating theater schedules and track procedures.
-                </p>
-              </div>
+    <div className="flex bg-[#FDF8F8] min-h-screen font-sans">
+      <Sidebar />
+      <div className="ml-[248px] flex-1 flex flex-col min-h-screen">
+        <div className="bg-white border-b border-[#ECECEC] px-8 py-4 flex justify-between items-center sticky top-0 z-10">
+          <div>
+            <h1 className="text-2xl font-extrabold text-[#800020]">Minor OT</h1>
+            <p className="text-sm text-[#6B7280]">Minor surgical procedures and OT management</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#E12D45] text-[#E12D45] text-xs font-bold hover:bg-[#FFF4F4] transition-colors">
+              <Database size={14} /> CONNECT EXCEL DB
+            </button>
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-[#ECECEC] text-sm font-semibold text-gray-700 shadow-sm">
+              <CalendarDays size={16} className="text-[#E12D45]" />
+              {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* OT Scheduling Form */}
-              <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
-                <h2 className="section-heading mb-4">Schedule Procedure</h2>
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                  <div>
-                    <label className="block text-[12px] font-semibold text-[#1A2332] mb-1">Patient Name</label>
-                    <input type="text" name="patientName" value={formData.patientName} onChange={handleChange} required className="w-full h-9 rounded-lg border border-[#ECECEC] bg-[#FDF8F8] px-3 text-[13px] outline-none focus:border-[#E12D45]" placeholder="Enter patient name" />
-                  </div>
-                  <div>
-                    <label className="block text-[12px] font-semibold text-[#1A2332] mb-1">Assigned Doctor</label>
-                    <input type="text" name="doctor" value={formData.doctor} onChange={handleChange} required className="w-full h-9 rounded-lg border border-[#ECECEC] bg-[#FDF8F8] px-3 text-[13px] outline-none focus:border-[#E12D45]" placeholder="Select surgeon" />
-                  </div>
-                  <div>
-                    <label className="block text-[12px] font-semibold text-[#1A2332] mb-1">Procedure</label>
-                    <input type="text" name="procedure" value={formData.procedure} onChange={handleChange} required className="w-full h-9 rounded-lg border border-[#ECECEC] bg-[#FDF8F8] px-3 text-[13px] outline-none focus:border-[#E12D45]" placeholder="e.g. Knee Replacement" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[12px] font-semibold text-[#1A2332] mb-1">Date</label>
-                      <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full h-9 rounded-lg border border-[#ECECEC] bg-[#FDF8F8] px-3 text-[13px] outline-none focus:border-[#E12D45]" />
-                    </div>
-                    <div>
-                      <label className="block text-[12px] font-semibold text-[#1A2332] mb-1">Time</label>
-                      <input type="time" name="time" value={formData.time} onChange={handleChange} required className="w-full h-9 rounded-lg border border-[#ECECEC] bg-[#FDF8F8] px-3 text-[13px] outline-none focus:border-[#E12D45]" />
-                    </div>
-                  </div>
-                  <button type="submit" disabled={loading} className="w-full h-10 mt-2 rounded-lg bg-[#E12D45] text-white text-[13px] font-bold hover:bg-[#C82239] transition-colors disabled:opacity-50">
-                    Confirm Schedule
-                  </button>
-                </form>
-              </div>
-
-              {/* Procedure Tracking Table */}
-              <div className="lg:col-span-2 bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
-                <h2 className="section-heading mb-4">Procedure Tracking</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-[#ECECEC]">
-                        <th className="pb-3 text-[12px] text-[#6B7280] font-semibold">Date & Time</th>
-                        <th className="pb-3 text-[12px] text-[#6B7280] font-semibold">Patient</th>
-                        <th className="pb-3 text-[12px] text-[#6B7280] font-semibold">Procedure</th>
-                        <th className="pb-3 text-[12px] text-[#6B7280] font-semibold">Doctor</th>
-                        <th className="pb-3 text-[12px] text-[#6B7280] font-semibold text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {procedures.map((p, i) => (
-                        <tr key={i} className="border-b border-[#ECECEC]">
-                          <td className="py-3 text-[13px] text-[#1A2332] font-medium">{p.date} {p.time}</td>
-                          <td className="py-3 text-[13px] text-[#1A2332]">{p.patientName}</td>
-                          <td className="py-3 text-[13px] text-[#6B7280]">{p.procedure}</td>
-                          <td className="py-3 text-[13px] text-[#6B7280]">{p.doctor}</td>
-                          <td className="py-3 text-center">
-                            <select
-                              value={p.status}
-                              onChange={async (e) => {
-                                const newStatus = e.target.value;
-                                try {
-                                  const { updateProcedureStatus } = await import("@/services/otService");
-                                  await updateProcedureStatus(p.id, newStatus);
-                                  fetchProcedures();
-                                } catch (err) {
-                                  console.error(err);
-                                }
-                              }}
-                              className="text-[12px] border border-[#ECECEC] rounded px-2 py-1 bg-[#FDF8F8] text-[#6B7280] font-bold"
-                            >
-                              <option value="Scheduled">Scheduled</option>
-                              <option value="Prep">Prep</option>
-                              <option value="Ongoing">Ongoing</option>
-                              <option value="Recovery">Recovery</option>
-                              <option value="Discharged">Discharged</option>
-                            </select>
-                          </td>
-                        </tr>
-                      ))}
-                      {procedures.length === 0 && (
-                        <tr>
-                          <td colSpan={5} className="py-3 text-center text-[#6B7280] text-[13px]">No procedures scheduled.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </main>
+          </div>
         </div>
+        
+        <main className="flex-1 p-8">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-2xl p-6 border border-[#ECECEC] shadow-sm">
+              <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Today's Cases</p>
+              <p className="text-4xl font-extrabold text-[#1A2332]">{todaysCases}</p>
+            </div>
+            <div className="bg-white rounded-2xl p-6 border border-[#ECECEC] shadow-sm">
+              <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">In Progress</p>
+              <p className="text-4xl font-extrabold text-[#1A2332]">{inProgressCases}</p>
+            </div>
+            <div className="bg-white rounded-2xl p-6 border border-[#ECECEC] shadow-sm">
+              <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Completed</p>
+              <p className="text-4xl font-extrabold text-[#1A2332]">{completedCases}</p>
+            </div>
+          </div>
+
+          <div className="flex justify-end mb-6">
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="bg-[#E12D45] hover:bg-[#C01D35] text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-colors text-sm"
+            >
+              <Plus size={16} /> Schedule Procedure
+            </button>
+          </div>
+
+          {/* Procedure Cards */}
+          <div className="space-y-4">
+            {loading ? (
+              <div className="p-8 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E12D45] mx-auto"></div></div>
+            ) : procedures.length === 0 ? (
+              <div className="p-8 text-center bg-white rounded-2xl border border-[#ECECEC] shadow-sm text-gray-500 font-medium">No procedures scheduled today.</div>
+            ) : (
+              procedures.map((proc, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-[#ECECEC] shadow-sm p-6 flex flex-col gap-4">
+                  
+                  {/* Top Section */}
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-400">
+                        <User size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-[#1A2332]">{proc.patientName}</h3>
+                        <p className="text-sm font-medium text-gray-500 mt-0.5">
+                          {proc.opNumber} {proc.age ? `• ${proc.age} yrs` : ''} • {proc.time || '--:--'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      {proc.status?.toUpperCase() !== 'COMPLETED' && (
+                        <button 
+                          onClick={() => markCompleted(proc.id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#16A34A] text-[#16A34A] text-xs font-bold hover:bg-[#16A34A] hover:text-white transition-colors"
+                        >
+                          <CheckSquare size={14} /> Complete
+                        </button>
+                      )}
+                      <span className={`px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider ${
+                        proc.status?.toUpperCase() === 'COMPLETED' ? 'bg-[#DCFCE7] text-[#16A34A]' :
+                        'bg-[#DBEAFE] text-[#2563EB]'
+                      }`}>
+                        {proc.status?.toUpperCase() === 'COMPLETED' ? 'COMPLETED' : 'IN PROGRESS'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Section */}
+                  <div className="grid grid-cols-4 gap-6 pt-4 border-t border-gray-100 mt-2">
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Procedure</p>
+                      <p className="text-sm font-bold text-[#1A2332]">{proc.procedure}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Doctor</p>
+                      <p className="text-sm font-bold text-[#1A2332]">{proc.doctor}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Fee</p>
+                      <p className="text-sm font-bold text-[#800020]">₹{proc.fee}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Notes</p>
+                      <p className="text-sm text-gray-500">{proc.notes || '-'}</p>
+                    </div>
+                  </div>
+
+                </div>
+              ))
+            )}
+          </div>
+        </main>
       </div>
-    </ProtectedRoute>
+
+      {showAddModal && <OTForm onClose={() => setShowAddModal(false)} onSuccess={handleAdd} />}
+    </div>
   );
 }

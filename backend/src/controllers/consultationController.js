@@ -1,164 +1,42 @@
-const {
-  getConsultationSheet,
-} = require(
-  "../services/consultationService"
-);
+const consultationService = require("../services/consultationService");
+const auditService = require("../services/auditService");
 
-exports.getConsultations =
-  async (req, res) => {
-    try {
-      const { sheet } =
-        await getConsultationSheet();
+const createConsultation = async (req, res) => {
+  try {
+    const consultation = await consultationService.addConsultation(req.body);
+    await auditService.logAction(req.user?.username, req.user?.role, "NEW_CONSULTATION", `Consultation added for OP ${consultation.opNumber}`);
+    res.status(201).json({ message: "Consultation created", consultation });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to create consultation", error: error.message });
+  }
+};
 
-      const consultations =
-        [];
+const getConsultations = async (req, res) => {
+  try {
+    const consultations = await consultationService.getConsultations();
+    res.status(200).json(consultations);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch consultations", error: error.message });
+  }
+};
 
-      sheet.eachRow(
-        (row, rowNumber) => {
-          if (
-            rowNumber === 1
-          )
-            return;
-
-          consultations.push({
-            opNumber:
-              row.getCell(1)
-                .value,
-            patientName:
-              row.getCell(2)
-                .value,
-            doctor:
-              row.getCell(3)
-                .value,
-            diagnosis:
-              row.getCell(4)
-                .value,
-            prescription:
-              row.getCell(5)
-                .value,
-            consultationDate:
-              row.getCell(6)
-                .value,
-          });
-        }
-      );
-
-      res.json(
-        consultations
-      );
-    } catch (error) {
-      res.status(500).json({
-        error:
-          error.message,
-      });
+const updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const updated = await consultationService.updateConsultationStatus(id, status);
+    if (!updated) {
+      return res.status(404).json({ message: "Consultation not found" });
     }
-  };
+    await auditService.logAction(req.user?.username, req.user?.role, "UPDATE_CONSULTATION_STATUS", `Consultation ${id} status updated to ${status}`);
+    res.status(200).json({ message: "Status updated", updated });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update status", error: error.message });
+  }
+};
 
-exports.addConsultation =
-  async (req, res) => {
-    try {
-      const {
-        workbook,
-        sheet,
-        filePath,
-      } =
-        await getConsultationSheet();
-
-      sheet.addRow([
-        req.body.opNumber,
-        req.body.patientName,
-        req.body.doctor,
-        req.body.diagnosis,
-        req.body.prescription,
-        new Date().toLocaleString(),
-      ]);
-
-      await workbook.xlsx.writeFile(
-        filePath
-      );
-
-      res.status(201).json({
-        success: true,
-        message:
-          "Consultation Saved Successfully",
-      });
-    } catch (error) {
-      res.status(500).json({
-        error:
-          error.message,
-      });
-    }
-  };
-
-exports.getConsultationByOP =
-  async (req, res) => {
-    try {
-      const { sheet } =
-        await getConsultationSheet();
-
-      let consultation =
-        null;
-
-      sheet.eachRow(
-        (
-          row,
-          rowNumber
-        ) => {
-          if (
-            rowNumber === 1
-          )
-            return;
-
-          if (
-            row.getCell(1)
-              .value ===
-            req.params.opNumber
-          ) {
-            consultation =
-              {
-                opNumber:
-                  row.getCell(
-                    1
-                  ).value,
-                patientName:
-                  row.getCell(
-                    2
-                  ).value,
-                doctor:
-                  row.getCell(
-                    3
-                  ).value,
-                diagnosis:
-                  row.getCell(
-                    4
-                  ).value,
-                prescription:
-                  row.getCell(
-                    5
-                  ).value,
-              };
-          }
-        }
-      );
-
-      if (
-        !consultation
-      ) {
-        return res
-          .status(404)
-          .json({
-            message:
-              "Consultation not found",
-          });
-      }
-
-      res.json(
-        consultation
-      );
-    } catch (error) {
-      res.status(500).json({
-        error:
-          error.message,
-      });
-    }
-  };
+module.exports = {
+  createConsultation,
+  getConsultations,
+  updateStatus,
+};

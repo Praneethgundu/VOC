@@ -14,3 +14,8 @@ export const updatePaymentStatus = async (id: string, status: string) => {
   const response = await api.put(`/billing/${id}/payment`, { status });
   return response.data;
 };
+
+export const getUnbilledPatients = async () => {
+  const response = await api.get("/billing/unbilled");
+  return response.data;
+};

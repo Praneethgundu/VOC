@@ -1,29 +1,15 @@
 const express = require("express");
+const { getInventory, addMedicine, dispenseMedicine, restockMedicine, getDispenseHistory } = require("../controllers/pharmacyController");
+const authMiddleware = require("../middleware/auth.middleware");
 
-const {
-  getMedicines,
-  addMedicine,
-  updateStock,
-} = require(
-  "../controllers/pharmacyController"
-);
+const router = express.Router();
 
-const router =
-  express.Router();
+router.use(authMiddleware);
 
-router.get(
-  "/",
-  getMedicines
-);
-
-router.post(
-  "/",
-  addMedicine
-);
-
-router.put(
-  "/:medicineId",
-  updateStock
-);
+router.get("/inventory", getInventory);
+router.get("/dispense-history", getDispenseHistory);
+router.post("/inventory", addMedicine);
+router.post("/dispense", dispenseMedicine);
+router.post("/restock", restockMedicine);
 
 module.exports = router;
