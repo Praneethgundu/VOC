@@ -1,4 +1,4 @@
-const { getWorkbook } = require("./excelService");
+const { getHospitalWorkbook, saveHospitalWorkbook, releaseLock } = require("./excelService");
 const bcrypt = require("bcrypt");
 
 const columns = [
@@ -12,14 +12,9 @@ const columns = [
 ];
 
 const getUserSheet = async () => {
-  const { workbook, filePath } = await getWorkbook(
-    "users.xlsx",
-    "Users",
-    columns
-  );
-
+  const workbook = await getHospitalWorkbook();
   const sheet = workbook.getWorksheet("Users");
-  return { workbook, sheet, filePath };
+  return { workbook, sheet };
 };
 
 const getUserByUsername = async (username) => {
@@ -42,11 +37,12 @@ const getUserByUsername = async (username) => {
     }
   });
 
+  releaseLock();
   return user;
 };
 
 const createUser = async (id, username, password, role) => {
-  const { workbook, sheet, filePath } = await getUserSheet();
+  const { workbook, sheet } = await getUserSheet();
   
   // Check if username already exists
   let exists = false;
@@ -58,6 +54,7 @@ const createUser = async (id, username, password, role) => {
   });
 
   if (exists) {
+    releaseLock();
     throw new Error("Username already exists");
   }
 
@@ -75,7 +72,7 @@ const createUser = async (id, username, password, role) => {
     now   // updatedAt
   ]);
 
-  await workbook.xlsx.writeFile(filePath);
+  await saveHospitalWorkbook(workbook);
   
   return {
     id,

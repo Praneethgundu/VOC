@@ -19,3 +19,13 @@ export const getUnbilledPatients = async () => {
   const response = await api.get("/billing/unbilled");
   return response.data;
 };
+
+export const updateBill = async (id: string, data: any) => {
+  const response = await api.put(`/billing/${id}`, data);
+  return response.data;
+};
+
+export const deleteBill = async (id: string) => {
+  const response = await api.delete(`/billing/${id}`);
+  return response.data;
+};

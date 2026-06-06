@@ -2,25 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Microscope, X } from 'lucide-react';
 import { addInvestigation } from '@/services/investigationService';
 import { getPatients } from '@/services/patientService';
+import InvestigationSelect, { InvestigationMasterData } from './InvestigationSelect';
 
 interface InvestigationFormProps {
   onClose: () => void;
   onSuccess: () => void;
 }
 
-const TESTS = [
-  { name: 'X-Ray Knee AP/Lat', price: 400 },
-  { name: 'X-Ray Pelvis AP', price: 300 },
-  { name: 'MRI Lumbar Spine', price: 4000 },
-  { name: 'MRI Cervical Spine', price: 4000 },
-  { name: 'DEXA Bone Density Scan', price: 1500 },
-  { name: 'CT Scan Joint', price: 2500 },
-  { name: 'Serum Uric Acid', price: 200 },
-  { name: 'Serum Calcium', price: 150 },
-  { name: 'CRP (C-Reactive Protein)', price: 300 },
-  { name: 'Rheumatoid Factor (RA Test)', price: 350 },
-  { name: 'Complete Blood Count (CBC)', price: 250 }
-];
+
 
 const DOCTORS = [
   'Dr. Meera Patel',
@@ -32,7 +21,7 @@ const DOCTORS = [
 export default function InvestigationForm({ onClose, onSuccess }: InvestigationFormProps) {
   const [opNumber, setOpNumber] = useState('');
   const [patientName, setPatientName] = useState('');
-  const [testName, setTestName] = useState(TESTS[0].name);
+  const [selectedTests, setSelectedTests] = useState<InvestigationMasterData[]>([]);
   const [doctor, setDoctor] = useState(DOCTORS[0]);
   const [loading, setLoading] = useState(false);
   
@@ -55,21 +44,21 @@ export default function InvestigationForm({ onClose, onSuccess }: InvestigationF
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!opNumber || !patientName || !testName || !doctor) return;
-    
-    const selectedTest = TESTS.find(t => t.name === testName);
+    if (!opNumber || !patientName || selectedTests.length === 0 || !doctor) return;
     
     setLoading(true);
     try {
-      await addInvestigation({
-        opNumber,
-        patientName,
-        testName,
-        doctor,
-        amount: selectedTest?.price || 0,
-        status: 'Pending'
-      });
-      alert("Test Ordered Successfully!");
+      await Promise.all(selectedTests.map(test => 
+        addInvestigation({
+          opNumber,
+          patientName,
+          testName: test.name,
+          doctor,
+          amount: test.price || 0,
+          status: 'Pending'
+        })
+      ));
+      alert("Tests Ordered Successfully!");
       onSuccess();
       onClose();
     } catch (e: any) {
@@ -117,19 +106,36 @@ export default function InvestigationForm({ onClose, onSuccess }: InvestigationF
           </div>
 
           <div className="flex flex-col gap-1.5 mb-4">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Test</label>
-            <select 
-              value={testName} 
-              onChange={(e) => setTestName(e.target.value)} 
-              className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#E12D45] text-sm bg-white"
-              required
-            >
-              {TESTS.map((t, i) => (
-                <option key={i} value={t.name}>
-                  {t.name} — ₹{t.price}
-                </option>
-              ))}
-            </select>
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Search & Add Tests *</label>
+            <InvestigationSelect 
+              value={null} 
+              onChange={(test) => {
+                if (test && !selectedTests.find(t => t.code === test.code)) {
+                  setSelectedTests([...selectedTests, test]);
+                }
+              }} 
+            />
+            {selectedTests.length > 0 && (
+              <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-200 max-h-[120px] overflow-y-auto">
+                <div className="flex flex-col gap-2">
+                  {selectedTests.map((test, idx) => (
+                    <div key={idx} className="flex justify-between items-center bg-white border border-gray-100 rounded-md p-2 shadow-sm">
+                      <div>
+                        <p className="text-xs font-bold text-gray-800">{test.name}</p>
+                        <p className="text-[10px] font-medium text-gray-500">₹{test.price || 0} • {test.category}</p>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setSelectedTests(selectedTests.filter(t => t.code !== test.code))}
+                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col gap-1.5 mb-6">

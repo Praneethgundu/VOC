@@ -78,11 +78,13 @@ interface TdProps {
   children: React.ReactNode;
   className?: string;
   align?: "left" | "center" | "right";
+  colSpan?: number;
 }
 
-export function Td({ children, className = "", align = "left" }: TdProps) {
+export function Td({ children, className = "", align = "left", colSpan }: TdProps) {
   return (
     <td
+      colSpan={colSpan}
       className={[
         "px-4 py-3 text-[#1A2332]",
         align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left",

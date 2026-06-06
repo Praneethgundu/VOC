@@ -1,12 +1,13 @@
 import React from 'react';
-import { Pill } from 'lucide-react';
+import { Pill, Trash2 } from 'lucide-react';
 
 interface MedicineCardProps {
   medicine: any;
   onRestock: (med: any) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function MedicineCard({ medicine, onRestock }: MedicineCardProps) {
+export default function MedicineCard({ medicine, onRestock, onDelete }: MedicineCardProps) {
   const qty = Number(medicine.quantity) || 0;
   const isLowStock = qty < 50;
   
@@ -20,6 +21,13 @@ export default function MedicineCard({ medicine, onRestock }: MedicineCardProps)
           <h3 className="text-sm font-bold text-[#1A2332] leading-tight mb-0.5">{medicine.medicineName}</h3>
           <p className="text-xs text-[#6B7280]">{medicine.category}</p>
         </div>
+        <button 
+          onClick={() => onDelete(medicine.medicineId)}
+          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+          title="Delete Medicine"
+        >
+          <Trash2 size={16} />
+        </button>
       </div>
       
       <div className="grid grid-cols-3 gap-2 mb-4">

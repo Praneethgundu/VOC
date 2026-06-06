@@ -11,42 +11,59 @@ import { getConsultations } from "@/services/consultationService";
 import { getInvestigations } from "@/services/investigationService";
 import { getBills } from "@/services/billingService";
 
+import { useAuth } from "@/hooks/useAuth";
+import { 
+  getReceptionEodReport, 
+  getDoctorEodReport, 
+  getPharmacyEodReport, 
+  getAdminEodReport 
+} from "@/services/reportService";
+
 export default function DashboardPage() {
-  const [summary, setSummary] = useState({
-    newReg: 0,
-    consultations: 0,
-    labTests: 0,
-    pendingBills: 0,
-  });
+  const { role, currentUser } = useAuth();
+  const [eodSummary, setEodSummary] = useState<any>(null);
 
   useEffect(() => {
-    fetchSummary();
-  }, []);
+    if (role) fetchEodSummary();
+  }, [role]);
 
-  const fetchSummary = async () => {
+  const fetchEodSummary = async () => {
     try {
-      const todayStr = new Date().toISOString().split("T")[0];
-      const [patients, consultations, investigations, bills] = await Promise.all([
-        getPatients().catch(() => []),
-        getConsultations().catch(() => []),
-        getInvestigations().catch(() => []),
-        getBills().catch(() => []),
-      ]);
-
-      const todayPatients = patients.filter((p: any) => p.createdAt?.startsWith(todayStr));
-      const todayConsultations = consultations.filter((c: any) => c.consultationDate?.startsWith(todayStr));
-      const todayLab = investigations.filter((i: any) => i.orderedDate?.startsWith(todayStr) || i.createdAt?.startsWith(todayStr));
-      const todayPendingBills = bills.filter((b: any) => b.status === "Unpaid" && b.date?.startsWith(todayStr));
-
-      setSummary({
-        newReg: todayPatients.length,
-        consultations: todayConsultations.length,
-        labTests: todayLab.length,
-        pendingBills: todayPendingBills.length,
-      });
+      if (role === "RECEPTIONIST") setEodSummary(await getReceptionEodReport());
+      else if (role === "DOCTOR") setEodSummary(await getDoctorEodReport(undefined, currentUser?.username));
+      else if (role === "PHARMACIST") setEodSummary(await getPharmacyEodReport());
+      else if (role === "ADMIN") setEodSummary(await getAdminEodReport());
     } catch {
       // ignore
     }
+  };
+
+  const getRoleWidgets = () => {
+    if (!eodSummary || !eodSummary.stats) return [];
+    const stats = eodSummary.stats;
+    
+    if (role === "RECEPTIONIST") return [
+      { label: "Today's Registrations", value: stats.totalRegistrations, color: "#E12D45" },
+      { label: "Collections", value: `₹${stats.collectionsReceived || 0}`, color: "#16A34A" },
+      { label: "Pending Bills", value: stats.billsPending, color: "#F59E0B" },
+    ];
+    if (role === "DOCTOR") return [
+      { label: "Today's Consultations", value: stats.patientsConsulted, color: "#2563EB" },
+      { label: "Pending Patients", value: stats.patientsPending, color: "#F59E0B" },
+      { label: "Investigations Ordered", value: stats.investigationsOrdered, color: "#8B5CF6" },
+    ];
+    if (role === "PHARMACIST") return [
+      { label: "Medicines Dispensed", value: stats.medicinesDispensed, color: "#10B981" },
+      { label: "Revenue", value: `₹${stats.revenueGenerated || 0}`, color: "#16A34A" },
+      { label: "Low Stock Alerts", value: stats.lowStockMedicines, color: "#EF4444" },
+    ];
+    // Admin default
+    return [
+      { label: "Total Registrations", value: stats.totalRegistrations, color: "#E12D45" },
+      { label: "Total Consultations", value: stats.totalConsultations, color: "#2563EB" },
+      { label: "Total Revenue", value: `₹${stats.totalRevenue || 0}`, color: "#16A34A" },
+      { label: "Pending Revenue", value: `₹${stats.pendingRevenue || 0}`, color: "#F59E0B" },
+    ];
   };
 
   return (
@@ -86,12 +103,7 @@ export default function DashboardPage() {
               >
                 <h2 className="section-heading mb-5">Today&apos;s Summary</h2>
                 <div className="space-y-4">
-                  {[
-                    { label: "New Registrations", value: summary.newReg.toString(), color: "#E12D45" },
-                    { label: "Consultations Done", value: summary.consultations.toString(), color: "#2563EB" },
-                    { label: "Lab Tests Ordered", value: summary.labTests.toString(), color: "#F59E0B" },
-                    { label: "Pending Bills", value: summary.pendingBills.toString(), color: "#6B7280" },
-                  ].map((item) => (
+                  {getRoleWidgets().map((item) => (
                     <div key={item.label} className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <div
@@ -137,10 +149,10 @@ export default function DashboardPage() {
                     Order Test
                   </a>
                   <a
-                    href="/reports"
+                    href="/reports/eod"
                     className="flex items-center justify-center py-2 rounded-lg bg-[#FDF8F8] border border-[#ECECEC] text-[#6B7280] text-[12px] font-semibold hover:border-[rgba(128,0,32,0.2)] hover:text-[#800020] transition-colors col-span-2"
                   >
-                    EOD Report
+                    View Full EOD Report
                   </a>
                 </div>
               </div>

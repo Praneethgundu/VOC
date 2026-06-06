@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getPatients } from "@/services/patientService";
+import { getPatients, deletePatient } from "@/services/patientService";
 import { Table, THead, TBody, Th, Tr, Td, Badge } from "@/components/ui/Table";
-import { Search, RefreshCw, Printer } from "lucide-react";
+import { Search, RefreshCw, Printer, Edit2, Trash2 } from "lucide-react";
+import PatientEditModal from "./PatientEditModal";
 
 export default function PatientTable() {
   const [patients, setPatients] = useState<any[]>([]);
@@ -25,6 +26,18 @@ export default function PatientTable() {
       setLoading(false);
     }
   };
+
+  const handleDelete = async (opNumber: string) => {
+    if (!confirm(`Are you sure you want to delete patient ${opNumber}?`)) return;
+    try {
+      await deletePatient(opNumber);
+      fetchPatients();
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Failed to delete patient");
+    }
+  };
+
+  const [editingPatient, setEditingPatient] = useState<any>(null);
 
   const filtered = patients.filter(
     (p) =>
@@ -164,13 +177,29 @@ export default function PatientTable() {
                     )}
                   </Td>
                   <Td align="right">
-                    <button
-                      onClick={() => handlePrintOpSlip(patient)}
-                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-[#FDF8F8] border border-[#ECECEC] text-[#E12D45] text-[11px] font-semibold hover:border-[rgba(128,0,32,0.2)] hover:text-[#800020] transition-colors ml-auto"
-                    >
-                      <Printer size={12} />
-                      OP Slip
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handlePrintOpSlip(patient)}
+                        title="Print OP Slip"
+                        className="flex items-center justify-center p-1.5 rounded bg-[#FDF8F8] border border-[#ECECEC] text-[#E12D45] hover:border-[rgba(128,0,32,0.2)] hover:text-[#800020] transition-colors"
+                      >
+                        <Printer size={14} />
+                      </button>
+                      <button
+                        onClick={() => setEditingPatient(patient)}
+                        title="Edit Patient"
+                        className="flex items-center justify-center p-1.5 rounded bg-blue-50 border border-blue-100 text-blue-600 hover:border-blue-200 hover:text-blue-800 transition-colors"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(patient.opNumber)}
+                        title="Delete Patient"
+                        className="flex items-center justify-center p-1.5 rounded bg-red-50 border border-red-100 text-red-600 hover:border-red-200 hover:text-red-800 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </Td>
                 </Tr>
               ))}
@@ -201,6 +230,14 @@ export default function PatientTable() {
             </div>
           )}
         </>
+      )}
+
+      {editingPatient && (
+        <PatientEditModal
+          patient={editingPatient}
+          onClose={() => setEditingPatient(null)}
+          onSuccess={fetchPatients}
+        />
       )}
     </div>
   );

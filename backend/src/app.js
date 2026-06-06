@@ -37,6 +37,26 @@ app.get("/", (req, res) => {
   res.send("VOC HMS Backend Running");
 });
 
+app.get("/debug-excel", async (req, res) => {
+  try {
+    const ExcelJS = require('exceljs');
+    const path = require('path');
+    const excelFilePath = path.join(__dirname, '../../Investigation.xlsx');
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(excelFilePath);
+    const sheet = workbook.worksheets[0];
+    const rawRows = [];
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber <= 5) {
+        rawRows.push(row.values);
+      }
+    });
+    res.json({ success: true, rawRows });
+  } catch (err) {
+    res.json({ success: false, error: err.message, stack: err.stack });
+  }
+});
+
 module.exports = app;
 
 

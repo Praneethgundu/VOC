@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { addConsultation, updateConsultationStatus } from "@/services/consultationService";
+import { addConsultation, updateConsultationStatus, updateConsultation } from "@/services/consultationService";
 import { addInvestigation } from "@/services/investigationService";
 import api from "@/services/api";
-import { Stethoscope, Calendar, Scissors } from "lucide-react";
+import { Stethoscope, Calendar, Scissors, X } from "lucide-react";
+import InvestigationSelect, { InvestigationMasterData } from "../investigations/InvestigationSelect";
 
 export default function ConsultationForm({ selectedPatient, onSave }: { selectedPatient: any, onSave: () => void }) {
   const [formData, setFormData] = useState({
@@ -24,20 +25,53 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
       weight: "",
       height: "",
     },
-    investigations: [] as string[],
+    investigations: [] as InvestigationMasterData[],
     otProcedures: [] as string[]
   });
   const [loading, setLoading] = useState(false);
 
+  const [history, setHistory] = useState<any>(null);
+
   useEffect(() => {
-    if (selectedPatient) {
+    if (selectedPatient && selectedPatient.opNumber) {
       setFormData(prev => ({
         ...prev,
         opNumber: selectedPatient.opNumber || "",
         patientName: selectedPatient.patientName || selectedPatient.fullName || "",
         doctor: selectedPatient.doctor || "",
         department: selectedPatient.department || "Orthopaedics",
+        chiefComplaints: selectedPatient.complaint || "", // Auto-populate complaint
       }));
+      
+      // Fetch full patient record for history and demographic data
+      api.get(`/patients/${encodeURIComponent(selectedPatient.opNumber)}/record`)
+        .then(res => {
+          setHistory(res.data);
+          // If we want to populate existing consultation data (if resuming an active consultation)
+          // We can parse clinicalNotes if it's JSON, or just use the fields
+          if (selectedPatient.diagnosis) {
+             setFormData(prev => ({ ...prev, diagnosis: selectedPatient.diagnosis }));
+          }
+          if (selectedPatient.prescription) {
+             setFormData(prev => ({ ...prev, prescription: selectedPatient.prescription }));
+          }
+          if (selectedPatient.clinicalNotes) {
+             try {
+                const notes = JSON.parse(selectedPatient.clinicalNotes);
+                setFormData(prev => ({ 
+                   ...prev, 
+                   chiefComplaints: notes.chiefComplaints || selectedPatient.complaint || "",
+                   examination: notes.examination || "",
+                   advice: notes.advice || "",
+                   vitals: notes.vitals || prev.vitals
+                }));
+             } catch(e) {
+                setFormData(prev => ({ ...prev, examination: selectedPatient.clinicalNotes }));
+             }
+          }
+        })
+        .catch(console.error);
+
     } else {
       setFormData({
         opNumber: "", patientName: "", doctor: "", department: "", diagnosis: "", prescription: "",
@@ -46,6 +80,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         investigations: [],
         otProcedures: []
       });
+      setHistory(null);
     }
   }, [selectedPatient]);
 
@@ -53,13 +88,18 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     setFormData(prev => ({ ...prev, vitals: { ...prev.vitals, [field]: value } }));
   };
 
-  const handleInvestigationToggle = (test: string) => {
+  const handleInvestigationSelect = (test: InvestigationMasterData) => {
     setFormData(prev => {
-      const invs = prev.investigations.includes(test)
-        ? prev.investigations.filter(t => t !== test)
-        : [...prev.investigations, test];
-      return { ...prev, investigations: invs };
+      if (prev.investigations.find(t => t.code === test.code)) return prev;
+      return { ...prev, investigations: [...prev.investigations, test] };
     });
+  };
+
+  const removeInvestigation = (code: string) => {
+    setFormData(prev => ({
+      ...prev,
+      investigations: prev.investigations.filter(t => t.code !== code)
+    }));
   };
 
   const handleOTToggle = (proc: string) => {
@@ -76,21 +116,33 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     if (!selectedPatient) return alert("Please select a patient from the queue");
     setLoading(true);
     try {
-      await addConsultation({ ...formData, status: "Completed" });
+      const payload = {
+        ...formData,
+        clinicalNotes: JSON.stringify({
+          chiefComplaints: formData.chiefComplaints,
+          examination: formData.examination,
+          advice: formData.advice,
+          vitals: formData.vitals,
+        }),
+        status: "Completed"
+      };
+
+      if (selectedPatient.id) {
+        await updateConsultation(selectedPatient.id, payload);
+      } else {
+        await addConsultation(payload);
+      }
       
       // Auto-schedule investigations
-      for (const testName of formData.investigations) {
-        const testObj = investigationsList.find(t => t.name === testName);
-        if (testObj) {
-          await addInvestigation({
-            opNumber: formData.opNumber,
-            patientName: formData.patientName,
-            testName: testObj.name,
-            doctor: formData.doctor || "Consulting Doctor",
-            amount: testObj.price,
-            status: 'Pending'
-          }).catch(console.error); // Ignore individual failures
-        }
+      for (const testObj of formData.investigations) {
+        await addInvestigation({
+          opNumber: formData.opNumber,
+          patientName: formData.patientName,
+          testName: testObj.name,
+          doctor: formData.doctor || "Consulting Doctor",
+          amount: testObj.price,
+          status: 'Pending'
+        }).catch(console.error); // Ignore individual failures
       }
 
       // Auto-schedule OT procedures
@@ -112,9 +164,6 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         }
       }
 
-      if (selectedPatient.id) {
-        await updateConsultationStatus(selectedPatient.id, "Completed");
-      }
       alert("Consultation Saved & Procedures Scheduled!");
       onSave();
     } catch (error) {
@@ -125,24 +174,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     }
   };
 
-  const investigationsList = [
-    { name: "X-Ray Knee AP/Lat", price: 400 },
-    { name: "X-Ray Cervical Spine", price: 450 },
-    { name: "X-Ray Lumbar Spine", price: 450 },
-    { name: "X-Ray Pelvis", price: 400 },
-    { name: "MRI Knee Joint", price: 3500 },
-    { name: "MRI Cervical Spine", price: 4000 },
-    { name: "MRI Lumbar Spine", price: 4000 },
-    { name: "MRI Shoulder", price: 3500 },
-    { name: "CT Scan Joints", price: 2500 },
-    { name: "DEXA Bone Density Scan", price: 1500 },
-    { name: "Rheumatoid Factor (RF)", price: 600 },
-    { name: "Serum Uric Acid", price: 200 },
-    { name: "Serum Calcium", price: 250 },
-    { name: "Vitamin D3 (25-OH)", price: 1200 },
-    { name: "CRP (C-Reactive Protein)", price: 400 },
-    { name: "ESR", price: 150 },
-  ];
+
 
   const otProceduresList = [
     { name: "Wound Suturing", price: 800 },
@@ -167,9 +199,15 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
       <div className="bg-[#800020] rounded-xl text-white p-5 flex justify-between items-center shadow-sm">
         <div>
           <h2 className="text-xl font-bold">{formData.patientName}</h2>
-          <p className="text-[13px] text-white/80 mt-1">{formData.opNumber} • 45y/Male • B+</p>
+          <p className="text-[13px] text-white/80 mt-1">
+            {formData.opNumber} • {history?.profile?.age || selectedPatient?.age || '--'}y/{history?.profile?.gender || selectedPatient?.gender || '--'} • {history?.profile?.bloodGroup || selectedPatient?.bloodGroup || '--'}
+          </p>
         </div>
         <div className="flex gap-8 text-right">
+          <div>
+            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider">Complaint</p>
+            <p className="font-semibold text-sm">{selectedPatient.complaint || "N/A"}</p>
+          </div>
           <div>
             <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider">Doctor</p>
             <p className="font-semibold text-sm">{formData.doctor || "Unassigned"}</p>
@@ -218,10 +256,29 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Chief Complaints</label>
-            <select className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm mb-2 outline-none">
-              <option>-- Select --</option>
-              <option>Knee Pain</option>
-              <option>Back Pain</option>
+            <select 
+              value={formData.chiefComplaints || ""} 
+              onChange={(e) => setFormData(prev => ({ ...prev, chiefComplaints: e.target.value }))}
+              className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm mb-2 outline-none"
+            >
+              <option value="">-- Select --</option>
+              <option value="Neck Pain">Neck Pain</option>
+              <option value="Shoulder Pain">Shoulder Pain</option>
+              <option value="Elbow Pain">Elbow Pain</option>
+              <option value="Wrist Pain">Wrist Pain</option>
+              <option value="Finger Pain">Finger Pain</option>
+              <option value="Hand Pain">Hand Pain</option>
+              <option value="Lower Backache (LBA)">Lower Backache (LBA)</option>
+              <option value="Hip Pain">Hip Pain</option>
+              <option value="Knee Pain">Knee Pain</option>
+              <option value="Ankle Pain">Ankle Pain</option>
+              <option value="Foot Pain">Foot Pain</option>
+              {formData.chiefComplaints && ![
+                "Neck Pain", "Shoulder Pain", "Elbow Pain", "Wrist Pain", "Finger Pain", 
+                "Hand Pain", "Lower Backache (LBA)", "Hip Pain", "Knee Pain", "Ankle Pain", "Foot Pain"
+              ].includes(formData.chiefComplaints) && (
+                <option value={formData.chiefComplaints}>{formData.chiefComplaints}</option>
+              )}
             </select>
             <textarea
               value={formData.chiefComplaints}
@@ -292,22 +349,32 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         <h3 className="flex items-center gap-2 text-[#800020] font-bold mb-4">
           <span className="text-xl">🔬</span> Order Investigations
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {investigationsList.map((test) => (
-            <label key={test.name} className="flex items-center justify-between p-3 border border-[#ECECEC] rounded-lg cursor-pointer hover:border-[#E12D45] transition-colors">
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={formData.investigations.includes(test.name)}
-                  onChange={() => handleInvestigationToggle(test.name)}
-                  className="w-4 h-4 accent-[#E12D45]"
-                />
-                <span className="text-[13px] text-[#1A2332] font-medium">{test.name}</span>
-              </div>
-              <span className="text-[13px] font-bold text-[#800020]">₹{test.price}</span>
-            </label>
-          ))}
+        
+        <div className="mb-4">
+          <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Search & Add Test</label>
+          <InvestigationSelect value={null} onChange={handleInvestigationSelect} className="max-w-md" />
         </div>
+
+        {formData.investigations.length > 0 && (
+          <div className="flex flex-col gap-2 max-w-md">
+            {formData.investigations.map((test) => (
+              <div key={test.code} className="flex items-center justify-between p-3 border border-[#ECECEC] bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="text-[13px] text-[#1A2332] font-medium leading-tight">
+                    {test.name}
+                    <div className="text-[11px] text-gray-500 mt-0.5">{test.code}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[13px] font-bold text-[#800020]">₹{test.price}</span>
+                  <button type="button" onClick={() => removeInvestigation(test.code)} className="text-gray-400 hover:text-red-500">
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Schedule OT Procedures */}

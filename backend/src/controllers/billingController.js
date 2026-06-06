@@ -41,9 +41,37 @@ const updatePayment = async (req, res) => {
   }
 };
 
+const updateBill = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updated = await billingService.updateBill(id, req.body);
+    if (!updated) return res.status(404).json({ message: "Bill not found" });
+    
+    await auditService.logAction(req.user?.username, req.user?.role, "UPDATE_BILL", `Updated bill ${id}`);
+    res.status(200).json({ message: "Bill updated successfully", bill: updated });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update bill", error: error.message });
+  }
+};
+
+const deleteBill = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await billingService.deleteBill(id);
+    if (!deleted) return res.status(404).json({ message: "Bill not found" });
+    
+    await auditService.logAction(req.user?.username, req.user?.role, "DELETE_BILL", `Deleted bill ${id}`);
+    res.status(200).json({ message: "Bill deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete bill", error: error.message });
+  }
+};
+
 module.exports = {
   createBill,
   getBills,
   getUnbilled,
   updatePayment,
+  updateBill,
+  deleteBill,
 };

@@ -50,6 +50,7 @@ export default function RecentPatients() {
             <Th>Patient Name</Th>
             <Th>Doctor</Th>
             <Th>Department</Th>
+            <Th>Complaint</Th>
             <Th align="center">Status</Th>
           </tr>
         </THead>
@@ -75,6 +76,11 @@ export default function RecentPatients() {
                   {p.department || "General"}
                 </span>
               </Td>
+              <Td>
+                <span className="text-[12px] text-gray-600 font-medium">
+                  {p.complaint || "N/A"}
+                </span>
+              </Td>
               <Td align="center">
                 <Badge status="success">Completed</Badge>
               </Td>
@@ -82,7 +88,7 @@ export default function RecentPatients() {
           ))}
           {patients.length === 0 && (
             <Tr index={0}>
-              <Td colSpan={5} align="center">
+              <Td colSpan={6} align="center">
                 <div className="py-8 text-[#6B7280] text-[13px]">No recent patients.</div>
               </Td>
             </Tr>

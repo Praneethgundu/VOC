@@ -1,0 +1,146 @@
+[
+  {
+    "code": "BIO31",
+    "name": "Acetyl Choline Esterase Level",
+    "description": "Acetyl Choline Esterase Level",
+    "category": "BIOCHEMISTRY",
+    "type": "Investigation",
+    "price": 1500
+  },
+  {
+    "code": "XR01",
+    "name": "X-Ray Knee AP/Lat",
+    "description": "X-Ray of Knee joint AP and Lateral views",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 400
+  },
+  {
+    "code": "XR02",
+    "name": "X-Ray Pelvis AP",
+    "description": "X-Ray of Pelvis AP view",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 300
+  },
+  {
+    "code": "XR03",
+    "name": "X-Ray Cervical Spine",
+    "description": "X-Ray of Cervical Spine",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 450
+  },
+  {
+    "code": "XR04",
+    "name": "X-Ray Lumbar Spine",
+    "description": "X-Ray of Lumbar Spine",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 450
+  },
+  {
+    "code": "MRI01",
+    "name": "MRI Lumbar Spine",
+    "description": "Magnetic Resonance Imaging of Lumbar Spine",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 4000
+  },
+  {
+    "code": "MRI02",
+    "name": "MRI Cervical Spine",
+    "description": "Magnetic Resonance Imaging of Cervical Spine",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 4000
+  },
+  {
+    "code": "MRI03",
+    "name": "MRI Knee Joint",
+    "description": "Magnetic Resonance Imaging of Knee Joint",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 3500
+  },
+  {
+    "code": "MRI04",
+    "name": "MRI Shoulder",
+    "description": "Magnetic Resonance Imaging of Shoulder",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 3500
+  },
+  {
+    "code": "CT01",
+    "name": "CT Scan Joints",
+    "description": "Computed Tomography of Joints",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 2500
+  },
+  {
+    "code": "SCAN01",
+    "name": "DEXA Bone Density Scan",
+    "description": "DEXA Bone Density Scan",
+    "category": "RADIOLOGY",
+    "type": "Investigation",
+    "price": 1500
+  },
+  {
+    "code": "BIO01",
+    "name": "Serum Uric Acid",
+    "description": "Serum Uric Acid Level",
+    "category": "BIOCHEMISTRY",
+    "type": "Investigation",
+    "price": 200
+  },
+  {
+    "code": "BIO02",
+    "name": "Serum Calcium",
+    "description": "Serum Calcium Level",
+    "category": "BIOCHEMISTRY",
+    "type": "Investigation",
+    "price": 250
+  },
+  {
+    "code": "BIO03",
+    "name": "Vitamin D3 (25-OH)",
+    "description": "Vitamin D3 Level",
+    "category": "BIOCHEMISTRY",
+    "type": "Investigation",
+    "price": 1200
+  },
+  {
+    "code": "BIO04",
+    "name": "CRP (C-Reactive Protein)",
+    "description": "C-Reactive Protein Level",
+    "category": "BIOCHEMISTRY",
+    "type": "Investigation",
+    "price": 400
+  },
+  {
+    "code": "BIO05",
+    "name": "Rheumatoid Factor (RF)",
+    "description": "Rheumatoid Factor",
+    "category": "BIOCHEMISTRY",
+    "type": "Investigation",
+    "price": 600
+  },
+  {
+    "code": "PATH01",
+    "name": "Complete Blood Count (CBC)",
+    "description": "Complete Blood Count",
+    "category": "PATHOLOGY",
+    "type": "Investigation",
+    "price": 250
+  },
+  {
+    "code": "PATH02",
+    "name": "ESR",
+    "description": "Erythrocyte Sedimentation Rate",
+    "category": "PATHOLOGY",
+    "type": "Investigation",
+    "price": 150
+  }
+]

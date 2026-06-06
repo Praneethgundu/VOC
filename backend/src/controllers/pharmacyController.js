@@ -51,10 +51,38 @@ const restockMedicine = async (req, res) => {
   }
 };
 
+const updateMedicine = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updated = await pharmacyService.updateMedicine(id, req.body);
+    if (!updated) return res.status(404).json({ message: "Medicine not found" });
+    
+    await auditService.logAction(req.user?.username, req.user?.role, "UPDATE_MEDICINE", `Updated medicine ${id}`);
+    res.status(200).json({ message: "Medicine updated successfully", medicine: updated });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update medicine", error: error.message });
+  }
+};
+
+const deleteMedicine = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await pharmacyService.deleteMedicine(id);
+    if (!deleted) return res.status(404).json({ message: "Medicine not found" });
+    
+    await auditService.logAction(req.user?.username, req.user?.role, "DELETE_MEDICINE", `Deleted medicine ${id}`);
+    res.status(200).json({ message: "Medicine deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete medicine", error: error.message });
+  }
+};
+
 module.exports = {
   getInventory,
   addMedicine,
   dispenseMedicine,
   restockMedicine,
   getDispenseHistory,
+  updateMedicine,
+  deleteMedicine,
 };

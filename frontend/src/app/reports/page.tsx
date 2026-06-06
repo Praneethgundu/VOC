@@ -268,6 +268,7 @@ export default function ReportsPage() {
                     <Th>Name</Th>
                     <Th>Phone</Th>
                     <Th>Department</Th>
+                    <Th>Complaint</Th>
                     <Th>Date</Th>
                   </tr>
                 </THead>
@@ -278,6 +279,7 @@ export default function ReportsPage() {
                       <Td>{p.fullName}</Td>
                       <Td>{p.phone}</Td>
                       <Td>{p.department}</Td>
+                      <Td>{p.complaint || "N/A"}</Td>
                       <Td>{new Date(p.createdAt).toLocaleDateString()}</Td>
                     </Tr>
                   ))}

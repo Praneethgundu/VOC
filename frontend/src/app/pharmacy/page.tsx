@@ -7,7 +7,7 @@ import MedicineCard from "@/components/pharmacy/MedicineCard";
 import PharmacyForm from "@/components/pharmacy/PharmacyForm";
 import DispenseModal from "@/components/pharmacy/DispenseModal";
 import RestockModal from "@/components/pharmacy/RestockModal";
-import { getMedicines, getDispenseHistory } from "@/services/pharmacyService";
+import { getMedicines, getDispenseHistory, deleteMedicine } from "@/services/pharmacyService";
 import { Search, Plus, CalendarDays, Database, AlertTriangle, Pill, Clock, ClipboardList } from "lucide-react";
 
 export default function PharmacyPage() {
@@ -41,6 +41,16 @@ export default function PharmacyPage() {
   useEffect(() => {
     fetchMedicines();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this medicine?")) return;
+    try {
+      await deleteMedicine(id);
+      fetchMedicines();
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Failed to delete medicine");
+    }
+  };
 
   const filtered = medicines.filter((m) =>
     m.medicineName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -173,6 +183,7 @@ export default function PharmacyPage() {
                       key={m.medicineId} 
                       medicine={m} 
                       onRestock={setRestockMed}
+                      onDelete={handleDelete}
                     />
                   ))}
                 </div>

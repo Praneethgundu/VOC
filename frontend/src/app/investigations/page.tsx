@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import InvestigationForm from "@/components/investigations/InvestigationForm";
-import { getInvestigations, updateInvestigation } from "@/services/investigationService";
-import { Search, Plus, CalendarDays, Database, Check } from "lucide-react";
+import { getInvestigations, updateInvestigation, deleteInvestigation } from "@/services/investigationService";
+import { Search, Plus, CalendarDays, Database, Check, Trash2 } from "lucide-react";
 
 export default function InvestigationPage() {
   const [investigations, setInvestigations] = useState<any[]>([]);
@@ -40,6 +40,16 @@ export default function InvestigationPage() {
       fetchInvestigations();
     } catch (e) {
       alert("Failed to update result");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this test?")) return;
+    try {
+      await deleteInvestigation(id);
+      fetchInvestigations();
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Failed to delete test");
     }
   };
 
@@ -206,25 +216,33 @@ export default function InvestigationPage() {
                         )}
                       </td>
                       <td className="p-4 text-center">
-                        {inv.status?.toUpperCase() === 'IN PROGRESS' ? (
-                          <button 
-                            onClick={() => handleUpdateResult(inv.id)}
-                            disabled={editingResultId !== inv.id || !tempResult}
-                            className="flex flex-col items-center justify-center gap-1 w-full border border-[#16A34A] text-[#16A34A] hover:bg-[#16A34A] hover:text-white disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[#16A34A] transition-colors rounded-lg py-1 px-2"
+                        <div className="flex items-center justify-center gap-2">
+                          {inv.status?.toUpperCase() === 'IN PROGRESS' ? (
+                            <button 
+                              onClick={() => handleUpdateResult(inv.id)}
+                              disabled={editingResultId !== inv.id || !tempResult}
+                              className="flex items-center justify-center gap-1 w-16 border border-[#16A34A] text-[#16A34A] hover:bg-[#16A34A] hover:text-white disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[#16A34A] transition-colors rounded-lg py-1 px-2"
+                            >
+                              <Check size={14} />
+                              <span className="text-[10px] font-bold">Done</span>
+                            </button>
+                          ) : inv.status?.toUpperCase() === 'PENDING' ? (
+                            <button 
+                              onClick={() => updateInvestigation(inv.id, { status: "IN PROGRESS" }).then(fetchInvestigations)}
+                              className="text-xs font-bold text-[#2563EB] hover:underline"
+                            >
+                              Start Test
+                            </button>
+                          ) : null}
+                          
+                          <button
+                            onClick={() => handleDelete(inv.id)}
+                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Test"
                           >
-                            <Check size={14} />
-                            <span className="text-[10px] font-bold">Done</span>
+                            <Trash2 size={16} />
                           </button>
-                        ) : inv.status?.toUpperCase() === 'PENDING' ? (
-                          <button 
-                            onClick={() => updateInvestigation(inv.id, { status: "IN PROGRESS" }).then(fetchInvestigations)}
-                            className="text-xs font-bold text-[#2563EB] hover:underline"
-                          >
-                            Start Test
-                          </button>
-                        ) : (
-                          <span className="text-gray-400 font-bold">—</span>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   ))

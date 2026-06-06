@@ -7,9 +7,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   icon?: React.ReactNode;
+  iconPosition?: "left" | "right";
+  className?: string;
+  type?: "button" | "submit" | "reset";
+  fullWidth?: boolean;
   iconRight?: React.ReactNode;
   loading?: boolean;
-  fullWidth?: boolean;
 }
 
 const variantStyles: Record<ButtonVariant, string> = {

@@ -1,59 +1,46 @@
-const { getWorkbook } = require("./excelService");
+const { getHospitalWorkbook, saveHospitalWorkbook, releaseLock } = require("./excelService");
 const crypto = require("crypto");
 
 const columns = [
   { header: "Procedure ID", key: "id", width: 20 },
+  { header: "Patient ID", key: "patientId", width: 36 },
   { header: "OP Number", key: "opNumber", width: 20 },
-  { header: "Patient Name", key: "patientName", width: 25 },
-  { header: "Age", key: "age", width: 10 },
-  { header: "Procedure", key: "procedure", width: 30 },
   { header: "Doctor", key: "doctor", width: 25 },
-  { header: "Date", key: "date", width: 15 },
-  { header: "Time", key: "time", width: 15 },
-  { header: "Fee", key: "fee", width: 15 },
-  { header: "Notes", key: "notes", width: 40 },
+  { header: "Procedure Name", key: "procedure", width: 30 },
+  { header: "Cost", key: "fee", width: 15 },
   { header: "Status", key: "status", width: 15 },
+  { header: "Procedure Date", key: "date", width: 25 },
+  { header: "Notes", key: "notes", width: 40 },
 ];
 
 const getOTSheet = async () => {
-  const { workbook, filePath } = await getWorkbook("ot_procedures_v2.xlsx", "Procedures", columns);
-  let sheet = workbook.getWorksheet("Procedures");
-  if (!sheet) {
-    sheet = workbook.addWorksheet("Procedures");
-    sheet.columns = columns;
-
-    // Seed dummy data
-    const dummyData = [
-      { opNumber: "OP-2024-001", patientName: "Ravi Kumar Sharma", age: "45", procedure: "Joint Aspiration", doctor: "Dr. Meera Patel", date: new Date().toISOString().split("T")[0], time: "10:00", fee: "1200", notes: "Right knee aspiration, fluid sent for analysis", status: "COMPLETED" },
-      { opNumber: "OP-2024-004", patientName: "Padmavathi Venkatesh", age: "27", procedure: "Casting / Splinting", doctor: "Dr. Sunitha Devi", date: new Date().toISOString().split("T")[0], time: "11:30", fee: "1500", notes: "Below knee cast applied for undisplaced fracture", status: "IN PROGRESS" }
-    ];
-    dummyData.forEach(data => sheet.addRow({ id: "OT-" + crypto.randomBytes(3).toString("hex").toUpperCase(), ...data }));
-
-    await workbook.xlsx.writeFile(filePath);
-  }
-  return { workbook, sheet, filePath };
+  const workbook = await getHospitalWorkbook();
+  const sheet = workbook.getWorksheet("OT_Procedures");
+  return { workbook, sheet };
 };
 
 const scheduleProcedure = async (data) => {
-  const { workbook, sheet, filePath } = await getOTSheet();
+  const { workbook, sheet } = await getOTSheet();
   
   const id = "OT-" + crypto.randomBytes(3).toString("hex").toUpperCase();
   const newProcedure = {
     id,
+    patientId: data.patientId || "",
     opNumber: data.opNumber,
-    patientName: data.patientName,
-    age: data.age,
-    procedure: data.procedure,
     doctor: data.doctor,
-    date: data.date,
-    time: data.time,
+    procedure: data.procedure,
     fee: data.fee,
-    notes: data.notes,
     status: data.status || "Scheduled",
+    date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
+    notes: data.notes || "",
   };
   
   sheet.addRow(newProcedure);
-  await workbook.xlsx.writeFile(filePath);
+  await saveHospitalWorkbook(workbook);
+  
+  const auditService = require("./auditService");
+  await auditService.logAction("System", "Backend", "Procedure Scheduled", `ID: ${id}`);
+  
   return newProcedure;
 };
 
@@ -65,42 +52,74 @@ const getProcedures = async () => {
     if (rowNumber === 1) return; // Skip header
     procedures.push({
       id: row.getCell(1).value,
-      opNumber: row.getCell(2).value,
-      patientName: row.getCell(3).value,
-      age: row.getCell(4).value,
+      patientId: row.getCell(2).value,
+      opNumber: row.getCell(3).value,
+      doctor: row.getCell(4).value,
       procedure: row.getCell(5).value,
-      doctor: row.getCell(6).value,
-      date: row.getCell(7).value,
-      time: row.getCell(8).value,
-      fee: row.getCell(9).value,
-      notes: row.getCell(10).value,
-      status: row.getCell(11).value,
+      fee: row.getCell(6).value,
+      status: row.getCell(7).value,
+      date: row.getCell(8).value,
+      notes: row.getCell(9).value,
     });
   });
   
+  releaseLock();
   return procedures.reverse();
 };
 
-const updateProcedureStatus = async (id, status) => {
-  const { workbook, sheet, filePath } = await getOTSheet();
-  let updated = false;
+const updateProcedure = async (id, updateData) => {
+  const { workbook, sheet } = await getOTSheet();
+  let updated = null;
 
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return;
     if (row.getCell(1).value === id) {
-      row.getCell(11).value = status;
-      updated = true;
+      if (updateData.doctor) row.getCell(4).value = updateData.doctor;
+      if (updateData.procedure) row.getCell(5).value = updateData.procedure;
+      if (updateData.fee) row.getCell(6).value = updateData.fee;
+      if (updateData.status) row.getCell(7).value = updateData.status;
+      if (updateData.date) row.getCell(8).value = updateData.date;
+      if (updateData.notes) row.getCell(9).value = updateData.notes;
+      
+      updated = {
+        id,
+        patientId: row.getCell(2).value,
+        opNumber: row.getCell(3).value,
+        doctor: row.getCell(4).value,
+        procedure: row.getCell(5).value,
+        fee: row.getCell(6).value,
+        status: row.getCell(7).value,
+        date: row.getCell(8).value,
+        notes: row.getCell(9).value,
+      };
     }
   });
 
-  if (updated) {
-    await workbook.xlsx.writeFile(filePath);
-  }
+  if (updated) await saveHospitalWorkbook(workbook);
+  else releaseLock();
   return updated;
+};
+
+const deleteProcedure = async (id) => {
+  const { workbook, sheet } = await getOTSheet();
+  let deleted = false;
+
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return;
+    if (row.getCell(1).value === id) {
+      sheet.spliceRows(rowNumber, 1);
+      deleted = true;
+    }
+  });
+
+  if (deleted) await saveHospitalWorkbook(workbook);
+  else releaseLock();
+  return deleted;
 };
 
 module.exports = {
   scheduleProcedure,
   getProcedures,
-  updateProcedureStatus,
+  updateProcedure,
+  deleteProcedure,
 };

@@ -1,45 +1,56 @@
-const { getWorkbook } = require("./excelService");
+const { getHospitalWorkbook, saveHospitalWorkbook, releaseLock } = require("./excelService");
 const consultationService = require("./consultationService");
 // const pharmacyService = require("./pharmacyService"); // if needed in future for unbilled
 const crypto = require("crypto");
 
 const columns = [
-  { header: "Bill ID", key: "id", width: 20 },
-  { header: "Patient Name", key: "patientName", width: 25 },
+  { header: "Bill Number", key: "id", width: 20 },
+  { header: "Patient ID", key: "patientId", width: 36 },
   { header: "OP Number", key: "opNumber", width: 20 },
-  { header: "Bill Items", key: "items", width: 50 },
-  { header: "Total", key: "total", width: 15 },
+  { header: "Invoice Date", key: "date", width: 25 },
+  { header: "Line Items", key: "items", width: 50 },
+  { header: "Amount", key: "total", width: 15 },
+  { header: "Paid Amount", key: "paidAmount", width: 15 },
+  { header: "Pending Amount", key: "pendingAmount", width: 15 },
   { header: "Payment Mode", key: "paymentMode", width: 15 },
-  { header: "Status", key: "status", width: 15 },
-  { header: "Date", key: "date", width: 25 },
+  { header: "Payment Status", key: "status", width: 15 },
 ];
 
 const getBillingSheet = async () => {
-  const { workbook, filePath } = await getWorkbook("billing.xlsx", "Billing", columns);
-  const sheet = workbook.getWorksheet("Billing");
-  return { workbook, sheet, filePath };
+  const workbook = await getHospitalWorkbook();
+  const sheet = workbook.getWorksheet("Bills");
+  return { workbook, sheet };
 };
 
 const createBill = async (data) => {
-  const { workbook, sheet, filePath } = await getBillingSheet();
+  const { workbook, sheet } = await getBillingSheet();
   
   const id = "BILL-" + crypto.randomBytes(3).toString("hex").toUpperCase();
   const items = Array.isArray(data.items) ? data.items : [];
   const total = items.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+  
+  const paidAmount = Number(data.paidAmount) || (data.paymentMode === "Pending" ? 0 : total);
+  const pendingAmount = total - paidAmount;
 
   const newBill = {
     id,
-    patientName: data.patientName || "Unknown",
+    patientId: data.patientId || "",
     opNumber: data.opNumber || "Unknown",
+    date: new Date().toISOString(),
     items: JSON.stringify(items),
     total,
+    paidAmount,
+    pendingAmount,
     paymentMode: data.paymentMode || "Pending",
-    status: data.status || (data.paymentMode === "Pending" ? "Unpaid" : "Paid"),
-    date: new Date().toISOString(),
+    status: data.status || (pendingAmount > 0 ? "Unpaid" : "Paid"),
   };
   
   sheet.addRow(newBill);
-  await workbook.xlsx.writeFile(filePath);
+  await saveHospitalWorkbook(workbook);
+  
+  const auditService = require("./auditService");
+  await auditService.logAction("System", "Backend", "Bill Generated", `ID: ${id}`);
+  
   return newBill;
 };
 
@@ -51,40 +62,49 @@ const getBills = async () => {
     if (rowNumber === 1) return; // Skip header
     let parsedItems = [];
     try {
-      parsedItems = JSON.parse(row.getCell(4).value || "[]");
+      parsedItems = JSON.parse(row.getCell(5).value || "[]");
     } catch(e) {
       parsedItems = [];
     }
 
     bills.push({
       id: row.getCell(1).value,
-      patientName: row.getCell(2).value,
+      patientId: row.getCell(2).value,
       opNumber: row.getCell(3).value,
+      date: row.getCell(4).value,
       items: parsedItems,
-      total: row.getCell(5).value,
-      paymentMode: row.getCell(6).value,
-      status: row.getCell(7).value,
-      date: row.getCell(8).value,
+      total: row.getCell(6).value,
+      paidAmount: row.getCell(7).value,
+      pendingAmount: row.getCell(8).value,
+      paymentMode: row.getCell(9).value,
+      status: row.getCell(10).value,
     });
   });
   
+  releaseLock();
   return bills.reverse();
 };
 
 const updatePaymentStatus = async (id, status) => {
-  const { workbook, sheet, filePath } = await getBillingSheet();
+  const { workbook, sheet } = await getBillingSheet();
   let updated = false;
 
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return;
     if (row.getCell(1).value === id) {
-      row.getCell(7).value = status;
+      row.getCell(10).value = status;
+      if (status === "Paid") {
+        row.getCell(7).value = row.getCell(6).value; // Paid = Total
+        row.getCell(8).value = 0; // Pending = 0
+      }
       updated = true;
     }
   });
 
   if (updated) {
-    await workbook.xlsx.writeFile(filePath);
+    await saveHospitalWorkbook(workbook);
+  } else {
+    releaseLock();
   }
   return updated;
 };
@@ -108,7 +128,9 @@ const getUnbilledPatients = async () => {
         
         if (c.investigations && Array.isArray(c.investigations)) {
           c.investigations.forEach(inv => {
-            items.push({ serviceName: inv, category: 'Investigation', amount: getInvestigationPrice(inv) });
+            const invName = typeof inv === 'string' ? inv : inv.name;
+            const invPrice = typeof inv === 'string' ? getInvestigationPrice(inv) : inv.price;
+            items.push({ serviceName: invName, category: 'Investigation', amount: invPrice });
           });
         }
         
@@ -116,6 +138,7 @@ const getUnbilledPatients = async () => {
           patientName: c.patientName,
           opNumber: c.opNumber,
           department: c.department || "Orthopaedics",
+          complaint: c.complaint || "N/A",
           items,
           total: items.reduce((acc, it) => acc + it.amount, 0)
         });
@@ -151,9 +174,56 @@ const getInvestigationPrice = (name) => {
   return prices[name] || 500;
 };
 
+const updateBill = async (id, updateData) => {
+  const { workbook, sheet } = await getBillingSheet();
+  let updated = null;
+
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return;
+    if (row.getCell(1).value === id) {
+      if (updateData.paymentMode) row.getCell(6).value = updateData.paymentMode;
+      if (updateData.status) row.getCell(7).value = updateData.status;
+      
+      updated = {
+        id,
+        patientName: row.getCell(2).value,
+        opNumber: row.getCell(3).value,
+        items: JSON.parse(row.getCell(4).value || "[]"),
+        total: row.getCell(5).value,
+        paymentMode: row.getCell(6).value,
+        status: row.getCell(7).value,
+        date: row.getCell(8).value,
+      };
+    }
+  });
+
+  if (updated) await saveHospitalWorkbook(workbook);
+  else releaseLock();
+  return updated;
+};
+
+const deleteBill = async (id) => {
+  const { workbook, sheet } = await getBillingSheet();
+  let deleted = false;
+
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return;
+    if (row.getCell(1).value === id) {
+      sheet.spliceRows(rowNumber, 1);
+      deleted = true;
+    }
+  });
+
+  if (deleted) await saveHospitalWorkbook(workbook);
+  else releaseLock();
+  return deleted;
+};
+
 module.exports = {
   createBill,
   getBills,
   updatePaymentStatus,
-  getUnbilledPatients
+  getUnbilledPatients,
+  updateBill,
+  deleteBill
 };

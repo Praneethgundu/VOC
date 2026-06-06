@@ -4,9 +4,9 @@ import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import { Table, THead, TBody, Th, Tr, Td, Badge } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
-import { Receipt, Search, Printer, Plus, IndianRupee, Trash2 } from "lucide-react";
+import { Search, Printer, Plus, IndianRupee, Trash2, Receipt } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getBills, getUnbilledPatients, createBill, updatePaymentStatus } from "@/services/billingService";
+import { getBills, getUnbilledPatients, createBill, updatePaymentStatus, deleteBill } from "@/services/billingService";
 import { RefreshCw } from "lucide-react";
 
 export default function BillingPage() {
@@ -46,6 +46,16 @@ export default function BillingPage() {
       setUnbilled(data);
     } catch(e) {
       console.error(e);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this bill?")) return;
+    try {
+      await deleteBill(id);
+      fetchBills();
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Failed to delete bill");
     }
   };
 
@@ -190,13 +200,22 @@ export default function BillingPage() {
                       </span>
                     </Td>
                     <Td align="right">
-                      <button
-                        onClick={() => setShowReceiptModal(b)}
-                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#ECECEC] text-[#1A2332] text-[11px] font-bold hover:bg-gray-50 transition-colors ml-auto shadow-sm"
-                      >
-                        <Receipt size={12} />
-                        Receipt
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setShowReceiptModal(b)}
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#ECECEC] text-[#1A2332] text-[11px] font-bold hover:bg-gray-50 transition-colors shadow-sm"
+                        >
+                          <Receipt size={12} />
+                          Receipt
+                        </button>
+                        <button
+                          onClick={() => handleDelete(b.id)}
+                          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete Bill"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </Td>
                   </Tr>
                 ))}
@@ -229,8 +248,13 @@ export default function BillingPage() {
                         selectedUnbilled?.opNumber === p.opNumber ? "border-[#E12D45] ring-1 ring-[#E12D45]" : "border-[#ECECEC] hover:border-gray-300"
                       }`}
                     >
-                      <h4 className="font-bold text-[#1A2332] text-[13px]">{p.patientName}</h4>
-                      <p className="text-[11px] text-[#6B7280]">{p.opNumber} • {p.department}</p>
+                      <div>
+                        <p className="text-[13px] font-bold text-[#1A2332]">{p.patientName}</p>
+                        <p className="text-[11px] text-[#6B7280]">{p.opNumber} • {p.department}</p>
+                        {p.complaint && p.complaint !== "N/A" && (
+                          <p className="text-[11px] font-semibold text-[#800020] mt-0.5">{p.complaint}</p>
+                        )}
+                      </div>
                       <div className="flex justify-between items-center mt-2">
                         <Badge status="error">WAITING</Badge>
                         <span className="font-bold text-[#800020]">₹{p.total}</span>

@@ -18,3 +18,15 @@ export const addPatient =
 
     return response.data;
   };
+
+export const updatePatient =
+  async (opNumber: string, data: any) => {
+    const response = await api.put(`/patients/${opNumber}`, data);
+    return response.data;
+  };
+
+export const deletePatient =
+  async (opNumber: string) => {
+    const response = await api.delete(`/patients/${opNumber}`);
+    return response.data;
+  };

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getConsultations } from "@/services/consultationService";
+import { getConsultations, deleteConsultation } from "@/services/consultationService";
 import { Table, THead, TBody, Th, Tr, Td } from "@/components/ui/Table";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 
 export default function ConsultationQueue({ onSelect, selectedId }: { onSelect: (patient: any) => void, selectedId?: string }) {
   const [consultations, setConsultations] = useState<any[]>([]);
@@ -22,6 +22,17 @@ export default function ConsultationQueue({ onSelect, selectedId }: { onSelect: 
       // ignore
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this consultation?")) return;
+    try {
+      await deleteConsultation(id);
+      fetchQueue();
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to delete");
     }
   };
 
@@ -60,10 +71,26 @@ export default function ConsultationQueue({ onSelect, selectedId }: { onSelect: 
                     : "border-[#ECECEC] bg-white hover:border-gray-300 hover:shadow-sm"
                 }`}
               >
-                <h3 className="font-bold text-[#1A2332] text-[14px] mb-1">{c.patientName}</h3>
+                <div className="flex justify-between items-start mb-1">
+                  <h3 className="font-bold text-[#1A2332] text-[14px]">{c.patientName}</h3>
+                  <button 
+                    onClick={(e) => handleDelete(e, c.id)}
+                    className="text-red-400 hover:text-red-600 transition-colors p-1"
+                    title="Delete Consultation"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
                 <p className="text-[12px] text-[#6B7280] mb-2">{c.opNumber} • {c.department || "Orthopaedics"}</p>
-                <div className={`text-[11px] font-bold uppercase tracking-wider ${getStatusColor(c.status)}`}>
-                  {c.status || "WAITING"}
+                <div className="flex justify-between items-center">
+                  <div className={`text-[11px] font-bold uppercase tracking-wider ${getStatusColor(c.status)}`}>
+                    {c.status || "WAITING"}
+                  </div>
+                  {c.complaint && c.complaint !== "N/A" && (
+                    <div className="text-[11px] font-bold text-[#800020] bg-[#FFF0F2] px-2 py-0.5 rounded">
+                      {c.complaint}
+                    </div>
+                  )}
                 </div>
               </div>
             );

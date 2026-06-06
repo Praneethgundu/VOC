@@ -14,3 +14,13 @@ export const updateProcedureStatus = async (id: string, status: string) => {
   const response = await api.put(`/ot/${id}/status`, { status });
   return response.data;
 };
+
+export const updateProcedure = async (id: string, data: any) => {
+  const response = await api.put(`/ot/${id}`, data);
+  return response.data;
+};
+
+export const deleteProcedure = async (id: string) => {
+  const response = await api.delete(`/ot/${id}`);
+  return response.data;
+};

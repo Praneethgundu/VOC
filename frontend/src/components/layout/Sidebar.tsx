@@ -14,28 +14,39 @@ import {
   FileText,
   Settings,
   Scissors,
-  TrendingUp
+  TrendingUp,
+  FolderOpen
 } from "lucide-react";
 
 const menuItems = [
-  { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { name: "Registration", icon: UserPlus, path: "/registration" },
-  { name: "Consultation", icon: Stethoscope, path: "/consultation" },
-  { name: "Investigations", icon: Microscope, path: "/investigations" },
-  { name: "OT Procedures", icon: Scissors, path: "/ot" },
-  { name: "Pharmacy", icon: Pill, path: "/pharmacy" },
-  { name: "Billing", icon: Receipt, path: "/billing" },
-  { name: "Reports", icon: FileText, path: "/reports" },
-  { name: "EOD Report", icon: FileText, path: "/reports/eod" },
-  { name: "Financials", icon: TrendingUp, path: "/financials" },
-  { name: "Settings", icon: Settings, path: "/settings" },
+  { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard", baseRoute: "/dashboard" },
+  { name: "Registration", icon: UserPlus, path: "/registration", baseRoute: "/registration" },
+  { name: "Consultation", icon: Stethoscope, path: "/consultation", baseRoute: "/consultation" },
+  { name: "Investigations", icon: Microscope, path: "/investigations", baseRoute: "/investigations" },
+  { name: "OT Procedures", icon: Scissors, path: "/ot", baseRoute: "/ot" },
+  { name: "Pharmacy", icon: Pill, path: "/pharmacy", baseRoute: "/pharmacy" },
+  { name: "Billing", icon: Receipt, path: "/billing", baseRoute: "/billing" },
+  { name: "Reports", icon: FileText, path: "/reports", baseRoute: "/reports" },
+  { name: "EOD Report", icon: FileText, path: "/reports/eod", baseRoute: "/reports/eod" },
+  { name: "Patient Records", icon: FolderOpen, path: "/patient-records", baseRoute: "/patient-records" },
+  { name: "Settings", icon: Settings, path: "/settings", baseRoute: "/settings" },
 ];
 
 const roleRouteMap: Record<string, string[]> = {
-  RECEPTIONIST: ["/dashboard", "/registration", "/billing", "/reports/eod"],
-  DOCTOR: ["/dashboard", "/consultation", "/investigations", "/ot", "/reports", "/reports/eod"],
-  PHARMACIST: ["/dashboard", "/pharmacy", "/reports/eod"],
-  ADMIN: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/financials", "/settings"],
+  RECEPTIONIST: ["/dashboard", "/registration", "/billing", "/reports/eod", "/patient-records"],
+  DOCTOR: ["/dashboard", "/consultation", "/investigations", "/ot", "/reports", "/reports/eod", "/patient-records"],
+  PHARMACIST: ["/dashboard", "/pharmacy", "/reports/eod", "/patient-records"],
+  ADMIN: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/patient-records", "/settings"],
+};
+
+const getDynamicPath = (baseRoute: string, role?: string | null) => {
+  if (baseRoute === "/reports/eod" && role) {
+    if (role === "RECEPTIONIST") return "/reports/eod/reception";
+    if (role === "DOCTOR") return "/reports/eod/doctor";
+    if (role === "PHARMACIST") return "/reports/eod/pharmacy";
+    if (role === "ADMIN") return "/reports/eod/admin";
+  }
+  return baseRoute;
 };
 
 export default function Sidebar() {
@@ -83,12 +94,13 @@ export default function Sidebar() {
 
         {filteredMenuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.path;
+          const actualPath = getDynamicPath(item.baseRoute, role);
+          const isActive = pathname.startsWith(actualPath) && (actualPath !== "/dashboard" || pathname === "/dashboard");
 
           return (
             <Link
               key={item.name}
-              href={item.path}
+              href={actualPath}
               className={[
                 "flex items-center gap-3 px-3 py-2.5 rounded-[10px] transition-all duration-200 group",
                 isActive

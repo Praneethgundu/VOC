@@ -35,8 +35,36 @@ const updateStatus = async (req, res) => {
   }
 };
 
+const updateConsultation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updated = await consultationService.updateConsultation(id, req.body);
+    if (!updated) return res.status(404).json({ message: "Consultation not found" });
+    
+    await auditService.logAction(req.user?.username, req.user?.role, "UPDATE_CONSULTATION", `Updated consultation ${id}`);
+    res.status(200).json({ message: "Consultation updated", consultation: updated });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update consultation", error: error.message });
+  }
+};
+
+const deleteConsultation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await consultationService.deleteConsultation(id);
+    if (!deleted) return res.status(404).json({ message: "Consultation not found" });
+    
+    await auditService.logAction(req.user?.username, req.user?.role, "DELETE_CONSULTATION", `Deleted consultation ${id}`);
+    res.status(200).json({ message: "Consultation deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete consultation", error: error.message });
+  }
+};
+
 module.exports = {
   createConsultation,
   getConsultations,
   updateStatus,
+  updateConsultation,
+  deleteConsultation,
 };

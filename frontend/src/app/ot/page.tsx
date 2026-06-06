@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import OTForm from "@/components/ot/OTForm";
 import api from "@/services/api";
-import { Plus, Database, CalendarDays, CheckSquare, User, Activity } from "lucide-react";
+import { Plus, Database, CalendarDays, CheckSquare, User, Activity, Trash2 } from "lucide-react";
 
 export default function OTProceduresPage() {
   const [procedures, setProcedures] = useState<any[]>([]);
@@ -39,6 +39,16 @@ export default function OTProceduresPage() {
       fetchProcedures();
     } catch (e) {
       alert("Failed to update status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this procedure?")) return;
+    try {
+      await api.delete(`/ot/${id}`);
+      fetchProcedures();
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Failed to delete procedure");
     }
   };
 
@@ -131,6 +141,13 @@ export default function OTProceduresPage() {
                       }`}>
                         {proc.status?.toUpperCase() === 'COMPLETED' ? 'COMPLETED' : 'IN PROGRESS'}
                       </span>
+                      <button 
+                        onClick={() => handleDelete(proc.id)}
+                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors ml-1"
+                        title="Delete Procedure"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
 

@@ -1,4 +1,4 @@
-const { getWorkbook } = require("./excelService");
+const { getHospitalWorkbook, saveHospitalWorkbook, releaseLock } = require("./excelService");
 
 const columns = [
   { header: "Timestamp", key: "timestamp", width: 25 },
@@ -9,14 +9,14 @@ const columns = [
 ];
 
 const getAuditSheet = async () => {
-  const { workbook, filePath } = await getWorkbook("audit_logs.xlsx", "Audit", columns);
-  const sheet = workbook.getWorksheet("Audit");
-  return { workbook, sheet, filePath };
+  const workbook = await getHospitalWorkbook();
+  const sheet = workbook.getWorksheet("Audit_Log");
+  return { workbook, sheet };
 };
 
 const logAction = async (username, role, action, details) => {
   try {
-    const { workbook, sheet, filePath } = await getAuditSheet();
+    const { workbook, sheet } = await getAuditSheet();
     const timestamp = new Date().toISOString();
     
     sheet.addRow({
@@ -27,10 +27,11 @@ const logAction = async (username, role, action, details) => {
       details: typeof details === 'object' ? JSON.stringify(details) : details,
     });
     
-    await workbook.xlsx.writeFile(filePath);
+    await saveHospitalWorkbook(workbook);
     return true;
   } catch (error) {
     console.error("[AUDIT] Failed to log action:", error);
+    releaseLock();
     return false;
   }
 };
@@ -49,9 +50,11 @@ const getLogs = async () => {
         details: row.getCell(5).value,
       });
     });
+    releaseLock();
     return logs.reverse(); // Newest first
   } catch (error) {
     console.error("[AUDIT] Failed to get logs:", error);
+    releaseLock();
     return [];
   }
 };

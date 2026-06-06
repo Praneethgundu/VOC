@@ -18,6 +18,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     address: "",
     department: "",
     doctor: "",
+    complaint: "",
     fee: 500,
   });
   const [loading, setLoading] = useState(false);
@@ -44,11 +45,13 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
         address: "",
         department: "",
         doctor: "",
+        complaint: "",
         fee: 500,
       });
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      alert(error.response?.data?.message || "Failed to save patient record");
     } finally {
       setLoading(false);
     }
@@ -140,6 +143,26 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           onChange={handleChange}
           placeholder="e.g. Orthopaedics"
         />
+        <Select
+          label="Patient Complaint"
+          name="complaint"
+          value={formData.complaint}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Select Complaint</option>
+          <option>Neck Pain</option>
+          <option>Shoulder Pain</option>
+          <option>Elbow Pain</option>
+          <option>Wrist Pain</option>
+          <option>Finger Pain</option>
+          <option>Hand Pain</option>
+          <option>Lower Backache (LBA)</option>
+          <option>Hip Pain</option>
+          <option>Knee Pain</option>
+          <option>Ankle Pain</option>
+          <option>Foot Pain</option>
+        </Select>
         <Input
           label="Consulting Doctor"
           name="doctor"
@@ -184,6 +207,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
               address: "",
               department: "",
               doctor: "",
+              complaint: "",
               fee: 500,
             })
           }
