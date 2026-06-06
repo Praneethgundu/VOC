@@ -13,6 +13,9 @@ const createPatient = async (req, res) => {
     res.status(201).json({ message: "Patient registered successfully", patient });
   } catch (error) {
     console.error("[REGISTRATION FAILED]", error);
+    if (error.code === 'EBUSY') {
+      return res.status(409).json({ message: "The database file (Excel) is currently open in another program. Please close Microsoft Excel and try again." });
+    }
     res.status(500).json({ message: "Failed to register patient", error: error.message });
   }
 };

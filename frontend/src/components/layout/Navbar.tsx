@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell, Search, ChevronDown, LogOut, User as UserIcon } from "lucide-react";
+import { Bell, Search, ChevronDown, LogOut, User as UserIcon, AlertTriangle, Info, ShieldAlert } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { getSystemAlerts, SystemAlert } from "@/services/dashboardService";
+import Link from "next/link";
 
 interface NavbarProps {
   pageTitle?: string;
@@ -12,12 +14,22 @@ interface NavbarProps {
 export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
   const { currentUser, logout } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showAlerts, setShowAlerts] = useState(false);
+  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const alertsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    getSystemAlerts().then(setAlerts).catch(console.error);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
+      }
+      if (alertsRef.current && !alertsRef.current.contains(event.target as Node)) {
+        setShowAlerts(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -60,10 +72,56 @@ export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
         </div>
 
         {/* Bell */}
-        <button className="relative w-9 h-9 rounded-lg border border-[#ECECEC] bg-white flex items-center justify-center text-[#6B7280] hover:border-[#E12D45] hover:text-[#E12D45] transition-colors">
-          <Bell size={16} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#E12D45] border-2 border-white" />
-        </button>
+        <div className="relative" ref={alertsRef}>
+          <button 
+            onClick={() => setShowAlerts(!showAlerts)}
+            className="relative w-9 h-9 rounded-lg border border-[#ECECEC] bg-white flex items-center justify-center text-[#6B7280] hover:border-[#E12D45] hover:text-[#E12D45] transition-colors"
+          >
+            <Bell size={16} />
+            {alerts.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#E12D45] border-2 border-white text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
+                {alerts.length}
+              </span>
+            )}
+          </button>
+          
+          {showAlerts && (
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-[#ECECEC] overflow-hidden z-50">
+              <div className="bg-gray-50 px-4 py-3 border-b border-[#ECECEC] flex justify-between items-center">
+                <h3 className="text-sm font-bold text-[#1A2332]">System Alerts</h3>
+                <span className="text-[10px] bg-[#E12D45] text-white px-2 py-0.5 rounded-full font-bold">{alerts.length} New</span>
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                {alerts.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                    No active alerts
+                  </div>
+                ) : (
+                  alerts.map((alert, idx) => (
+                    <Link href={alert.actionPath} key={alert.id} className="block border-b border-[#ECECEC] last:border-0 hover:bg-[#FDF8F8] transition-colors p-4">
+                      <div className="flex gap-3 items-start">
+                        <div className={`mt-0.5 p-1.5 rounded-lg shrink-0 ${
+                          alert.type === 'warning' ? 'bg-[#FFFBEB] text-[#D97706]' : 
+                          alert.type === 'error' ? 'bg-[#FFF4F4] text-[#E12D45]' : 
+                          'bg-[#F0F9FF] text-[#0284C7]'
+                        }`}>
+                          {alert.type === 'warning' ? <AlertTriangle size={14} /> : 
+                           alert.type === 'error' ? <ShieldAlert size={14} /> : 
+                           <Info size={14} />}
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">{alert.module}</p>
+                          <p className="text-xs font-bold text-[#1A2332] mb-1">{alert.title}</p>
+                          <p className="text-xs text-[#6B7280] leading-tight">{alert.message}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Avatar / User */}
         <div className="relative" ref={dropdownRef}>

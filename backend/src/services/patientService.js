@@ -57,6 +57,19 @@ const createPatient = async (patientData) => {
   const auditService = require("./auditService");
   await auditService.logAction("System", "Backend", "Patient Created", `OP: ${opNumber}`);
   
+  // Automatically add to consultation queue
+  try {
+    await consultationService.addConsultation({
+      patientId: newPatient.patientId,
+      opNumber: newPatient.opNumber,
+      doctor: newPatient.doctor || "",
+      department: newPatient.department || "",
+      status: "Waiting"
+    });
+  } catch (err) {
+    console.error("Failed to add patient to consultation queue automatically:", err);
+  }
+  
   return newPatient;
 };
 

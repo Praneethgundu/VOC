@@ -11,6 +11,7 @@ const billingRoutes = require("./routes/billingRoutes");
 const otRoutes = require("./routes/otRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const authMiddleware = require("./middleware/auth.middleware");
 const roleMiddleware = require("./middleware/role.middleware");
@@ -32,6 +33,7 @@ app.use("/api/ot", authMiddleware, roleMiddleware(["DOCTOR", "ADMIN"]), otRoutes
 app.use("/api/audit", authMiddleware, roleMiddleware(["ADMIN"]), auditRoutes);
 app.use("/api/reports", authMiddleware, roleMiddleware(["ADMIN", "RECEPTIONIST", "DOCTOR", "PHARMACIST"]), reportRoutes);
 app.use("/reports", authMiddleware, roleMiddleware(["ADMIN", "RECEPTIONIST", "DOCTOR", "PHARMACIST"]), reportRoutes); // Fallback
+app.use("/api/dashboard", authMiddleware, dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.send("VOC HMS Backend Running");

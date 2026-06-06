@@ -109,41 +109,69 @@ const updatePaymentStatus = async (id, status) => {
   return updated;
 };
 
-// Aggregates unbilled items from completed consultations
+// Aggregates unbilled items from completed consultations and newly registered patients
 const getUnbilledPatients = async () => {
   try {
+    const patientService = require("./patientService");
     const consultations = await consultationService.getConsultations();
+    const patients = await patientService.getAllPatients();
     const bills = await getBills();
     
     // Create a set of already billed OP numbers to avoid double billing for now
     const billedOps = new Set(bills.map(b => b.opNumber));
     
-    const unbilled = [];
+    const unbilledMap = new Map();
     
+    // 1. Process all registered patients for Registration Fee
+    for (const p of patients) {
+      if (!billedOps.has(p.opNumber)) {
+        unbilledMap.set(p.opNumber, {
+          patientName: p.fullName,
+          opNumber: p.opNumber,
+          department: p.department || "Orthopaedics",
+          complaint: p.complaint || "N/A",
+          items: [{ serviceName: `Registration Fee`, category: 'Registration', amount: 200 }]
+        });
+      }
+    }
+    
+    // 2. Process consultations (both for new and existing patients if we want to bill them)
+    // Wait, the logic for billedOps prevents billing them for consultation if they've EVER been billed.
+    // That's a known limitation in the existing system. We will preserve it for now.
     for (const c of consultations) {
       if (c.status === "Completed" && !billedOps.has(c.opNumber)) {
-        // Construct unbilled items
-        const items = [];
-        items.push({ serviceName: `Consultation Fee (${c.department || 'General'})`, category: 'Consultation', amount: 500 });
+        
+        let existing = unbilledMap.get(c.opNumber);
+        if (!existing) {
+          existing = {
+            patientName: c.patientName,
+            opNumber: c.opNumber,
+            department: c.department || "Orthopaedics",
+            complaint: c.complaint || "N/A",
+            items: []
+          };
+          unbilledMap.set(c.opNumber, existing);
+        }
+        
+        existing.items.push({ serviceName: `Consultation Fee (${c.department || 'General'})`, category: 'Consultation', amount: 500 });
         
         if (c.investigations && Array.isArray(c.investigations)) {
           c.investigations.forEach(inv => {
             const invName = typeof inv === 'string' ? inv : inv.name;
             const invPrice = typeof inv === 'string' ? getInvestigationPrice(inv) : inv.price;
-            items.push({ serviceName: invName, category: 'Investigation', amount: invPrice });
+            existing.items.push({ serviceName: invName, category: 'Investigation', amount: invPrice });
           });
         }
-        
-        unbilled.push({
-          patientName: c.patientName,
-          opNumber: c.opNumber,
-          department: c.department || "Orthopaedics",
-          complaint: c.complaint || "N/A",
-          items,
-          total: items.reduce((acc, it) => acc + it.amount, 0)
-        });
       }
     }
+    
+    // Convert map to array and calculate total
+    const unbilled = Array.from(unbilledMap.values()).map(entry => {
+      return {
+        ...entry,
+        total: entry.items.reduce((acc, it) => acc + (it.amount || 0), 0)
+      };
+    });
     
     return unbilled;
   } catch(e) {

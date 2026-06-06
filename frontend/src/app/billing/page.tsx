@@ -23,6 +23,7 @@ export default function BillingPage() {
   const [selectedUnbilled, setSelectedUnbilled] = useState<any>(null);
   const [billItems, setBillItems] = useState<any[]>([]);
   const [paymentMode, setPaymentMode] = useState("Cash");
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   useEffect(() => {
     fetchBills();
@@ -104,6 +105,36 @@ export default function BillingPage() {
 
   const updateItem = (index: number, field: string, value: any) => {
     setBillItems(prev => prev.map((it, i) => i === index ? { ...it, [field]: value } : it));
+  };
+
+  const handleDragStart = (e: React.DragEvent, patient: any) => {
+    e.dataTransfer.setData("application/json", JSON.stringify(patient));
+    e.dataTransfer.effectAllowed = "copy";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    if (!isDraggingOver) setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    try {
+      const data = e.dataTransfer.getData("application/json");
+      if (data) {
+        const patient = JSON.parse(data);
+        selectPatientForBill(patient);
+      }
+    } catch (err) {
+      console.error("Failed to drop patient data", err);
+    }
   };
 
   const filtered = bills.filter(
@@ -243,10 +274,12 @@ export default function BillingPage() {
                   unbilled.map((p, idx) => (
                     <div 
                       key={idx}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, p)}
                       onClick={() => selectPatientForBill(p)}
                       className={`p-3 rounded-xl border cursor-pointer bg-white shadow-sm transition-all ${
                         selectedUnbilled?.opNumber === p.opNumber ? "border-[#E12D45] ring-1 ring-[#E12D45]" : "border-[#ECECEC] hover:border-gray-300"
-                      }`}
+                      } active:scale-95`}
                     >
                       <div>
                         <p className="text-[13px] font-bold text-[#1A2332]">{p.patientName}</p>
@@ -266,14 +299,24 @@ export default function BillingPage() {
             </div>
 
             {/* Right Panel: Invoice Builder */}
-            <div className="flex-1 flex flex-col bg-white">
+            <div 
+              className={`flex-1 flex flex-col transition-colors duration-300 ${isDraggingOver ? "bg-red-50 border-2 border-dashed border-[#E12D45]" : "bg-white"}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               <div className="p-5 border-b border-[#ECECEC] flex items-center gap-2">
                 <Receipt className="text-[#800020]" size={20} />
-                <h2 className="text-xl font-bold text-[#1A2332]">Create New Bill</h2>
+                <h2 className="text-xl font-bold text-[#1A2332]">Create New Bill {isDraggingOver && <span className="text-sm font-normal text-[#E12D45] animate-pulse ml-2">Drop to auto-fill</span>}</h2>
               </div>
               
               <div className="p-6 flex-1 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-4 mb-6 relative">
+                  {isDraggingOver && (
+                    <div className="absolute inset-0 bg-[#E12D45]/5 border-2 border-[#E12D45] border-dashed rounded-lg flex items-center justify-center z-10 pointer-events-none">
+                       <span className="font-bold text-[#E12D45]">Drop Patient Here</span>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">OP Number</label>
                     <input type="text" readOnly value={selectedUnbilled?.opNumber || ""} className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg bg-gray-50 text-sm" />

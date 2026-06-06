@@ -1,9 +1,16 @@
 import { useState, useEffect } from "react";
 import { addConsultation, updateConsultationStatus, updateConsultation } from "@/services/consultationService";
 import { addInvestigation } from "@/services/investigationService";
+import { getMedicines } from "@/services/pharmacyService";
 import api from "@/services/api";
-import { Stethoscope, Calendar, Scissors, X } from "lucide-react";
+import { Stethoscope, Calendar, Scissors, X, Plus } from "lucide-react";
 import InvestigationSelect, { InvestigationMasterData } from "../investigations/InvestigationSelect";
+
+export interface PrescriptionData {
+  medicineName: string;
+  frequency: string;
+  days: string;
+}
 
 export default function ConsultationForm({ selectedPatient, onSave }: { selectedPatient: any, onSave: () => void }) {
   const [formData, setFormData] = useState({
@@ -12,7 +19,8 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     doctor: "",
     department: "",
     diagnosis: "",
-    prescription: "",
+    prescriptions: [] as PrescriptionData[],
+    legacyPrescription: "",
     chiefComplaints: "",
     examination: "",
     advice: "",
@@ -29,8 +37,14 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     otProcedures: [] as string[]
   });
   const [loading, setLoading] = useState(false);
+  const [pharmacyMedicines, setPharmacyMedicines] = useState<any[]>([]);
+  const [currentPrescription, setCurrentPrescription] = useState<PrescriptionData>({ medicineName: "", frequency: "1-0-1", days: "5" });
 
   const [history, setHistory] = useState<any>(null);
+
+  useEffect(() => {
+    getMedicines().then(setPharmacyMedicines).catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (selectedPatient && selectedPatient.opNumber) {
@@ -53,7 +67,16 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
              setFormData(prev => ({ ...prev, diagnosis: selectedPatient.diagnosis }));
           }
           if (selectedPatient.prescription) {
-             setFormData(prev => ({ ...prev, prescription: selectedPatient.prescription }));
+             try {
+                const parsed = JSON.parse(selectedPatient.prescription);
+                if (Array.isArray(parsed)) {
+                  setFormData(prev => ({ ...prev, prescriptions: parsed }));
+                } else {
+                  setFormData(prev => ({ ...prev, legacyPrescription: selectedPatient.prescription }));
+                }
+             } catch(e) {
+                setFormData(prev => ({ ...prev, legacyPrescription: selectedPatient.prescription }));
+             }
           }
           if (selectedPatient.clinicalNotes) {
              try {
@@ -74,7 +97,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
     } else {
       setFormData({
-        opNumber: "", patientName: "", doctor: "", department: "", diagnosis: "", prescription: "",
+        opNumber: "", patientName: "", doctor: "", department: "", diagnosis: "", prescriptions: [], legacyPrescription: "",
         chiefComplaints: "", examination: "", advice: "", followUpDate: "",
         vitals: { bp: "", pulse: "", temp: "", spo2: "", weight: "", height: "" },
         investigations: [],
@@ -111,6 +134,19 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     });
   };
 
+  const handleAddPrescription = () => {
+    if (!currentPrescription.medicineName || !currentPrescription.frequency || !currentPrescription.days) {
+      alert("Please fill all prescription fields before adding.");
+      return;
+    }
+    setFormData(prev => ({ ...prev, prescriptions: [...prev.prescriptions, currentPrescription] }));
+    setCurrentPrescription({ medicineName: "", frequency: "1-0-1", days: "5" });
+  };
+
+  const handleRemovePrescription = (index: number) => {
+    setFormData(prev => ({ ...prev, prescriptions: prev.prescriptions.filter((_, i) => i !== index) }));
+  };
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!selectedPatient) return alert("Please select a patient from the queue");
@@ -118,11 +154,13 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     try {
       const payload = {
         ...formData,
+        prescription: JSON.stringify(formData.prescriptions),
         clinicalNotes: JSON.stringify({
           chiefComplaints: formData.chiefComplaints,
           examination: formData.examination,
           advice: formData.advice,
           vitals: formData.vitals,
+          legacyPrescription: formData.legacyPrescription
         }),
         status: "Completed"
       };
@@ -297,7 +335,6 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
             />
           </div>
         </div>
-
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Diagnosis</label>
@@ -305,21 +342,97 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
               value={formData.diagnosis}
               onChange={(e) => setFormData(prev => ({ ...prev, diagnosis: e.target.value }))}
               placeholder="Clinical diagnosis..."
-              className="w-full h-24 p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none"
+              className="w-full h-full p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none min-h-[120px]"
             />
           </div>
-          <div>
-            <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Prescription</label>
-            <select className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm mb-2 outline-none">
-              <option>-- Select Standard Prescription --</option>
-            </select>
-            <textarea
-              value={formData.prescription}
-              onChange={(e) => setFormData(prev => ({ ...prev, prescription: e.target.value }))}
-              placeholder="Medicines & dosages..."
-              className="w-full h-24 p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none"
-            />
-          </div>
+        </div>
+
+        <div>
+            <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-2">Prescription</label>
+            
+            {/* Add Medicine Inputs */}
+            <div className="flex gap-2 mb-3 items-end bg-[#F9FAFB] p-3 rounded-lg border border-[#ECECEC]">
+              <div className="flex-1">
+                <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Medicine (From Pharmacy)</label>
+                <select 
+                  className="w-full h-9 px-3 border border-[#ECECEC] rounded-lg text-sm outline-none"
+                  value={currentPrescription.medicineName}
+                  onChange={(e) => setCurrentPrescription(prev => ({ ...prev, medicineName: e.target.value }))}
+                >
+                  <option value="">-- Select Medicine --</option>
+                  {pharmacyMedicines.map(med => (
+                    <option key={med.medicineId} value={med.medicineName}>{med.medicineName} (Stock: {med.stock})</option>
+                  ))}
+                  {currentPrescription.medicineName && !pharmacyMedicines.find(m => m.medicineName === currentPrescription.medicineName) && (
+                    <option value={currentPrescription.medicineName}>{currentPrescription.medicineName}</option>
+                  )}
+                </select>
+              </div>
+              <div className="w-24">
+                <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Frequency</label>
+                <select 
+                  className="w-full h-9 px-2 border border-[#ECECEC] rounded-lg text-sm outline-none"
+                  value={currentPrescription.frequency}
+                  onChange={(e) => setCurrentPrescription(prev => ({ ...prev, frequency: e.target.value }))}
+                >
+                  <option value="1-0-1">1-0-1</option>
+                  <option value="1-1-1">1-1-1</option>
+                  <option value="1-0-0">1-0-0</option>
+                  <option value="0-1-0">0-1-0</option>
+                  <option value="0-0-1">0-0-1</option>
+                  <option value="0-1-1">0-1-1</option>
+                  <option value="SOS">SOS</option>
+                </select>
+              </div>
+              <div className="w-20">
+                <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Days</label>
+                <input 
+                  type="number" 
+                  min="1"
+                  className="w-full h-9 px-2 border border-[#ECECEC] rounded-lg text-sm outline-none"
+                  value={currentPrescription.days}
+                  onChange={(e) => setCurrentPrescription(prev => ({ ...prev, days: e.target.value }))}
+                  placeholder="e.g. 5"
+                />
+              </div>
+              <button 
+                type="button" 
+                onClick={handleAddPrescription}
+                className="h-9 px-3 bg-[#E12D45] text-white rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-[#C82239]"
+              >
+                <Plus size={14} /> Add
+              </button>
+            </div>
+
+            {/* Prescriptions List */}
+            {formData.prescriptions.length > 0 && (
+              <div className="flex flex-col gap-2 mb-4">
+                {formData.prescriptions.map((med, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-3 border border-[#ECECEC] rounded-lg bg-white shadow-sm">
+                    <div className="flex-1">
+                      <span className="font-bold text-[#1A2332] text-sm">{med.medicineName}</span>
+                    </div>
+                    <div className="w-24 text-sm text-[#6B7280] font-medium">{med.frequency}</div>
+                    <div className="w-24 text-sm text-[#6B7280] font-medium">{med.days} Days</div>
+                    <button type="button" onClick={() => handleRemovePrescription(idx)} className="text-red-400 hover:text-red-600 p-1">
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Legacy text area */}
+            {formData.legacyPrescription && (
+              <div className="mt-3">
+                <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Legacy Notes</label>
+                <textarea
+                  value={formData.legacyPrescription}
+                  onChange={(e) => setFormData(prev => ({ ...prev, legacyPrescription: e.target.value }))}
+                  className="w-full h-16 p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none"
+                />
+              </div>
+            )}
         </div>
 
         <div>
@@ -413,7 +526,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
           onClick={() => {
             if (window.confirm("Are you sure you want to cancel? All unsaved notes will be cleared.")) {
               setFormData({
-                opNumber: "", patientName: "", doctor: "", department: "", diagnosis: "", prescription: "",
+                opNumber: "", patientName: "", doctor: "", department: "", diagnosis: "", prescriptions: [], legacyPrescription: "",
                 chiefComplaints: "", examination: "", advice: "", followUpDate: "",
                 vitals: { bp: "", pulse: "", temp: "", spo2: "", weight: "", height: "" },
                 investigations: [], otProcedures: []

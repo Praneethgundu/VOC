@@ -87,11 +87,10 @@ const schema = {
   "Inventory": [
     { header: "Medicine ID", key: "medicineId", width: 20 },
     { header: "Medicine Name", key: "medicineName", width: 30 },
-    { header: "Batch", key: "batch", width: 15 },
-    { header: "Stock", key: "stock", width: 10 },
+    { header: "Category", key: "category", width: 20 },
+    { header: "Quantity", key: "quantity", width: 10 },
     { header: "Price", key: "price", width: 10 },
     { header: "Expiry Date", key: "expiryDate", width: 15 },
-    { header: "Category", key: "category", width: 20 },
     { header: "Created At", key: "createdAt", width: 25 },
   ],
   "Pharmacy": [
@@ -100,7 +99,6 @@ const schema = {
     { header: "OP Number", key: "opNumber", width: 20 },
     { header: "Bill ID", key: "billId", width: 20 },
     { header: "Medicine Name", key: "medicineName", width: 30 },
-    { header: "Batch", key: "batch", width: 15 },
     { header: "Quantity", key: "quantity", width: 10 },
     { header: "Price", key: "price", width: 10 },
     { header: "Total Amount", key: "amount", width: 15 },

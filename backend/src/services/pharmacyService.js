@@ -5,11 +5,10 @@ const patientService = require("./patientService");
 const inventoryColumns = [
   { header: "Medicine ID", key: "medicineId", width: 20 },
   { header: "Medicine Name", key: "medicineName", width: 30 },
-  { header: "Batch", key: "batch", width: 20 },
-  { header: "Stock", key: "stock", width: 15 },
+  { header: "Category", key: "category", width: 20 },
+  { header: "Quantity", key: "quantity", width: 15 },
   { header: "Price", key: "price", width: 15 },
   { header: "Expiry Date", key: "expiryDate", width: 20 },
-  { header: "Category", key: "category", width: 20 },
   { header: "Created At", key: "createdAt", width: 25 },
 ];
 
@@ -18,7 +17,6 @@ const dispenseColumns = [
   { header: "Patient ID", key: "patientId", width: 36 },
   { header: "OP Number", key: "opNumber", width: 20 },
   { header: "Medicine Name", key: "medicineName", width: 30 },
-  { header: "Batch", key: "batch", width: 20 },
   { header: "Quantity Dispensed", key: "quantity", width: 20 },
   { header: "Price", key: "price", width: 15 },
   { header: "Total Amount", key: "amount", width: 15 },
@@ -46,11 +44,11 @@ const getInventory = async () => {
     inventory.push({
       medicineId: row.getCell(1).value,
       medicineName: row.getCell(2).value,
-      batch: row.getCell(3).value,
-      stock: row.getCell(4).value,
+      category: row.getCell(3).value,
+      quantity: row.getCell(4).value,
       price: row.getCell(5).value,
       expiryDate: row.getCell(6).value,
-      category: row.getCell(7).value,
+      createdAt: row.getCell(7).value,
     });
   });
   
@@ -65,11 +63,10 @@ const addMedicine = async (data) => {
   const newMedicine = {
     medicineId,
     medicineName: data.medicineName,
-    batch: data.batch || "",
-    stock: data.quantity || data.stock || 0,
+    category: data.category || "",
+    quantity: data.quantity || data.stock || 0,
     price: data.price,
     expiryDate: data.expiryDate,
-    category: data.category || "",
     createdAt: new Date().toISOString(),
   };
   
@@ -113,12 +110,13 @@ const getDispenseHistory = async () => {
       id: row.getCell(1).value,
       patientId: row.getCell(2).value,
       opNumber: row.getCell(3).value,
-      medicineName: row.getCell(4).value,
-      batch: row.getCell(5).value,
+      billId: row.getCell(4).value,
+      medicineName: row.getCell(5).value,
       quantity: row.getCell(6).value,
       price: row.getCell(7).value,
       amount: row.getCell(8).value,
-      dispensedDate: row.getCell(9).value,
+      dispensedBy: row.getCell(9).value,
+      dispensedDate: row.getCell(10).value,
     });
   });
   
@@ -149,8 +147,8 @@ const dispenseMedicine = async (data) => {
       if (rowNumber > 1 && row.getCell(1).value === data.medicineId) {
         medicine = {
           medicineName: row.getCell(2).value,
-          batch: row.getCell(3).value,
-          stock: row.getCell(4).value,
+          category: row.getCell(3).value,
+          quantity: row.getCell(4).value,
           price: row.getCell(5).value,
         };
         medicineRowNumber = rowNumber;
@@ -161,7 +159,7 @@ const dispenseMedicine = async (data) => {
   if (!medicine) { releaseLock(); throw new Error("Medicine not found"); }
 
   // Update stock
-  const currentQty = Number(medicine.stock) || 0;
+  const currentQty = Number(medicine.quantity) || 0;
   inventorySheet.getRow(medicineRowNumber).getCell(4).value = currentQty - Number(data.quantity);
 
   const id = crypto.randomBytes(4).toString("hex");
@@ -169,11 +167,12 @@ const dispenseMedicine = async (data) => {
     id,
     patientId: data.patientId || patient.patientId || "",
     opNumber: data.opNumber,
+    billId: "",
     medicineName: medicine.medicineName,
-    batch: medicine.batch,
     quantity: data.quantity,
     price: medicine.price,
     amount: data.amount || (medicine.price * data.quantity),
+    dispensedBy: "System",
     dispensedDate: new Date().toISOString(),
   };
   
