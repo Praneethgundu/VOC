@@ -137,15 +137,22 @@ export default function BillingPage() {
     }
   };
 
+  const searchLower = search.toLowerCase();
   const filtered = bills.filter(
     (b) =>
-      b.patientName?.toLowerCase().includes(search.toLowerCase()) ||
-      b.opNumber?.toLowerCase().includes(search.toLowerCase()) ||
-      b.id?.toLowerCase().includes(search.toLowerCase())
+      (b.patientName || b.patient || "").toLowerCase().includes(searchLower) ||
+      (b.opNumber || b.op || "").toString().toLowerCase().includes(searchLower) ||
+      (b.id || b._id || "").toString().toLowerCase().includes(searchLower)
   );
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const todayBills = bills.filter((b) => b.date?.startsWith(todayStr));
+  const todayBills = bills.filter((b) => {
+    try {
+      return b.date && new Date(b.date).toISOString().startsWith(todayStr);
+    } catch {
+      return false;
+    }
+  });
   const totalBilledToday = todayBills.reduce((acc, b) => acc + (Number(b.total) || 0), 0);
   const collectedToday = todayBills.filter(b => b.status === "Paid").reduce((acc, b) => acc + (Number(b.total) || 0), 0);
   const pendingToday = todayBills.filter(b => b.status === "Unpaid").reduce((acc, b) => acc + (Number(b.total) || 0), 0);
@@ -215,11 +222,11 @@ export default function BillingPage() {
               </THead>
               <TBody>
                 {filtered.map((b, i) => (
-                  <Tr key={b.id} index={i}>
-                    <Td><span className="font-mono text-[13px] font-bold text-[#E12D45]">{b.id}</span></Td>
+                  <Tr key={b.id || b._id} index={i}>
+                    <Td><span className="font-mono text-[13px] font-bold text-[#E12D45]">{b.id || b._id}</span></Td>
                     <Td><span className="font-mono text-[13px] text-[#1A2332]">{b.opNumber || b.op}</span></Td>
                     <Td><span className="font-medium text-[#1A2332]">{b.patientName || b.patient}</span></Td>
-                    <Td><span className="text-[13px] text-[#6B7280]">{new Date(b.date).toISOString().split('T')[0]}</span></Td>
+                    <Td><span className="text-[13px] text-[#6B7280]">{b.date && !isNaN(new Date(b.date).getTime()) ? new Date(b.date).toISOString().split('T')[0] : "N/A"}</span></Td>
                     <Td><span className="font-bold text-[#1A2332]">₹{(b.total || 0).toLocaleString("en-IN")}</span></Td>
                     <Td><span className="font-bold text-[#16A34A]">₹{b.status === "Paid" ? (b.total || 0).toLocaleString("en-IN") : "0"}</span></Td>
                     <Td><span className="text-[13px] text-[#6B7280]">{b.paymentMode || (b.status === "Paid" ? "Cash" : "Pending")}</span></Td>
@@ -240,7 +247,7 @@ export default function BillingPage() {
                           Receipt
                         </button>
                         <button
-                          onClick={() => handleDelete(b.id)}
+                          onClick={() => handleDelete(b.id || b._id)}
                           className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete Bill"
                         >
@@ -414,7 +421,7 @@ export default function BillingPage() {
             <div className="space-y-2 text-[13px] mb-6">
               <div className="flex justify-between">
                 <span className="text-[#6B7280]">Bill No.</span>
-                <span className="font-bold text-[#1A2332]">{showReceiptModal.id}</span>
+                <span className="font-bold text-[#1A2332]">{showReceiptModal.id || showReceiptModal._id}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#6B7280]">Patient</span>
@@ -426,7 +433,7 @@ export default function BillingPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[#6B7280]">Date</span>
-                <span className="font-bold text-[#1A2332]">{new Date(showReceiptModal.date).toISOString().split('T')[0]}</span>
+                <span className="font-bold text-[#1A2332]">{showReceiptModal.date && !isNaN(new Date(showReceiptModal.date).getTime()) ? new Date(showReceiptModal.date).toISOString().split('T')[0] : "N/A"}</span>
               </div>
             </div>
 
