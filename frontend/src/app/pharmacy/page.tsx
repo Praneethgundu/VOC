@@ -243,7 +243,7 @@ export default function PharmacyPage() {
                             </td>
                             <td className="p-4 text-sm font-bold text-[#800020]">{h.opNumber}</td>
                             <td className="p-4 text-sm font-medium text-[#1A2332]">
-                              {med ? med.medicineName : h.medicineId}
+                              {h.medicineName || h.medicineId || "Unknown"}
                             </td>
                             <td className="p-4 text-sm font-bold text-center text-gray-700 bg-gray-50 w-20">{h.quantity}</td>
                             <td className="p-4 text-sm font-bold text-[#16A34A] text-right">₹{h.amount}</td>

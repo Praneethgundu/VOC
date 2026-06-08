@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/Button";
 import { Search, Printer, Plus, IndianRupee, Trash2, Receipt } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getBills, getUnbilledPatients, createBill, updatePaymentStatus, deleteBill } from "@/services/billingService";
-import { RefreshCw } from "lucide-react";
+import { getPatients } from "@/services/patientService";
+import { RefreshCw, Download } from "lucide-react";
 
 export default function BillingPage() {
   const [search, setSearch] = useState("");
   const [bills, setBills] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
   const [unbilled, setUnbilled] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -32,8 +34,12 @@ export default function BillingPage() {
   const fetchBills = async () => {
     setLoading(true);
     try {
-      const data = await getBills();
-      setBills(data);
+      const [billsData, patientsData] = await Promise.all([
+        getBills(),
+        getPatients()
+      ]);
+      setBills(billsData);
+      setPatients(patientsData);
     } catch (e) {
       console.error(e);
     } finally {
@@ -58,6 +64,66 @@ export default function BillingPage() {
     } catch (e: any) {
       alert(e.response?.data?.message || "Failed to delete bill");
     }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    if (newStatus === "Paid" || newStatus === "Pay") {
+      try {
+        await updatePaymentStatus(id, "Paid");
+        fetchBills();
+      } catch (e) {
+        alert("Failed to update status");
+      }
+    }
+  };
+
+  const downloadReceipt = () => {
+    if (!showReceiptModal) return;
+    const bill = showReceiptModal;
+    
+    let itemsText = "";
+    if (bill.items && bill.items.length > 0) {
+      bill.items.forEach((item: any) => {
+        itemsText += `${item.serviceName.padEnd(30)} Rs.${item.amount}\n`;
+      });
+    } else {
+      itemsText += `Consultation Fee`.padEnd(30) + ` Rs.${bill.consultation || 0}\n`;
+      itemsText += `Pharmacy Charges`.padEnd(30) + ` Rs.${bill.pharmacy || 0}\n`;
+      itemsText += `Lab Charges`.padEnd(30) + ` Rs.${bill.lab || 0}\n`;
+    }
+
+    const patientName = patients.find(p => p.opNumber === bill.opNumber)?.fullName || bill.patientName || bill.patient || "Unknown";
+
+    const receiptContent = `
+VOC Orthopaedic Hospital
+Main Road, Kavali - Ph: 0861-XXXXXX
+========================================
+RECEIPT
+========================================
+Bill No. : ${bill.id || bill._id}
+Patient  : ${patientName}
+OP No.   : ${bill.opNumber || bill.op}
+Date     : ${bill.date ? new Date(bill.date).toISOString().split('T')[0] : "N/A"}
+========================================
+ITEMS:
+${itemsText}
+========================================
+TOTAL    : Rs.${bill.total}
+PAYMENT  : ${bill.paymentMode || (bill.status === "Paid" ? "Cash" : "Pending")}
+STATUS   : ${bill.status === "Paid" ? "COMPLETED" : "PENDING"}
+========================================
+Thank you!
+    `.trim();
+
+    const blob = new Blob([receiptContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Receipt_${bill.id || bill._id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const openNewBillModal = () => {
@@ -139,10 +205,12 @@ export default function BillingPage() {
 
   const searchLower = search.toLowerCase();
   const filtered = bills.filter(
-    (b) =>
-      (b.patientName || b.patient || "").toLowerCase().includes(searchLower) ||
-      (b.opNumber || b.op || "").toString().toLowerCase().includes(searchLower) ||
-      (b.id || b._id || "").toString().toLowerCase().includes(searchLower)
+    (b) => {
+      const pName = patients.find(p => p.opNumber === b.opNumber)?.fullName || b.patientName || b.patient || "";
+      return pName.toLowerCase().includes(searchLower) ||
+             (b.opNumber || b.op || "").toString().toLowerCase().includes(searchLower) ||
+             (b.id || b._id || "").toString().toLowerCase().includes(searchLower);
+    }
   );
 
   const todayStr = new Date().toISOString().split("T")[0];
@@ -223,19 +291,30 @@ export default function BillingPage() {
               <TBody>
                 {filtered.map((b, i) => (
                   <Tr key={b.id || b._id} index={i}>
-                    <Td><span className="font-mono text-[13px] font-bold text-[#E12D45]">{b.id || b._id}</span></Td>
+                    <Td><span className="font-mono text-[13px] font-bold text-[#E12D45]">{b.id || b._id || "N/A"}</span></Td>
                     <Td><span className="font-mono text-[13px] text-[#1A2332]">{b.opNumber || b.op}</span></Td>
-                    <Td><span className="font-medium text-[#1A2332]">{b.patientName || b.patient}</span></Td>
+                    <Td><span className="font-medium text-[#1A2332]">
+                      {patients.find(p => p.opNumber === b.opNumber)?.fullName || b.patientName || b.patient || "Unknown"}
+                    </span></Td>
                     <Td><span className="text-[13px] text-[#6B7280]">{b.date && !isNaN(new Date(b.date).getTime()) ? new Date(b.date).toISOString().split('T')[0] : "N/A"}</span></Td>
                     <Td><span className="font-bold text-[#1A2332]">₹{(b.total || 0).toLocaleString("en-IN")}</span></Td>
                     <Td><span className="font-bold text-[#16A34A]">₹{b.status === "Paid" ? (b.total || 0).toLocaleString("en-IN") : "0"}</span></Td>
                     <Td><span className="text-[13px] text-[#6B7280]">{b.paymentMode || (b.status === "Paid" ? "Cash" : "Pending")}</span></Td>
                     <Td align="center">
-                      <span className={`text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded ${
-                        b.status === "Paid" ? "text-[#16A34A] bg-[#F0FDF4]" : "text-[#D97706] bg-[#FFFBEB]"
-                      }`}>
-                        {b.status || "PENDING"}
-                      </span>
+                      {b.status === "Paid" ? (
+                        <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded text-[#16A34A] bg-[#F0FDF4]">
+                          PAID
+                        </span>
+                      ) : (
+                        <select
+                          className="text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] outline-none cursor-pointer"
+                          value="Pending"
+                          onChange={(e) => handleStatusChange(b.id || b._id, e.target.value)}
+                        >
+                          <option value="Pending">PENDING</option>
+                          <option value="Pay">PAY</option>
+                        </select>
+                      )}
                     </Td>
                     <Td align="right">
                       <div className="flex items-center justify-end gap-2">
@@ -332,6 +411,14 @@ export default function BillingPage() {
                     <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">Patient Name</label>
                     <input type="text" readOnly value={selectedUnbilled?.patientName || ""} className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg bg-gray-50 text-sm" />
                   </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">Bill Number</label>
+                    <input type="text" readOnly value="Auto-generated" className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg bg-gray-50 text-sm text-gray-400 italic" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">Date</label>
+                    <input type="text" readOnly value={new Date().toLocaleDateString('en-GB')} className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg bg-gray-50 text-sm text-gray-500" />
+                  </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-3">
@@ -425,7 +512,9 @@ export default function BillingPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[#6B7280]">Patient</span>
-                <span className="font-bold text-[#1A2332]">{showReceiptModal.patientName || showReceiptModal.patient}</span>
+                <span className="font-bold text-[#1A2332]">
+                  {patients.find(p => p.opNumber === showReceiptModal.opNumber)?.fullName || showReceiptModal.patientName || showReceiptModal.patient || "Unknown"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#6B7280]">OP No.</span>
@@ -477,6 +566,13 @@ export default function BillingPage() {
             </div>
 
             <div className="flex gap-3">
+              <button 
+                onClick={downloadReceipt}
+                className="flex items-center justify-center gap-2 h-12 bg-gray-100 text-[#1A2332] font-bold rounded-lg hover:bg-gray-200 transition-colors px-4"
+                title="Download Receipt"
+              >
+                <Download size={18} />
+              </button>
               <button 
                 onClick={() => {
                   window.print();

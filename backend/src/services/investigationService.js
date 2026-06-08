@@ -55,8 +55,8 @@ const getInvestigations = async () => {
       patientId: row.getCell(2).value,
       opNumber: row.getCell(3).value,
       testName: row.getCell(4).value,
-      doctor: row.getCell(5).value,
-      amount: row.getCell(6).value,
+      amount: row.getCell(5).value,
+      doctor: row.getCell(6).value,
       status: row.getCell(7).value,
       result: row.getCell(8).value,
       orderedDate: row.getCell(9).value,
@@ -77,7 +77,7 @@ const updateInvestigation = async (id, updateData) => {
       if (updateData.testName !== undefined)
         row.getCell(4).value = updateData.testName;
       if (updateData.amount !== undefined)
-        row.getCell(6).value = updateData.amount;
+        row.getCell(5).value = updateData.amount;
       if (updateData.status !== undefined)
         row.getCell(7).value = updateData.status;
       if (updateData.result !== undefined)
@@ -88,8 +88,8 @@ const updateInvestigation = async (id, updateData) => {
         patientId: row.getCell(2).value,
         opNumber: row.getCell(3).value,
         testName: row.getCell(4).value,
-        doctor: row.getCell(5).value,
-        amount: row.getCell(6).value,
+        amount: row.getCell(5).value,
+        doctor: row.getCell(6).value,
         status: row.getCell(7).value,
         result: row.getCell(8).value,
         orderedDate: row.getCell(9).value,
