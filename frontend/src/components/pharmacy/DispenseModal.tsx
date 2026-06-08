@@ -25,11 +25,12 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
 
   useEffect(() => {
     if (opNumber) {
-      const patient = patients.find(p => p.opNumber === opNumber);
+      const searchOp = opNumber.trim().toLowerCase();
+      const patient = patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp);
       if (patient) {
-        setPatientName(patient.fullName);
+        setPatientName(patient.fullName || patient.patientName || patient.name || 'Unknown Name');
       } else {
-        setPatientName('');
+        setPatientName('Patient not found');
       }
     }
   }, [opNumber, patients]);
@@ -53,7 +54,8 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
       onSuccess();
       onClose();
     } catch (e: any) {
-      alert("Failed to dispense: " + (e.response?.data?.message || e.message));
+      const errorMessage = e.response?.data?.error || e.response?.data?.message || e.message;
+      alert("Failed to dispense: " + errorMessage);
     } finally {
       setLoading(false);
     }

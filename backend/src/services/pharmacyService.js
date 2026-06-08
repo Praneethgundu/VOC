@@ -132,7 +132,7 @@ const dispenseMedicine = async (data) => {
   let patient = null;
   if (patientsSheet) {
     patientsSheet.eachRow((row, rowNumber) => {
-      if (rowNumber > 1 && row.getCell(2).value === data.opNumber) {
+      if (rowNumber > 1 && String(row.getCell(2).value || "").trim().toLowerCase() === String(data.opNumber || "").trim().toLowerCase()) {
         patient = { patientId: row.getCell(1).value, opNumber: row.getCell(2).value };
       }
     });
@@ -144,7 +144,7 @@ const dispenseMedicine = async (data) => {
   let medicineRowNumber = null;
   if (inventorySheet) {
     inventorySheet.eachRow((row, rowNumber) => {
-      if (rowNumber > 1 && row.getCell(1).value === data.medicineId) {
+      if (rowNumber > 1 && String(row.getCell(1).value || "").trim().toLowerCase() === String(data.medicineId || "").trim().toLowerCase()) {
         medicine = {
           medicineName: row.getCell(2).value,
           category: row.getCell(3).value,
