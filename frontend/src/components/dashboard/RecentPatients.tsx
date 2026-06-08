@@ -12,10 +12,9 @@ export default function RecentPatients() {
   const fetchRecent = async () => {
     try {
       const data = await getPatients();
-      // Get today's patients and take top 5
-      const todayStr = new Date().toISOString().split("T")[0];
-      const todayPatients = data.filter((p: any) => p.createdAt?.startsWith(todayStr)).slice(0, 5);
-      setPatients(todayPatients);
+      // Get top 5 most recent patients
+      const recentPatients = data.slice(0, 5);
+      setPatients(recentPatients);
     } catch {
       // ignore
     }
@@ -32,7 +31,7 @@ export default function RecentPatients() {
         <div>
           <h2 className="section-heading">Recent Registrations</h2>
           <p className="text-[12px] text-[#6B7280] mt-0.5">
-            Today&apos;s patient activity
+            Latest patient activity
           </p>
         </div>
         <a

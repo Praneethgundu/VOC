@@ -52,6 +52,11 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchData();
+    // Real-time updates
+    const interval = setInterval(() => {
+      fetchData();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchData = async () => {
@@ -113,6 +118,46 @@ export default function ReportsPage() {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExport = () => {
+    let csv = "";
+    if (activeTab === "Daily Reports") {
+      csv += "Date,Patients,Total Revenue,Lab,Pharmacy,Status\n";
+      recentEOD.forEach(row => {
+        csv += `${row.date},${row.patients},${row.revenue.replace(/₹|,/g, '')},${row.lab.replace(/₹|,/g, '')},${row.pharmacy.replace(/₹|,/g, '')},${row.status}\n`;
+      });
+    } else if (activeTab === "Patient Reports") {
+      csv += "OP Number,Name,Phone,Department,Complaint,Date\n";
+      allPatients.forEach(p => {
+        csv += `${p.opNumber},${p.fullName},${p.phone},${p.department},${(p.complaint || "N/A").replace(/,/g, ' ')},${new Date(p.createdAt).toLocaleDateString()}\n`;
+      });
+    } else if (activeTab === "Revenue Reports") {
+      csv += "Bill ID,Patient,Date,Amount,Status\n";
+      allBills.forEach(b => {
+        const pName = allPatients.find(p => p.opNumber === b.opNumber)?.fullName || b.patientName || "Unknown";
+        csv += `${b.id},${pName},${new Date(b.date).toLocaleDateString()},${b.total},${b.status}\n`;
+      });
+    } else if (activeTab === "Inventory Reports") {
+      csv += "Medicine ID,Name,Category,Quantity\n";
+      allInventory.forEach(m => {
+        csv += `${m.medicineId},${m.medicineName},${m.category},${m.quantity}\n`;
+      });
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeTab.replace(' ', '_')}_Export.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex bg-[#FDF8F8] min-h-screen">
       <Sidebar />
@@ -127,8 +172,8 @@ export default function ReportsPage() {
               <p className="text-[#6B7280] text-[13px] mt-1">End-of-day summaries and monthly performance</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="md" icon={<Printer size={15} />}>Print</Button>
-              <Button size="md" icon={<Download size={15} />}>Export</Button>
+              <Button onClick={handlePrint} variant="outline" size="md" icon={<Printer size={15} />}>Print</Button>
+              <Button onClick={handleExport} size="md" icon={<Download size={15} />}>Export</Button>
             </div>
           </div>
 
@@ -302,15 +347,18 @@ export default function ReportsPage() {
                   </tr>
                 </THead>
                 <TBody>
-                  {allBills.map((b, i) => (
-                    <Tr key={i} index={i}>
-                      <Td><span className="font-mono text-[#800020] font-bold">{b.id}</span></Td>
-                      <Td>{b.patientName}</Td>
-                      <Td>{new Date(b.date).toLocaleDateString()}</Td>
-                      <Td align="right"><span className="font-mono text-[#16A34A] font-bold">₹{b.total}</span></Td>
-                      <Td align="center"><Badge status={b.status === "Paid" ? "success" : "error"}>{b.status}</Badge></Td>
-                    </Tr>
-                  ))}
+                  {allBills.map((b, i) => {
+                    const pName = allPatients.find(p => p.opNumber === b.opNumber)?.fullName || b.patientName || "Unknown";
+                    return (
+                      <Tr key={i} index={i}>
+                        <Td><span className="font-mono text-[#800020] font-bold">{b.id}</span></Td>
+                        <Td>{pName}</Td>
+                        <Td>{new Date(b.date).toLocaleDateString()}</Td>
+                        <Td align="right"><span className="font-mono text-[#16A34A] font-bold">₹{b.total}</span></Td>
+                        <Td align="center"><Badge status={b.status === "Paid" ? "success" : "error"}>{b.status}</Badge></Td>
+                      </Tr>
+                    );
+                  })}
                 </TBody>
               </Table>
             </div>

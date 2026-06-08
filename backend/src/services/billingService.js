@@ -33,7 +33,7 @@ const createBill = async (data) => {
   const pendingAmount = total - paidAmount;
 
   const newBill = {
-    id,
+    billNumber: id,
     patientId: data.patientId || "",
     opNumber: data.opNumber || "Unknown",
     date: new Date().toISOString(),
@@ -62,7 +62,7 @@ const getBills = async () => {
     if (rowNumber === 1) return; // Skip header
     let parsedItems = [];
     try {
-      parsedItems = JSON.parse(row.getCell(5).value || "[]");
+      parsedItems = JSON.parse(row.getCell(4).value || "[]");
     } catch(e) {
       parsedItems = [];
     }
@@ -71,13 +71,13 @@ const getBills = async () => {
       id: row.getCell(1).value,
       patientId: row.getCell(2).value,
       opNumber: row.getCell(3).value,
-      date: row.getCell(4).value,
       items: parsedItems,
-      total: row.getCell(6).value,
-      paidAmount: row.getCell(7).value,
-      pendingAmount: row.getCell(8).value,
-      paymentMode: row.getCell(9).value,
-      status: row.getCell(10).value,
+      total: row.getCell(9).value,
+      paidAmount: row.getCell(10).value,
+      pendingAmount: row.getCell(11).value,
+      paymentMode: row.getCell(12).value,
+      status: row.getCell(13).value,
+      date: row.getCell(14).value,
     });
   });
   
@@ -92,10 +92,10 @@ const updatePaymentStatus = async (id, status) => {
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return;
     if (row.getCell(1).value === id) {
-      row.getCell(10).value = status;
+      row.getCell(13).value = status;
       if (status === "Paid") {
-        row.getCell(7).value = row.getCell(6).value; // Paid = Total
-        row.getCell(8).value = 0; // Pending = 0
+        row.getCell(10).value = row.getCell(9).value; // Paid = Total
+        row.getCell(11).value = 0; // Pending = 0
       }
       updated = true;
     }
@@ -209,18 +209,20 @@ const updateBill = async (id, updateData) => {
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return;
     if (row.getCell(1).value === id) {
-      if (updateData.paymentMode) row.getCell(6).value = updateData.paymentMode;
-      if (updateData.status) row.getCell(7).value = updateData.status;
+      if (updateData.paymentMode) row.getCell(12).value = updateData.paymentMode;
+      if (updateData.status) row.getCell(13).value = updateData.status;
       
       updated = {
         id,
-        patientName: row.getCell(2).value,
+        patientId: row.getCell(2).value,
         opNumber: row.getCell(3).value,
         items: JSON.parse(row.getCell(4).value || "[]"),
-        total: row.getCell(5).value,
-        paymentMode: row.getCell(6).value,
-        status: row.getCell(7).value,
-        date: row.getCell(8).value,
+        total: row.getCell(9).value,
+        paidAmount: row.getCell(10).value,
+        pendingAmount: row.getCell(11).value,
+        paymentMode: row.getCell(12).value,
+        status: row.getCell(13).value,
+        date: row.getCell(14).value,
       };
     }
   });

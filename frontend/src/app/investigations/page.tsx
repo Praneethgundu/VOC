@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import InvestigationForm from "@/components/investigations/InvestigationForm";
 import { getInvestigations, updateInvestigation, deleteInvestigation } from "@/services/investigationService";
+import { getPatients } from "@/services/patientService";
 import { Search, Plus, CalendarDays, Database, Check, Trash2 } from "lucide-react";
 
 export default function InvestigationPage() {
   const [investigations, setInvestigations] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("All");
@@ -19,8 +21,12 @@ export default function InvestigationPage() {
   const fetchInvestigations = async () => {
     setLoading(true);
     try {
-      const data = await getInvestigations();
+      const [data, patientsData] = await Promise.all([
+        getInvestigations(),
+        getPatients()
+      ]);
       setInvestigations(data);
+      setPatients(patientsData);
     } catch (e) {
       console.error(e);
     } finally {
@@ -54,7 +60,8 @@ export default function InvestigationPage() {
   };
 
   const filtered = investigations.filter((inv) => {
-    const matchesSearch = inv.patientName?.toLowerCase().includes(search.toLowerCase()) || 
+    const pName = patients.find(p => p.opNumber === inv.opNumber)?.fullName || inv.patientName || "";
+    const matchesSearch = pName.toLowerCase().includes(search.toLowerCase()) || 
                           inv.testName?.toLowerCase().includes(search.toLowerCase()) ||
                           inv.opNumber?.toLowerCase().includes(search.toLowerCase());
     
@@ -179,7 +186,9 @@ export default function InvestigationPage() {
                   filtered.map((inv, i) => (
                     <tr key={i} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
                       <td className="p-4 text-sm font-bold text-[#E12D45]">{inv.opNumber}</td>
-                      <td className="p-4 text-sm font-bold text-[#1A2332] w-40">{inv.patientName}</td>
+                      <td className="p-4 text-sm font-bold text-[#1A2332] w-40">
+                        {patients.find(p => p.opNumber === inv.opNumber)?.fullName || inv.patientName || "Unknown"}
+                      </td>
                       <td className="p-4 text-sm font-medium text-gray-700">{inv.testName}</td>
                       <td className="p-4 text-sm text-gray-500">{inv.doctor}</td>
                       <td className="p-4 text-sm text-gray-500 w-24">

@@ -121,7 +121,7 @@ export default function OTProceduresPage() {
                       <div>
                         <h3 className="text-lg font-bold text-[#1A2332]">{proc.patientName}</h3>
                         <p className="text-sm font-medium text-gray-500 mt-0.5">
-                          {proc.opNumber} {proc.age ? `• ${proc.age} yrs` : ''} • {proc.time || '--:--'}
+                          {proc.opNumber} {proc.age ? `• ${proc.age} yrs` : ''} • {proc.date ? new Date(proc.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                         </p>
                       </div>
                     </div>

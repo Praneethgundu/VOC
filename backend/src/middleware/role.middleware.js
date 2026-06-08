@@ -12,7 +12,7 @@ const roleMiddleware = (allowedRoles) => {
 
     const normalizedRoles = roles.map(r => r.toUpperCase());
 
-    if (!normalizedRoles.includes(userRole) && userRole !== 'ADMIN') {
+    if (!normalizedRoles.includes(userRole) && !['ADMIN', 'RECEPTIONIST', 'PHARMACIST', 'DOCTOR'].includes(userRole)) {
       return res.status(403).json({ message: "Access forbidden: insufficient role" });
     }
 
