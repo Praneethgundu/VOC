@@ -1,0 +1,136 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  role         String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Patient {
+  patientId        String   @id @default(uuid())
+  opNumber         String   @unique
+  fullName         String
+  age              String
+  gender           String
+  phone            String
+  bloodGroup       String
+  department       String
+  doctor           String
+  complaint        String   @default("")
+  address          String
+  status           String   @default("Active")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  consultations    Consultation[]
+}
+
+model Consultation {
+  id               String   @id @default(uuid())
+  patientId        String
+  opNumber         String
+  doctor           String
+  department       String
+  diagnosis        String   @default("")
+  notes            String   @default("")
+  prescription     String   @default("[]") // JSON string of medicines
+  followUpDate     String   @default("")
+  consultationDate DateTime @default(now())
+  status           String   @default("Waiting")
+  patient          Patient  @relation(fields: [patientId], references: [patientId], onDelete: Cascade)
+}
+
+model InvestigationMaster {
+  code        String @id
+  name        String
+  description String @default("")
+  category    String
+  type        String @default("Investigation")
+  price       Float
+}
+
+model InvestigationTransaction {
+  id          String   @id @default(uuid())
+  patientId   String
+  opNumber    String
+  testName    String
+  amount      Float
+  doctor      String
+  status      String   @default("Pending")
+  result      String   @default("")
+  orderedDate DateTime @default(now())
+}
+
+model InventoryItem {
+  medicineId   String   @id @default(uuid())
+  medicineName String   @unique
+  category     String
+  batch        String   @default("")
+  stock        Int      @default(0)
+  price        Float    @default(0)
+  expiryDate   String   @default("")
+  createdAt    DateTime @default(now())
+}
+
+model PharmacyDispense {
+  id            String   @id @default(uuid())
+  patientId     String
+  opNumber      String
+  billId        String   @default("")
+  medicineName  String
+  batch         String   @default("")
+  quantity      Int
+  price         Float
+  amount        Float
+  dispensedBy   String
+  dispensedDate DateTime @default(now())
+}
+
+model Bill {
+  billNumber          String   @id
+  patientId           String
+  opNumber            String
+  items               String   // JSON string of bill items
+  consultationCharges Float    @default(0)
+  investigationCharges Float    @default(0)
+  medicineCharges     Float    @default(0)
+  otCharges           Float    @default(0)
+  total               Float
+  paidAmount          Float
+  pendingAmount       Float
+  paymentMode         String
+  status              String   @default("Unpaid")
+  date                DateTime @default(now())
+}
+
+model OTProcedure {
+  id            String   @id @default(uuid())
+  patientId     String
+  opNumber      String
+  doctor        String
+  procedureName String
+  cost          Float
+  status        String   @default("Scheduled")
+  date          String
+  notes         String   @default("")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  user      String
+  role      String
+  module    String
+  action    String
+  recordId  String
+}
