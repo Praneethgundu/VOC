@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    if (!authorizeRole(session, ["PHARMACIST", "ADMIN"])) {
+    if (!authorizeRole(session, ["PHARMACIST", "RECEPTIONIST", "ADMIN"])) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
@@ -35,6 +35,8 @@ export async function POST(req: Request) {
         medicineId,
         medicineName: body.medicineName,
         category: body.category || "",
+        batch: body.batch || "",
+        distributor: body.distributor || "",
         stock: Number(body.quantity || body.stock || 0),
         price: Number(body.price) || 0,
         expiryDate: body.expiryDate || "",

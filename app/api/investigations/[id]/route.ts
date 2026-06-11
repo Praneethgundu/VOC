@@ -12,7 +12,7 @@ export async function PUT(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    if (!authorizeRole(session, ["DOCTOR", "ADMIN"])) {
+    if (!authorizeRole(session, ["DOCTOR", "RECEPTIONIST", "ADMIN"])) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
@@ -64,7 +64,7 @@ export async function DELETE(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    if (!authorizeRole(session, ["DOCTOR", "ADMIN"])) {
+    if (!authorizeRole(session, ["DOCTOR", "RECEPTIONIST", "ADMIN"])) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 

@@ -31,83 +31,140 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const [patients, consultations, bills] = await Promise.all([
+    const [patients, consultations, bills, investigations, pharmacy, otProcedures] = await Promise.all([
       prisma.patient.findMany(),
-      prisma.consultation.findMany({
-        include: { patient: true },
-      }),
-      prisma.bill.findMany({ select: { opNumber: true } }),
+      prisma.consultation.findMany({ include: { patient: true } }),
+      prisma.bill.findMany({ select: { opNumber: true, items: true } }),
+      prisma.investigationTransaction.findMany({ where: { status: "Completed" } }),
+      prisma.pharmacyDispense.findMany(),
+      prisma.oTProcedure.findMany({ where: { status: "Completed" } })
     ]);
 
-    const billedOps = new Set(bills.map((b) => b.opNumber));
+    // Map OP Number to a Map of { serviceName: count }
+    const billedCountsMap = new Map<string, Map<string, number>>();
+    bills.forEach(b => {
+      if (!billedCountsMap.has(b.opNumber)) {
+        billedCountsMap.set(b.opNumber, new Map());
+      }
+      try {
+        const items = JSON.parse(b.items);
+        const opMap = billedCountsMap.get(b.opNumber)!;
+        items.forEach((item: any) => {
+          if (item.serviceName) {
+            opMap.set(item.serviceName, (opMap.get(item.serviceName) || 0) + 1);
+          }
+        });
+      } catch (e) {
+        // ignore parse error
+      }
+    });
+
     const unbilledMap = new Map<string, any>();
+
+    const getOrInitPatient = (opNumber: string, patientName: string, patientId: string, department: string, complaint: string) => {
+      if (!unbilledMap.has(opNumber)) {
+        unbilledMap.set(opNumber, {
+          patientName,
+          opNumber,
+          patientId,
+          department: department || "General",
+          complaint: complaint || "N/A",
+          items: []
+        });
+      }
+      return unbilledMap.get(opNumber);
+    };
+
+    // Helper to check if an item is billed (and decrement its count if so)
+    const isBilled = (opNumber: string, serviceName: string) => {
+      const opMap = billedCountsMap.get(opNumber);
+      if (!opMap) return false;
+      const count = opMap.get(serviceName) || 0;
+      if (count > 0) {
+        opMap.set(serviceName, count - 1);
+        return true;
+      }
+      return false;
+    };
 
     // 1. Process all patients for Registration Fee if never billed
     for (const p of patients) {
-      if (!billedOps.has(p.opNumber)) {
-        unbilledMap.set(p.opNumber, {
-          patientName: p.fullName,
-          opNumber: p.opNumber,
-          patientId: p.patientId,
-          department: p.department || "Orthopaedics",
-          complaint: p.complaint || "N/A",
-          items: [
-            {
-              serviceName: "Registration Fee",
-              category: "Registration",
-              amount: 200,
-            },
-          ],
+      if (!isBilled(p.opNumber, "Registration Fee")) {
+        const entry = getOrInitPatient(p.opNumber, p.fullName, p.patientId, p.department, p.complaint);
+        entry.items.push({
+          serviceName: "Registration Fee",
+          category: "Registration",
+          amount: 200,
         });
       }
     }
 
-    // 2. Process consultations for completed ones if never billed
+    // 2. Process consultations for Consultation Fee
     for (const c of consultations) {
-      if (c.status === "Completed" && !billedOps.has(c.opNumber)) {
-        let existing = unbilledMap.get(c.opNumber);
-        if (!existing) {
-          existing = {
-            patientName: c.patient ? c.patient.fullName : "Unknown Patient",
-            opNumber: c.opNumber,
-            patientId: c.patientId,
-            department: c.department || "Orthopaedics",
-            complaint: c.patient ? c.patient.complaint : "N/A",
-            items: [],
-          };
-          unbilledMap.set(c.opNumber, existing);
-        }
-
-        existing.items.push({
-          serviceName: `Consultation Fee (${c.department || "General"})`,
-          category: "Consultation",
-          amount: 500,
-        });
-
-        // Add investigations ordered in this consultation
-        if (c.prescription) {
-          try {
-            // Check if prescription contains ordered investigations
-            // Let's also verify if there are pending investigations in the transaction table
-            const transactions = await prisma.investigationTransaction.findMany({
-              where: { opNumber: c.opNumber, status: "Completed" },
-            });
-            transactions.forEach((tx) => {
-              existing.items.push({
-                serviceName: tx.testName,
-                category: "Investigation",
-                amount: tx.amount,
-              });
-            });
-          } catch (e) {
-            console.error("Error fetching patient investigations for unbilled", e);
-          }
+      if (c.status === "Completed") {
+        const serviceName = `Consultation Fee (${c.department || "General"})`;
+        if (!isBilled(c.opNumber, serviceName)) {
+           const entry = getOrInitPatient(c.opNumber, c.patient?.fullName || "Unknown", c.patientId, c.department, c.patient?.complaint || "");
+           entry.items.push({
+             serviceName: serviceName,
+             category: "Consultation",
+             amount: 500,
+           });
         }
       }
     }
 
-    // Convert map to array and calculate total
-    const unbilled = Array.from(unbilledMap.values()).map((entry) => {
+    // 3. Process completed investigations
+    for (const tx of investigations) {
+      if (!isBilled(tx.opNumber, tx.testName)) {
+        const p = patients.find(pat => pat.opNumber === tx.opNumber);
+        const entry = getOrInitPatient(tx.opNumber, p?.fullName || "Unknown", tx.patientId, p?.department || "General", p?.complaint || "");
+        entry.items.push({
+          serviceName: tx.testName,
+          category: "Investigation",
+          amount: tx.amount,
+        });
+      }
+    }
+
+    // 4. Process pharmacy dispenses
+    for (const ph of pharmacy) {
+      const serviceName = `${ph.medicineName} (Pharmacy)`;
+      if (!isBilled(ph.opNumber, serviceName)) {
+        const p = patients.find(pat => pat.opNumber === ph.opNumber);
+        const entry = getOrInitPatient(ph.opNumber, p?.fullName || "Unknown", ph.patientId, p?.department || "General", p?.complaint || "");
+        
+        // Since we decrement counts per item, we should add each individual dispense as a separate item, or aggregate correctly.
+        // It's safer to aggregate them in the unbilled list to avoid too many duplicate items.
+        const existingItem = entry.items.find((i: any) => i.serviceName === serviceName);
+        if (existingItem) {
+           existingItem.amount += ph.amount;
+        } else {
+           entry.items.push({
+             serviceName: serviceName,
+             category: "Pharmacy",
+             amount: ph.amount,
+           });
+        }
+      }
+    }
+
+    // 5. Process OT Procedures
+    for (const ot of otProcedures) {
+      const serviceName = `${ot.procedureName} (OT)`;
+      if (!isBilled(ot.opNumber, serviceName)) {
+        const p = patients.find(pat => pat.opNumber === ot.opNumber);
+        const entry = getOrInitPatient(ot.opNumber, p?.fullName || "Unknown", ot.patientId, p?.department || "General", p?.complaint || "");
+        entry.items.push({
+          serviceName: serviceName,
+          category: "OT Procedure",
+          amount: ot.cost,
+        });
+      }
+    }
+
+    // Convert map to array and calculate total, filtering out those with 0 items
+    const unbilled = Array.from(unbilledMap.values()).filter(entry => entry.items.length > 0).map((entry) => {
       return {
         ...entry,
         total: entry.items.reduce((acc: number, it: any) => acc + (it.amount || 0), 0),

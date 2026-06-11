@@ -20,7 +20,10 @@ export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
   const alertsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getSystemAlerts().then(setAlerts).catch(console.error);
+    const fetchAlerts = () => getSystemAlerts().then(setAlerts).catch(console.error);
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

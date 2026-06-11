@@ -79,6 +79,7 @@ model InventoryItem {
   stock        Int      @default(0)
   price        Float    @default(0)
   expiryDate   String   @default("")
+  distributor  String   @default("")
   createdAt    DateTime @default(now())
 }
 
@@ -133,4 +134,12 @@ model AuditLog {
   module    String
   action    String
   recordId  String
+}
+
+model ClinicalTemplate {
+  id              String   @id @default(uuid())
+  chiefComplaint  String   @unique
+  templateText    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

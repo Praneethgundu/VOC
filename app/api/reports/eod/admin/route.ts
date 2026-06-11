@@ -9,8 +9,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    if (!authorizeRole(session, ["ADMIN"])) {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    if (!authorizeRole(session, ["RECEPTIONIST", "ADMIN"])) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);

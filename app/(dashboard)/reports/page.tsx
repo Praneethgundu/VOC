@@ -141,9 +141,9 @@ export default function ReportsPage() {
         csv += `${b.id},${pName},${new Date(b.date).toLocaleDateString()},${b.total},${b.status}\n`;
       });
     } else if (activeTab === "Inventory Reports") {
-      csv += "Medicine ID,Name,Category,Quantity\n";
+      csv += "Medicine ID,Name,Category,Stock\n";
       allInventory.forEach(m => {
-        csv += `${m.medicineId},${m.medicineName},${m.category},${m.quantity}\n`;
+        csv += `${m.medicineId},${m.medicineName},${m.category},${m.stock}\n`;
       });
     }
 
@@ -373,7 +373,7 @@ export default function ReportsPage() {
                     <Th>Medicine ID</Th>
                     <Th>Name</Th>
                     <Th>Category</Th>
-                    <Th align="center">Quantity</Th>
+                    <Th align="center">Stock</Th>
                   </tr>
                 </THead>
                 <TBody>
@@ -383,8 +383,8 @@ export default function ReportsPage() {
                       <Td>{m.medicineName}</Td>
                       <Td>{m.category}</Td>
                       <Td align="center">
-                        <span className={`font-mono font-bold ${Number(m.quantity) < 20 ? "text-red-600" : ""}`}>
-                          {m.quantity}
+                        <span className={`font-mono font-bold ${Number(m.stock) < 20 ? "text-red-600" : ""}`}>
+                          {m.stock}
                         </span>
                       </Td>
                     </Tr>

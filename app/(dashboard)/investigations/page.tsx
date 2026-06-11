@@ -166,6 +166,7 @@ export default function InvestigationPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#FFF4F4] text-[#800020] text-xs font-extrabold uppercase tracking-wider border-b border-[#ECECEC]">
+                  <th className="p-4">Order ID</th>
                   <th className="p-4">OP No.</th>
                   <th className="p-4">Patient</th>
                   <th className="p-4">Test Name</th>
@@ -179,12 +180,13 @@ export default function InvestigationPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} className="p-8 text-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E12D45] mx-auto"></div></td></tr>
+                  <tr><td colSpan={10} className="p-8 text-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#E12D45] mx-auto"></div></td></tr>
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={9} className="p-8 text-center text-gray-500 font-medium">No tests found.</td></tr>
+                  <tr><td colSpan={10} className="p-8 text-center text-gray-500 font-medium">No tests found.</td></tr>
                 ) : (
                   filtered.map((inv, i) => (
                     <tr key={i} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
+                      <td className="p-4 text-sm font-mono text-[#800020] font-bold">{inv.id}</td>
                       <td className="p-4 text-sm font-bold text-[#E12D45]">{inv.opNumber}</td>
                       <td className="p-4 text-sm font-bold text-[#1A2332] w-40">
                         {patients.find(p => p.opNumber === inv.opNumber)?.fullName || inv.patientName || "Unknown"}

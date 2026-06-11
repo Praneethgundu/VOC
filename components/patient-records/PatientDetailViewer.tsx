@@ -22,7 +22,96 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
 
   const handleWhatsApp = () => {
     const text = `*VOC Orthopaedic Hospital - Patient Record*\nName: ${p.fullName}\nOP Number: ${p.opNumber}\nTotal Paid: ₹${totalPaid}\nOutstanding: ₹${totalBilled - totalPaid}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+    let phoneStr = p.phone || "";
+    if (phoneStr && !phoneStr.startsWith('+')) {
+      if (phoneStr.length === 10) phoneStr = '+91' + phoneStr;
+    }
+    const url = phoneStr 
+      ? `https://api.whatsapp.com/send?phone=${encodeURIComponent(phoneStr)}&text=${encodeURIComponent(text)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  };
+
+  const handleExport = () => {
+    let csv = "PATIENT RECORD EXPORT\n\n";
+    
+    // Patient Details Section
+    csv += `Name:,${p.fullName}\n`;
+    csv += `OP Number:,${p.opNumber}\n`;
+    csv += `Age/Gender:,${p.age} / ${p.gender}\n`;
+    csv += `Blood Group:,${p.bloodGroup || 'N/A'}\n`;
+    csv += `Contact:,${p.phone}\n`;
+    csv += `Doctor & Dept:,${p.doctor || 'Unassigned'} (${p.department || 'General'})\n`;
+    csv += `Total Paid:,₹${totalPaid}\n`;
+    csv += `Outstanding:,₹${totalBilled - totalPaid}\n\n`;
+
+    // Billing Section
+    csv += "--- BILLING & PAYMENTS ---\n";
+    if (record.bills.length > 0) {
+      csv += "Date,Invoice ID,Payment Mode,Status,Total Amount\n";
+      record.bills.forEach(b => {
+        csv += `"${new Date(b.date).toLocaleDateString()}","${b.id}","${b.paymentMode}","${b.status}","₹${b.total}"\n`;
+      });
+    } else {
+      csv += "No Billing Records Available\n";
+    }
+    csv += "\n";
+
+    // Consultation Section
+    csv += "--- CONSULTATION HISTORY ---\n";
+    if (record.consultations.length > 0) {
+      csv += "Date,Doctor,Department,Diagnosis,Status\n";
+      record.consultations.forEach(c => {
+        csv += `"${new Date(c.consultationDate).toLocaleDateString()}","${c.doctor}","${c.department}","${c.diagnosis || 'N/A'}","${c.status}"\n`;
+      });
+    } else {
+      csv += "No Consultations Available\n";
+    }
+    csv += "\n";
+
+    // Investigations Section
+    csv += "--- INVESTIGATIONS & TESTS ---\n";
+    if (record.investigations.length > 0) {
+      csv += "Ordered Date,Test Name,Doctor,Result,Status\n";
+      record.investigations.forEach(i => {
+        csv += `"${new Date(i.orderedDate).toLocaleDateString()}","${i.testName}","${i.doctor}","${i.result || 'Pending'}","${i.status}"\n`;
+      });
+    } else {
+      csv += "No Investigations Available\n";
+    }
+    csv += "\n";
+
+    // Pharmacy Section
+    csv += "--- MEDICINES DISPENSED ---\n";
+    if (record.pharmacy.length > 0) {
+      csv += "Dispensed Date,Medicine Name,Quantity,Amount\n";
+      record.pharmacy.forEach(ph => {
+        csv += `"${new Date(ph.dispensedDate).toLocaleDateString()}","${ph.medicineName}","${ph.quantity}","₹${ph.amount}"\n`;
+      });
+    } else {
+      csv += "No Medicines Dispensed\n";
+    }
+    csv += "\n";
+
+    // OT Procedures Section
+    csv += "--- OT PROCEDURES ---\n";
+    if (record.procedures.length > 0) {
+      csv += "Date,Time,Procedure,Doctor,Status,Fee\n";
+      record.procedures.forEach(pr => {
+        csv += `"${new Date(pr.date).toLocaleDateString()}","${pr.time}","${pr.procedure}","${pr.doctor}","${pr.status}","₹${pr.fee}"\n`;
+      });
+    } else {
+      csv += "No Procedures Available\n";
+    }
+
+    // Add BOM (\uFEFF) to force Excel to read as UTF-8 properly (handles ₹ symbol and accents)
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${p.opNumber}_Record_Export.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
@@ -36,7 +125,7 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
         <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 transition">
           <Printer size={16} /> Print Record
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 transition">
+        <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 transition">
           <Download size={16} /> PDF / Excel
         </button>
       </div>

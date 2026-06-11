@@ -8,7 +8,7 @@ interface MedicineCardProps {
 }
 
 export default function MedicineCard({ medicine, onRestock, onDelete }: MedicineCardProps) {
-  const qty = Number(medicine.quantity) || 0;
+  const qty = Number(medicine.stock) || 0;
   const isLowStock = qty < 50;
   
   return (

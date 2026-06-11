@@ -29,7 +29,7 @@ export default function DashboardPage() {
 
   const fetchEodSummary = async () => {
     try {
-      if (role === "RECEPTIONIST") setEodSummary(await getReceptionEodReport());
+      if (role === "RECEPTIONIST") setEodSummary(await getAdminEodReport());
       else if (role === "DOCTOR") setEodSummary(await getDoctorEodReport(undefined, currentUser?.username));
       else if (role === "PHARMACIST") setEodSummary(await getPharmacyEodReport());
       else if (role === "ADMIN") setEodSummary(await getAdminEodReport());

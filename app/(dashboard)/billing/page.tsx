@@ -25,6 +25,7 @@ export default function BillingPage() {
   const [selectedUnbilled, setSelectedUnbilled] = useState<any>(null);
   const [billItems, setBillItems] = useState<any[]>([]);
   const [paymentMode, setPaymentMode] = useState("Cash");
+  const [paymentStatus, setPaymentStatus] = useState("Pay");
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   useEffect(() => {
@@ -131,6 +132,7 @@ Thank you!
     setSelectedUnbilled(null);
     setBillItems([]);
     setPaymentMode("Cash");
+    setPaymentStatus("Pay");
     setShowNewBillModal(true);
   };
 
@@ -149,7 +151,7 @@ Thank you!
         opNumber: selectedUnbilled.opNumber,
         items: billItems,
         paymentMode: paymentMode,
-        status: paymentMode === "Pending" ? "Unpaid" : "Paid"
+        status: paymentStatus === "Pending" ? "Unpaid" : "Paid"
       };
       
       await createBill(payload);
@@ -405,7 +407,20 @@ Thank you!
                   )}
                   <div>
                     <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">OP Number</label>
-                    <input type="text" readOnly value={selectedUnbilled?.opNumber || ""} className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg bg-gray-50 text-sm" />
+                    <input 
+                      type="text" 
+                      value={selectedUnbilled?.opNumber || ""} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedUnbilled((prev: any) => ({ ...(prev || {}), opNumber: val }));
+                        const p = patients.find(p => p.opNumber === val);
+                        if (p) {
+                          setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: p.fullName }));
+                        }
+                      }}
+                      className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm bg-white" 
+                      placeholder="Enter OP Number"
+                    />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">Patient Name</label>
@@ -456,22 +471,29 @@ Thank you!
                   <span className="text-3xl font-bold">₹{billItems.reduce((acc, it) => acc + (Number(it.amount) || 0), 0).toLocaleString("en-IN")}</span>
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-2">Payment Mode</label>
-                  <div className="flex gap-3">
-                    {["Cash", "Card", "UPI", "Pending"].map(mode => (
-                      <button 
-                        key={mode}
-                        onClick={() => setPaymentMode(mode)}
-                        className={`px-5 py-2 rounded-full text-sm font-bold border transition-colors ${
-                          paymentMode === mode 
-                            ? "bg-[#800020] text-white border-[#800020]" 
-                            : "bg-white text-[#6B7280] border-[#ECECEC] hover:border-gray-300"
-                        }`}
-                      >
-                        {mode}
-                      </button>
-                    ))}
+                <div className="mb-6 grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-2">Payment Mode</label>
+                    <select 
+                      value={paymentMode}
+                      onChange={(e) => setPaymentMode(e.target.value)}
+                      className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm text-[#1A2332] outline-none"
+                    >
+                      <option value="Cash">Cash</option>
+                      <option value="Card">Card</option>
+                      <option value="UPI">UPI</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-2">Payment Status</label>
+                    <select 
+                      value={paymentStatus}
+                      onChange={(e) => setPaymentStatus(e.target.value)}
+                      className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm text-[#1A2332] outline-none"
+                    >
+                      <option value="Pay">Pay (Completed)</option>
+                      <option value="Pending">Pending</option>
+                    </select>
                   </div>
                 </div>
               </div>

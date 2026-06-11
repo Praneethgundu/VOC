@@ -40,7 +40,7 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!opNumber || !quantity || !selectedMedicine || Number(quantity) <= 0 || Number(quantity) > selectedMedicine.quantity) return;
+    if (!opNumber || !quantity || !selectedMedicine || Number(quantity) <= 0 || Number(quantity) > selectedMedicine.stock) return;
     
     setLoading(true);
     try {
@@ -104,7 +104,7 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
               <option value="">Select a medicine...</option>
               {medicines.map(m => (
                 <option key={m.medicineId} value={m.medicineId}>
-                  {m.medicineName} — Stock: {m.quantity} Tablets
+                  {m.medicineName} — Stock: {m.stock} Tablets
                 </option>
               ))}
             </select>
@@ -116,7 +116,7 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
               <input 
                 type="number" 
                 min="1" 
-                max={selectedMedicine?.quantity || 1} 
+                max={selectedMedicine?.stock || 1} 
                 value={quantity} 
                 onChange={(e) => setQuantity(e.target.value)} 
                 className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#16A34A] text-sm"

@@ -81,7 +81,9 @@ export default function ConsultationQueue({ onSelect, selectedId }: { onSelect: 
                     <Trash2 size={14} />
                   </button>
                 </div>
-                <p className="text-[12px] text-[#6B7280] mb-2">{c.opNumber} • {c.department || "Orthopaedics"}</p>
+                <p className="text-[12px] text-[#6B7280] mb-2">
+                  {c.opNumber} • {new Date(c.consultationDate || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} • {c.department || "Orthopaedics"}
+                </p>
                 <div className="flex justify-between items-center">
                   <div className={`text-[11px] font-bold uppercase tracking-wider ${getStatusColor(c.status)}`}>
                     {c.status || "WAITING"}

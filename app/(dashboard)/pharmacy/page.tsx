@@ -58,7 +58,7 @@ export default function PharmacyPage() {
   );
 
   const totalMedicines = medicines.length;
-  const lowStockCount = medicines.filter(m => Number(m.quantity) < 50).length;
+  const lowStockCount = medicines.filter(m => Number(m.stock) < 50).length;
   const categoriesCount = new Set(medicines.map(m => m.category)).size;
   // Let's just mock expiring soon for UI purpose
   const expiringSoonCount = medicines.filter(m => {
@@ -191,7 +191,7 @@ export default function PharmacyPage() {
 
               {/* Hidden trigger for dispense to select randomly if clicked globally */}
               <button id="dispenseTrigger" className="hidden" onClick={() => {
-                const inStock = medicines.filter(m => Number(m.quantity) > 0);
+                const inStock = medicines.filter(m => Number(m.stock) > 0);
                 if (inStock.length > 0) setDispenseMed(inStock[0]);
                 else alert("No medicines in stock to dispense");
               }}></button>
@@ -264,7 +264,7 @@ export default function PharmacyPage() {
       {dispenseMed && (
         <DispenseModal 
           initialMedicineId={dispenseMed.medicineId} 
-          medicines={medicines.filter(m => Number(m.quantity) > 0)}
+          medicines={medicines.filter(m => Number(m.stock) > 0)}
           onClose={() => setDispenseMed(null)} 
           onSuccess={fetchMedicines} 
         />

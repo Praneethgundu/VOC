@@ -13,6 +13,8 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
     quantity: "",
     price: "",
     expiryDate: "",
+    batch: "",
+    distributor: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -70,6 +72,10 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Initial Quantity" type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="0" required />
             <Input label="Price per Unit (₹)" type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" required />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Batch Number" name="batch" value={formData.batch} onChange={handleChange} placeholder="e.g. BT-2024" />
+            <Input label="Distributor Name" name="distributor" value={formData.distributor} onChange={handleChange} placeholder="e.g. Apex Pharma" />
           </div>
         </div>
 

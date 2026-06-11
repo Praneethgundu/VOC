@@ -6,10 +6,10 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { toast } from "sonner";
 
 const roleRouteMap: Record<string, string[]> = {
-  RECEPTIONIST: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/patient-records", "/settings"],
-  DOCTOR: ["/dashboard", "/consultation", "/investigations", "/ot", "/reports", "/reports/eod", "/patient-records"],
-  PHARMACIST: ["/dashboard", "/pharmacy", "/reports/eod", "/patient-records"],
-  ADMIN: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/patient-records", "/settings"],
+  RECEPTIONIST: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/records", "/settings"],
+  DOCTOR: ["/dashboard", "/consultation", "/investigations", "/ot", "/reports", "/reports/eod", "/records"],
+  PHARMACIST: ["/dashboard", "/pharmacy", "/reports/eod", "/records"],
+  ADMIN: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/records", "/settings"],
 };
 
 const defaultLandingPage: Record<string, string> = {

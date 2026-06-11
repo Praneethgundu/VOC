@@ -55,9 +55,9 @@ export default function PatientRecordsLayout() {
   });
 
   return (
-    <div className="flex flex-col h-full bg-[#F8F9FA]">
+    <div className="flex flex-col h-full bg-[#F8F9FA] print:bg-white print:block print:h-auto">
       {/* Custom Header Matching Screenshot */}
-      <div className="flex justify-between items-center bg-white px-8 py-5 border-b border-[#ECECEC]">
+      <div className="flex justify-between items-center bg-white px-8 py-5 border-b border-[#ECECEC] print:hidden">
         <div>
           <h1 className="text-[28px] font-bold text-[#800020]">Patient Records</h1>
           <p className="text-[14px] text-gray-500">Search and view comprehensive patient history</p>
@@ -81,9 +81,9 @@ export default function PatientRecordsLayout() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 p-8 gap-8 overflow-hidden bg-[#F8F9FA]">
+      <div className="flex flex-1 p-8 gap-8 overflow-hidden bg-[#F8F9FA] print:p-0 print:overflow-visible print:block print:bg-white">
         {/* Left Panel: Search Card */}
-        <div className="w-[360px] bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-[#ECECEC] flex flex-col h-full overflow-hidden shrink-0">
+        <div className="w-[360px] bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-[#ECECEC] flex flex-col h-full overflow-hidden shrink-0 print:hidden">
           <PatientSearchList 
             patients={patients} 
             loading={loading} 
@@ -93,7 +93,7 @@ export default function PatientRecordsLayout() {
         </div>
 
         {/* Right Panel: Detail or Empty State */}
-        <div className="flex-1 h-full overflow-y-auto rounded-xl">
+        <div className="flex-1 h-full overflow-y-auto rounded-xl print:overflow-visible print:h-auto print:w-full print:block">
           {!selectedOpNumber ? (
             <div className="flex flex-col items-center justify-center h-full text-[#6B7280]">
               <div className="w-16 h-16 bg-[#F3F4F6] rounded-xl flex items-center justify-center mb-4">
