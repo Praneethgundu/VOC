@@ -9,26 +9,26 @@ module.exports = {
     extend: {
       colors: {
         /* Primary */
-        p:   "#800020",
-        pl:  "#A32845",
-        pd:  "#5C0018",
-        acc: "#E12D45",
-        acc2:"#FF5A72",
+        p:   "#0F172A",
+        pl:  "#334155",
+        pd:  "#0F172A",
+        acc: "#2563EB",
+        acc2:"#3B82F6",
         /* Backgrounds */
-        bg:   "#FDF8F8",
+        bg:   "#F8FAFC",
         bg2:  "#FFFFFF",
         card: "#FFFFFF",
         /* Text */
-        txt:   "#1A2332",
-        muted: "#6B7280",
+        txt:   "#1E293B",
+        muted: "#64748B",
         /* Status */
-        ok:   "#16A34A",
+        ok:   "#059669",
         warn: "#F59E0B",
-        err:  "#E12D45",
+        err:  "#2563EB",
         info: "#2563EB",
         /* Borders */
         brd:  "rgba(128,0,32,0.12)",
-        brd2: "#ECECEC",
+        brd2: "#E2E8F0",
       },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "sans-serif"],
@@ -49,9 +49,9 @@ module.exports = {
       },
       backgroundImage: {
         sidebar:
-          "linear-gradient(180deg, #6B0019 0%, #800020 42%, #5C0018 100%)",
+          "linear-gradient(180deg, #0F172A 0%, #0F172A 42%, #0F172A 100%)",
         "btn-primary":
-          "linear-gradient(135deg, #E12D45 0%, #800020 100%)",
+          "linear-gradient(135deg, #2563EB 0%, #0F172A 100%)",
         "hero-overlay":
           "linear-gradient(135deg, rgba(92,0,24,0.88) 0%, rgba(128,0,32,0.75) 50%, rgba(92,0,24,0.60) 100%)",
       },

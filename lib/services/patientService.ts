@@ -21,12 +21,14 @@ export const addPatient =
 
 export const updatePatient =
   async (opNumber: string, data: any) => {
-    const response = await api.put(`/patients/${opNumber}`, data);
+    const encodeOp = encodeURIComponent(opNumber);
+    const response = await api.put(`/patients?opNumber=${encodeOp}`, data);
     return response.data;
   };
 
 export const deletePatient =
   async (opNumber: string) => {
-    const response = await api.delete(`/patients/${opNumber}`);
+    const encodeOp = encodeURIComponent(opNumber);
+    const response = await api.delete(`/patients?opNumber=${encodeOp}`);
     return response.data;
   };

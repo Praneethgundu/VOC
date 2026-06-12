@@ -60,7 +60,7 @@ export default function Sidebar() {
     <aside
       className="w-[248px] h-screen fixed left-0 top-0 flex flex-col z-40 overflow-hidden"
       style={{
-        background: "linear-gradient(180deg, #6B0019 0%, #800020 42%, #5C0018 100%)",
+        background: "linear-gradient(180deg, #0F172A 0%, #0F172A 42%, #0F172A 100%)",
       }}
     >
       {/* Logo / Brand */}
@@ -104,12 +104,12 @@ export default function Sidebar() {
               className={[
                 "flex items-center gap-3 px-3 py-2.5 rounded-[10px] transition-all duration-200 group",
                 isActive
-                  ? "bg-[#E12D45] text-white font-semibold"
+                  ? "bg-[#2563EB] text-white font-semibold"
                   : "text-white/70 hover:bg-white/8 hover:text-white",
               ].join(" ")}
               style={
                 isActive
-                  ? { boxShadow: "0 4px 14px rgba(225,45,69,0.45)" }
+                  ? { boxShadow: "0 4px 14px rgba(37,99,235,0.45)" }
                   : {}
               }
             >

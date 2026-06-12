@@ -96,7 +96,7 @@ export default function PatientTimeline({ record }: { record: PatientRecord }) {
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition ml-2">
             <div className="flex justify-between items-start mb-1">
-              <h3 className="font-bold text-[#1A2332]">{event.title}</h3>
+              <h3 className="font-bold text-[#1E293B]">{event.title}</h3>
               <span className="text-xs text-gray-500 font-semibold">{event.date.toLocaleString()}</span>
             </div>
             <p className="text-sm font-semibold text-gray-800 mb-1">{event.subtitle}</p>

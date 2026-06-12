@@ -16,14 +16,47 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
     batch: "",
     distributor: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.medicineName.trim() || formData.medicineName.length < 2) {
+      newErrors.medicineName = "Medicine name must be at least 2 characters";
+    }
+    if (!formData.category) newErrors.category = "Category is required";
+    if (!formData.batch.trim()) newErrors.batch = "Batch number is required";
+    
+    if (!formData.quantity || isNaN(Number(formData.quantity)) || Number(formData.quantity) <= 0) {
+      newErrors.quantity = "Initial quantity must be > 0";
+    }
+    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
+      newErrors.price = "Price must be > 0";
+    }
+    if (!formData.expiryDate) {
+      newErrors.expiryDate = "Expiry date is required";
+    } else {
+      // expiryDate is 'YYYY-MM'
+      const expDate = new Date(formData.expiryDate);
+      const today = new Date();
+      today.setDate(1);
+      today.setHours(0,0,0,0);
+      if (expDate < today) {
+        newErrors.expiryDate = "Expiry date must be in the future";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setLoading(true);
     try {
       await addMedicine(formData);
@@ -44,7 +77,7 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
         onSubmit={handleSubmit}
         className="bg-white rounded-2xl w-full max-w-lg shadow-2xl relative overflow-hidden"
       >
-        <div className="bg-[#800020] p-5 text-white flex justify-between items-center">
+        <div className="bg-[#0F172A] p-5 text-white flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Pill size={24} />
             <h2 className="text-lg font-bold">Add New Medicine</h2>
@@ -55,9 +88,9 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
         </div>
 
         <div className="p-6 space-y-4">
-          <Input label="Medicine Name" name="medicineName" value={formData.medicineName} onChange={handleChange} placeholder="e.g. Paracetamol 500mg" required />
+          <Input label="Medicine Name" name="medicineName" value={formData.medicineName} onChange={handleChange} placeholder="e.g. Paracetamol 500mg" error={errors.medicineName} required />
           <div className="grid grid-cols-2 gap-4">
-            <Select label="Category" name="category" value={formData.category} onChange={handleChange as any} required>
+            <Select label="Category" name="category" value={formData.category} onChange={handleChange as any} error={errors.category} required>
               <option value="">Select Category</option>
               <option>Analgesic</option>
               <option>Antibiotic</option>
@@ -67,11 +100,11 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
               <option>NSAID</option>
               <option>Other</option>
             </Select>
-            <Input label="Expiry Date" type="month" name="expiryDate" value={formData.expiryDate} onChange={handleChange} required />
+            <Input label="Expiry Date" type="month" name="expiryDate" value={formData.expiryDate} onChange={handleChange} min={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`} error={errors.expiryDate} required />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Initial Quantity" type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="0" required />
-            <Input label="Price per Unit (₹)" type="number" step="0.01" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" required />
+            <Input label="Initial Quantity" type="number" min="0" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="0" error={errors.quantity} required />
+            <Input label="Price per Unit (₹)" type="number" min="0" step="0.01" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" error={errors.price} required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="Batch Number" name="batch" value={formData.batch} onChange={handleChange} placeholder="e.g. BT-2024" />
@@ -83,7 +116,7 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
           <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition-colors">
             Cancel
           </button>
-          <button type="submit" disabled={loading} className="px-5 py-2.5 bg-[#E12D45] text-white font-bold rounded-xl hover:bg-[#800020] transition-colors flex items-center gap-2">
+          <button type="submit" disabled={loading} className="px-5 py-2.5 bg-[#2563EB] text-white font-bold rounded-xl hover:bg-[#0F172A] transition-colors flex items-center gap-2">
             {loading ? "Saving..." : "Add Medicine"}
           </button>
         </div>

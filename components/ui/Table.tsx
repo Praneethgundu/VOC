@@ -18,7 +18,7 @@ export function Table({ children, className = "" }: TableProps) {
 
 /* ─── THead ──────────────────────────────────────────────────────────────── */
 export function THead({ children }: { children: React.ReactNode }) {
-  return <thead className="bg-[#FBEAEA]">{children}</thead>;
+  return <thead className="bg-[#FEE2E2]">{children}</thead>;
 }
 
 /* ─── TH ─────────────────────────────────────────────────────────────────── */
@@ -32,7 +32,7 @@ export function Th({ children, className = "", align = "left" }: ThProps) {
   return (
     <th
       className={[
-        "table-header px-4 py-3 border-b border-[#F0D0D0]",
+        "table-header px-4 py-3 border-b border-[#FEE2E2]",
         align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left",
         className,
       ].join(" ")}
@@ -61,9 +61,9 @@ export function Tr({ children, index = 0, className = "", onClick }: TrProps) {
     <tr
       onClick={onClick}
       className={[
-        "border-b border-[#F5E8E8] transition-colors duration-100",
+        "border-b border-[#FEE2E2] transition-colors duration-100",
         "hover:bg-[#FAFAFA]",
-        isOdd ? "bg-[#FDF6F6]" : "bg-white",
+        isOdd ? "bg-[#FEE2E2]" : "bg-white",
         onClick ? "cursor-pointer" : "",
         className,
       ].join(" ")}
@@ -86,7 +86,7 @@ export function Td({ children, className = "", align = "left", colSpan }: TdProp
     <td
       colSpan={colSpan}
       className={[
-        "px-4 py-3 text-[#1A2332]",
+        "px-4 py-3 text-[#1E293B]",
         align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left",
         className,
       ].join(" ")}
@@ -105,11 +105,11 @@ interface BadgeProps {
 }
 
 const badgeStyles: Record<StatusType, string> = {
-  success: "bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]",
-  warning: "bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A]",
-  error: "bg-[#FEE2E2] text-[#E12D45] border border-[#FCA5A5]",
-  info: "bg-[#DBEAFE] text-[#2563EB] border border-[#BFDBFE]",
-  default: "bg-[#F3F4F6] text-[#6B7280] border border-[#E5E7EB]",
+  success: "bg-[#ECFDF5] text-[#059669] border border-[#ECFDF5]",
+  warning: "bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A]",
+  error: "bg-[#FEE2E2] text-[#2563EB] border border-[#FEE2E2]",
+  info: "bg-[#DBEAFE] text-[#2563EB] border border-[#DBEAFE]",
+  default: "bg-[#F3F4F6] text-[#64748B] border border-[#E2E8F0]",
 };
 
 export function Badge({ status, children }: BadgeProps) {

@@ -53,7 +53,7 @@ export default function LoginPage() {
       className="min-h-screen flex relative overflow-hidden"
       style={{
         background:
-          "linear-gradient(135deg,#6b0019 0%,#800020 45%,#900015 100%)",
+          "linear-gradient(135deg,#0F172A 0%,#0F172A 45%,#0F172A 100%)",
       }}
     >
       {/* Background Shapes */}
@@ -138,7 +138,7 @@ export default function LoginPage() {
               className="mx-auto mb-4 rounded-lg"
             />
 
-            <h1 className="text-[28px] font-extrabold text-[#7c1414]">
+            <h1 className="text-[28px] font-extrabold text-[#334155]">
               Welcome Back!
             </h1>
 
@@ -156,8 +156,8 @@ export default function LoginPage() {
                 onClick={() => setRole(r)}
                 className={`h-[88px] rounded-xl border transition-all flex flex-col items-center justify-center ${
                   role === r
-                    ? "border-[#E12D45] bg-[#fff5f6] text-[#800020]"
-                    : "border-[#ececec] text-[#6B7280] hover:border-[#E12D45]"
+                    ? "border-[#2563EB] bg-[#fff5f6] text-[#0F172A]"
+                    : "border-[#E2E8F0] text-[#64748B] hover:border-[#2563EB]"
                 }`}
               >
                 <span className="text-[28px] font-bold">
@@ -182,7 +182,7 @@ export default function LoginPage() {
                 placeholder="Enter Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full h-12 px-4 border border-[#f0d5d5] rounded-lg outline-none focus:border-[#a32a2a]"
+                className="w-full h-12 px-4 border border-[#FEE2E2] rounded-lg outline-none focus:border-[#a32a2a]"
               />
             </div>
 
@@ -198,7 +198,7 @@ export default function LoginPage() {
                   placeholder="Enter Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-12 px-4 pr-12 border border-[#f0d5d5] rounded-lg outline-none focus:border-[#a32a2a]"
+                  className="w-full h-12 px-4 pr-12 border border-[#FEE2E2] rounded-lg outline-none focus:border-[#a32a2a]"
                 />
 
                 <button
@@ -238,7 +238,7 @@ export default function LoginPage() {
               className="w-full h-[54px] rounded-lg text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-[1px]"
               style={{
                 background:
-                  "linear-gradient(90deg,#9e1d1d 0%,#520b0b 100%)",
+                  "linear-gradient(90deg,#991B1B 0%,#520b0b 100%)",
                 boxShadow:
                   "0 4px 12px rgba(124,20,20,0.3)",
               }}

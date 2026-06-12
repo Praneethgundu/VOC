@@ -46,8 +46,8 @@ export default function StatsCards() {
       changeDir: "up",
       icon: Users,
       iconBg: "bg-[#FFF0F2]",
-      iconColor: "text-[#E12D45]",
-      accentColor: "#E12D45",
+      iconColor: "text-[#2563EB]",
+      accentColor: "#2563EB",
     },
     {
       title: "Today's OP",
@@ -55,7 +55,7 @@ export default function StatsCards() {
       change: "+0",
       changeDir: "up",
       icon: Calendar,
-      iconBg: "bg-[#EFF6FF]",
+      iconBg: "bg-[#DBEAFE]",
       iconColor: "text-[#2563EB]",
       accentColor: "#2563EB",
     },
@@ -65,9 +65,9 @@ export default function StatsCards() {
       change: "+0%",
       changeDir: "up",
       icon: IndianRupee,
-      iconBg: "bg-[#F0FDF4]",
-      iconColor: "text-[#16A34A]",
-      accentColor: "#16A34A",
+      iconBg: "bg-[#ECFDF5]",
+      iconColor: "text-[#059669]",
+      accentColor: "#059669",
     },
     {
       title: "Medicines",
@@ -76,8 +76,8 @@ export default function StatsCards() {
       changeDir: "down",
       icon: Pill,
       iconBg: "bg-[#FFFBEB]",
-      iconColor: "text-[#D97706]",
-      accentColor: "#D97706",
+      iconColor: "text-[#92400E]",
+      accentColor: "#92400E",
     },
   ];
 
@@ -90,10 +90,10 @@ export default function StatsCards() {
         return (
           <div
             key={item.title}
-            className="bg-white rounded-xl border border-[#ECECEC] p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(128,0,32,0.08)]"
+            className="bg-white rounded-xl border border-[#E2E8F0] p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
             style={{
               boxShadow:
-                "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)",
+                "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04)",
             }}
           >
             {/* Top row */}
@@ -106,8 +106,8 @@ export default function StatsCards() {
               <span
                 className={`flex items-center gap-1 text-[12px] font-bold px-2 py-1 rounded-lg ${
                   isUp
-                    ? "bg-[#F0FDF4] text-[#16A34A]"
-                    : "bg-[#FEF3C7] text-[#D97706]"
+                    ? "bg-[#ECFDF5] text-[#059669]"
+                    : "bg-[#FFFBEB] text-[#92400E]"
                 }`}
               >
                 {isUp ? (
@@ -123,12 +123,12 @@ export default function StatsCards() {
             <p className="card-value">{item.value}</p>
 
             {/* Label */}
-            <p className="text-[#6B7280] text-[13px] font-medium mt-1">
+            <p className="text-[#64748B] text-[13px] font-medium mt-1">
               {item.title}
             </p>
 
             {/* Accent bar */}
-            <div className="mt-4 h-0.5 rounded-full bg-[#F5F5F5] overflow-hidden">
+            <div className="mt-4 h-0.5 rounded-full bg-[#F8FAFC] overflow-hidden">
               <div
                 className="h-full rounded-full w-3/4 transition-all duration-500"
                 style={{ backgroundColor: item.accentColor, opacity: 0.35 }}

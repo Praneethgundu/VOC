@@ -44,11 +44,11 @@ export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
   const displayRole = currentUser?.role ? currentUser.role : "";
 
   return (
-    <header className="h-16 bg-white border-b border-[#ECECEC] flex items-center justify-between px-6 sticky top-0 z-30 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+    <header className="h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-6 sticky top-0 z-30 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
       {/* Left: Page info */}
       <div>
         {breadcrumb && (
-          <p className="text-[11px] text-[#6B7280] font-medium mb-0.5 uppercase tracking-wider">
+          <p className="text-[11px] text-[#64748B] font-medium mb-0.5 uppercase tracking-wider">
             {breadcrumb}
           </p>
         )}
@@ -56,7 +56,7 @@ export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
           <h1 className="page-title !text-[18px]">{pageTitle}</h1>
         )}
         {!pageTitle && !breadcrumb && (
-          <h2 className="text-[16px] font-bold text-[#1A2332]">
+          <h2 className="text-[16px] font-bold text-[#1E293B]">
             VOC Orthopaedic Hospital
           </h2>
         )}
@@ -65,12 +65,12 @@ export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
       {/* Right: actions */}
       <div className="flex items-center gap-3">
         {/* Search */}
-        <div className="hidden md:flex items-center gap-2 bg-[#FDF8F8] border border-[#ECECEC] rounded-lg px-3 h-9 w-56">
-          <Search size={14} className="text-[#6B7280] shrink-0" />
+        <div className="hidden md:flex items-center gap-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-3 h-9 w-56">
+          <Search size={14} className="text-[#64748B] shrink-0" />
           <input
             type="text"
             placeholder="Search…"
-            className="bg-transparent outline-none text-[13px] text-[#1A2332] placeholder:text-[#9CA3AF] w-full"
+            className="bg-transparent outline-none text-[13px] text-[#1E293B] placeholder:text-[#64748B] w-full"
           />
         </div>
 
@@ -78,21 +78,21 @@ export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
         <div className="relative" ref={alertsRef}>
           <button 
             onClick={() => setShowAlerts(!showAlerts)}
-            className="relative w-9 h-9 rounded-lg border border-[#ECECEC] bg-white flex items-center justify-center text-[#6B7280] hover:border-[#E12D45] hover:text-[#E12D45] transition-colors"
+            className="relative w-9 h-9 rounded-lg border border-[#E2E8F0] bg-white flex items-center justify-center text-[#64748B] hover:border-[#2563EB] hover:text-[#2563EB] transition-colors"
           >
             <Bell size={16} />
             {alerts.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#E12D45] border-2 border-white text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#2563EB] border-2 border-white text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
                 {alerts.length}
               </span>
             )}
           </button>
           
           {showAlerts && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-[#ECECEC] overflow-hidden z-50">
-              <div className="bg-gray-50 px-4 py-3 border-b border-[#ECECEC] flex justify-between items-center">
-                <h3 className="text-sm font-bold text-[#1A2332]">System Alerts</h3>
-                <span className="text-[10px] bg-[#E12D45] text-white px-2 py-0.5 rounded-full font-bold">{alerts.length} New</span>
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-[#E2E8F0] overflow-hidden z-50">
+              <div className="bg-gray-50 px-4 py-3 border-b border-[#E2E8F0] flex justify-between items-center">
+                <h3 className="text-sm font-bold text-[#1E293B]">System Alerts</h3>
+                <span className="text-[10px] bg-[#2563EB] text-white px-2 py-0.5 rounded-full font-bold">{alerts.length} New</span>
               </div>
               <div className="max-h-80 overflow-y-auto">
                 {alerts.length === 0 ? (
@@ -101,12 +101,12 @@ export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
                   </div>
                 ) : (
                   alerts.map((alert, idx) => (
-                    <Link href={alert.actionPath} key={alert.id} className="block border-b border-[#ECECEC] last:border-0 hover:bg-[#FDF8F8] transition-colors p-4">
+                    <Link href={alert.actionPath} key={alert.id} className="block border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC] transition-colors p-4">
                       <div className="flex gap-3 items-start">
                         <div className={`mt-0.5 p-1.5 rounded-lg shrink-0 ${
-                          alert.type === 'warning' ? 'bg-[#FFFBEB] text-[#D97706]' : 
-                          alert.type === 'error' ? 'bg-[#FFF4F4] text-[#E12D45]' : 
-                          'bg-[#F0F9FF] text-[#0284C7]'
+                          alert.type === 'warning' ? 'bg-[#FFFBEB] text-[#92400E]' : 
+                          alert.type === 'error' ? 'bg-[#FEE2E2] text-[#2563EB]' : 
+                          'bg-[#DBEAFE] text-[#0284C7]'
                         }`}>
                           {alert.type === 'warning' ? <AlertTriangle size={14} /> : 
                            alert.type === 'error' ? <ShieldAlert size={14} /> : 
@@ -114,8 +114,8 @@ export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
                         </div>
                         <div>
                           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">{alert.module}</p>
-                          <p className="text-xs font-bold text-[#1A2332] mb-1">{alert.title}</p>
-                          <p className="text-xs text-[#6B7280] leading-tight">{alert.message}</p>
+                          <p className="text-xs font-bold text-[#1E293B] mb-1">{alert.title}</p>
+                          <p className="text-xs text-[#64748B] leading-tight">{alert.message}</p>
                         </div>
                       </div>
                     </Link>
@@ -130,34 +130,34 @@ export default function Navbar({ pageTitle, breadcrumb }: NavbarProps) {
         <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center gap-2 h-9 pl-2 pr-3 rounded-lg border border-[#ECECEC] bg-white hover:border-[rgba(128,0,32,0.2)] transition-colors group"
+            className="flex items-center gap-2 h-9 pl-2 pr-3 rounded-lg border border-[#E2E8F0] bg-white hover:border-[rgba(15,23,42,0.2)] transition-colors group"
           >
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#E12D45] to-[#800020] flex items-center justify-center text-white text-[11px] font-bold">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#2563EB] to-[#0F172A] flex items-center justify-center text-white text-[11px] font-bold">
               {displayInitial}
             </div>
-            <span className="text-[13px] font-semibold text-[#1A2332] hidden sm:block capitalize">
+            <span className="text-[13px] font-semibold text-[#1E293B] hidden sm:block capitalize">
               {displayName}
             </span>
-            <ChevronDown size={13} className="text-[#6B7280] group-hover:text-[#800020] transition-colors" />
+            <ChevronDown size={13} className="text-[#64748B] group-hover:text-[#0F172A] transition-colors" />
           </button>
 
           {/* Dropdown Menu */}
           {showDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-[#ECECEC] overflow-hidden z-50">
-              <div className="px-4 py-3 border-b border-[#ECECEC]">
-                <p className="text-[13px] font-semibold text-[#1A2332] capitalize">{displayName}</p>
-                <p className="text-[11px] text-[#6B7280] capitalize mt-0.5">{displayRole.toLowerCase()}</p>
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-[#E2E8F0] overflow-hidden z-50">
+              <div className="px-4 py-3 border-b border-[#E2E8F0]">
+                <p className="text-[13px] font-semibold text-[#1E293B] capitalize">{displayName}</p>
+                <p className="text-[11px] text-[#64748B] capitalize mt-0.5">{displayRole.toLowerCase()}</p>
               </div>
               <div className="py-1">
                 <button 
-                  className="w-full flex items-center gap-2 px-4 py-2 text-[13px] text-[#4B5563] hover:bg-[#FDF8F8] hover:text-[#E12D45] transition-colors"
+                  className="w-full flex items-center gap-2 px-4 py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#2563EB] transition-colors"
                   onClick={() => setShowDropdown(false)}
                 >
                   <UserIcon size={14} />
                   Profile
                 </button>
                 <button 
-                  className="w-full flex items-center gap-2 px-4 py-2 text-[13px] text-[#4B5563] hover:bg-[#FDF8F8] hover:text-[#E12D45] transition-colors"
+                  className="w-full flex items-center gap-2 px-4 py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#2563EB] transition-colors"
                   onClick={() => {
                     setShowDropdown(false);
                     logout();

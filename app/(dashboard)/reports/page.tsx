@@ -17,9 +17,9 @@ import { getMedicines } from "@/services/pharmacyService";
 function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-[#ECECEC] rounded-xl p-3 shadow-lg text-[13px]">
-        <p className="font-bold text-[#1A2332] mb-1">{label}</p>
-        <p className="text-[#E12D45] font-semibold">₹{(payload[0]?.value / 1000).toFixed(0)}k</p>
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-3 shadow-lg text-[13px]">
+        <p className="font-bold text-[#1E293B] mb-1">{label}</p>
+        <p className="text-[#2563EB] font-semibold">₹{(payload[0]?.value / 1000).toFixed(0)}k</p>
         <p className="text-[#2563EB] font-medium">{payload[1]?.value} patients</p>
       </div>
     );
@@ -29,10 +29,10 @@ function CustomTooltip({ active, payload, label }: any) {
 
 export default function ReportsPage() {
   const [eodStats, setEodStats] = useState([
-    { label: "New Patients", value: "0", icon: Users, color: "#E12D45", bg: "#FFF0F2" },
-    { label: "OP Consultations", value: "0", icon: Calendar, color: "#2563EB", bg: "#EFF6FF" },
-    { label: "Total Revenue", value: "₹0", icon: IndianRupee, color: "#16A34A", bg: "#F0FDF4" },
-    { label: "Prescriptions", value: "0", icon: Pill, color: "#D97706", bg: "#FFFBEB" },
+    { label: "New Patients", value: "0", icon: Users, color: "#2563EB", bg: "#FFF0F2" },
+    { label: "OP Consultations", value: "0", icon: Calendar, color: "#2563EB", bg: "#DBEAFE" },
+    { label: "Total Revenue", value: "₹0", icon: IndianRupee, color: "#059669", bg: "#ECFDF5" },
+    { label: "Prescriptions", value: "0", icon: Pill, color: "#92400E", bg: "#FFFBEB" },
     { label: "Lab Orders", value: "0", icon: Microscope, color: "#7C3AED", bg: "#F5F3FF" },
   ]);
 
@@ -83,10 +83,10 @@ export default function ReportsPage() {
       const labs = investigations.filter((i: any) => i.createdAt?.startsWith(todayStr) || i.orderedDate?.startsWith(todayStr)).length;
 
       setEodStats([
-        { label: "New Patients", value: newPatients.toString(), icon: Users, color: "#E12D45", bg: "#FFF0F2" },
-        { label: "OP Consultations", value: ops.toString(), icon: Calendar, color: "#2563EB", bg: "#EFF6FF" },
-        { label: "Total Revenue", value: `₹${totalRev.toLocaleString("en-IN")}`, icon: IndianRupee, color: "#16A34A", bg: "#F0FDF4" },
-        { label: "Prescriptions", value: prescriptions.toString(), icon: Pill, color: "#D97706", bg: "#FFFBEB" },
+        { label: "New Patients", value: newPatients.toString(), icon: Users, color: "#2563EB", bg: "#FFF0F2" },
+        { label: "OP Consultations", value: ops.toString(), icon: Calendar, color: "#2563EB", bg: "#DBEAFE" },
+        { label: "Total Revenue", value: `₹${totalRev.toLocaleString("en-IN")}`, icon: IndianRupee, color: "#059669", bg: "#ECFDF5" },
+        { label: "Prescriptions", value: prescriptions.toString(), icon: Pill, color: "#92400E", bg: "#FFFBEB" },
         { label: "Lab Orders", value: labs.toString(), icon: Microscope, color: "#7C3AED", bg: "#F5F3FF" },
       ]);
 
@@ -159,7 +159,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="flex bg-[#FDF8F8] min-h-screen">
+    <div className="flex bg-[#F8FAFC] min-h-screen">
       <Sidebar />
       <div className="ml-[248px] flex-1 flex flex-col min-h-screen">
         <Navbar pageTitle="Reports" breadcrumb="Analytics" />
@@ -169,7 +169,7 @@ export default function ReportsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="page-title">Reports & Analytics</h1>
-              <p className="text-[#6B7280] text-[13px] mt-1">End-of-day summaries and monthly performance</p>
+              <p className="text-[#64748B] text-[13px] mt-1">End-of-day summaries and monthly performance</p>
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={handlePrint} variant="outline" size="md" icon={<Printer size={15} />}>Print</Button>
@@ -178,15 +178,15 @@ export default function ReportsPage() {
           </div>
 
           {/* Report Segments */}
-          <div className="flex gap-2 border-b border-[#ECECEC] mt-2 mb-6">
+          <div className="flex gap-2 border-b border-[#E2E8F0] mt-2 mb-6">
             {["Daily Reports", "Revenue Reports", "Patient Reports", "Inventory Reports"].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 border-b-2 font-semibold text-[13px] ${
                   activeTab === tab
-                    ? "border-[#E12D45] text-[#E12D45]"
-                    : "border-transparent text-[#6B7280] hover:text-[#1A2332]"
+                    ? "border-[#2563EB] text-[#2563EB]"
+                    : "border-transparent text-[#64748B] hover:text-[#1E293B]"
                 }`}
               >
                 {tab}
@@ -197,24 +197,24 @@ export default function ReportsPage() {
           {activeTab === "Daily Reports" && (
             <>
           <div
-            className="bg-white rounded-xl border border-[#ECECEC] p-6"
-            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)" }}
+            className="bg-white rounded-xl border border-[#E2E8F0] p-6"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04)" }}
           >
             <div className="flex items-center gap-2 mb-5">
-              <FileText size={16} className="text-[#800020]" />
+              <FileText size={16} className="text-[#0F172A]" />
               <h2 className="section-heading">Today&apos;s Summary — {new Date().toLocaleDateString("en-GB", { day: 'numeric', month: 'short', year: 'numeric'})}</h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
               {eodStats.map((s) => {
                 const Icon = s.icon;
                 return (
-                  <div key={s.label} className="flex flex-col gap-3 p-4 rounded-xl border border-[#ECECEC]">
+                  <div key={s.label} className="flex flex-col gap-3 p-4 rounded-xl border border-[#E2E8F0]">
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: s.bg }}>
                       <Icon size={16} style={{ color: s.color }} />
                     </div>
                     <div>
                       <p className="text-[22px] font-extrabold" style={{ color: s.color }}>{s.value}</p>
-                      <p className="text-[11px] text-[#6B7280] font-medium mt-0.5">{s.label}</p>
+                      <p className="text-[11px] text-[#64748B] font-medium mt-0.5">{s.label}</p>
                     </div>
                   </div>
                 );
@@ -226,17 +226,17 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
             {/* Chart */}
             <div
-              className="xl:col-span-3 bg-white rounded-xl border border-[#ECECEC] p-6"
-              style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)" }}
+              className="xl:col-span-3 bg-white rounded-xl border border-[#E2E8F0] p-6"
+              style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04)" }}
             >
               <h2 className="section-heading mb-5">Monthly Revenue Trend</h2>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={monthlyData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F5" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "#6B7280", fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F8FAFC" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "#64748B", fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="revenue" fill="#E12D45" radius={[6, 6, 0, 0]} maxBarSize={40} fillOpacity={0.85} />
+                  <Bar dataKey="revenue" fill="#2563EB" radius={[6, 6, 0, 0]} maxBarSize={40} fillOpacity={0.85} />
                   <Bar dataKey="patients" fill="#2563EB" radius={[6, 6, 0, 0]} maxBarSize={40} fillOpacity={0.6} />
                 </BarChart>
               </ResponsiveContainer>
@@ -244,8 +244,8 @@ export default function ReportsPage() {
 
             {/* Quick stats */}
             <div
-              className="xl:col-span-2 bg-white rounded-xl border border-[#ECECEC] p-6"
-              style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)" }}
+              className="xl:col-span-2 bg-white rounded-xl border border-[#E2E8F0] p-6"
+              style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04)" }}
             >
               <h2 className="section-heading mb-5">This Month at a Glance</h2>
               <div className="space-y-4">
@@ -257,11 +257,11 @@ export default function ReportsPage() {
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between text-[13px] mb-1.5">
-                      <span className="text-[#6B7280]">{item.label}</span>
-                      <span className="font-bold text-[#1A2332]">{item.value}</span>
+                      <span className="text-[#64748B]">{item.label}</span>
+                      <span className="font-bold text-[#1E293B]">{item.value}</span>
                     </div>
-                    <div className="h-1.5 bg-[#F5F5F5] rounded-full overflow-hidden">
-                      <div className="h-full bg-[#E12D45] rounded-full transition-all duration-700" style={{ width: item.pct, opacity: 0.7 }} />
+                    <div className="h-1.5 bg-[#F8FAFC] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#2563EB] rounded-full transition-all duration-700" style={{ width: item.pct, opacity: 0.7 }} />
                     </div>
                   </div>
                 ))}
@@ -271,8 +271,8 @@ export default function ReportsPage() {
 
           {/* EOD history table */}
           <div
-            className="bg-white rounded-xl border border-[#ECECEC] p-6"
-            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)" }}
+            className="bg-white rounded-xl border border-[#E2E8F0] p-6"
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04)" }}
           >
             <h2 className="section-heading mb-5">End-of-Day History</h2>
             <Table>
@@ -289,11 +289,11 @@ export default function ReportsPage() {
               <TBody>
                 {recentEOD.map((row, i) => (
                   <Tr key={row.date} index={i}>
-                    <Td><span className="font-mono text-[13px] font-semibold text-[#800020]">{row.date}</span></Td>
+                    <Td><span className="font-mono text-[13px] font-semibold text-[#0F172A]">{row.date}</span></Td>
                     <Td align="center"><span className="font-mono font-bold">{row.patients}</span></Td>
-                    <Td align="right"><span className="font-mono font-bold text-[#16A34A]">{row.revenue}</span></Td>
+                    <Td align="right"><span className="font-mono font-bold text-[#059669]">{row.revenue}</span></Td>
                     <Td align="right"><span className="font-mono text-[#2563EB]">{row.lab}</span></Td>
-                    <Td align="right"><span className="font-mono text-[#D97706]">{row.pharmacy}</span></Td>
+                    <Td align="right"><span className="font-mono text-[#92400E]">{row.pharmacy}</span></Td>
                     <Td align="center"><Badge status="success">{row.status}</Badge></Td>
                   </Tr>
                 ))}
@@ -304,7 +304,7 @@ export default function ReportsPage() {
           )}
 
           {activeTab === "Patient Reports" && (
-            <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
               <h2 className="section-heading mb-4">Patient Registrations ({allPatients.length})</h2>
               <Table>
                 <THead>
@@ -320,7 +320,7 @@ export default function ReportsPage() {
                 <TBody>
                   {allPatients.map((p, i) => (
                     <Tr key={i} index={i}>
-                      <Td><span className="font-mono text-[#800020] font-bold">{p.opNumber}</span></Td>
+                      <Td><span className="font-mono text-[#0F172A] font-bold">{p.opNumber}</span></Td>
                       <Td>{p.fullName}</Td>
                       <Td>{p.phone}</Td>
                       <Td>{p.department}</Td>
@@ -334,7 +334,7 @@ export default function ReportsPage() {
           )}
 
           {activeTab === "Revenue Reports" && (
-            <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
               <h2 className="section-heading mb-4">All Revenue Transactions ({allBills.length})</h2>
               <Table>
                 <THead>
@@ -351,10 +351,10 @@ export default function ReportsPage() {
                     const pName = allPatients.find(p => p.opNumber === b.opNumber)?.fullName || b.patientName || "Unknown";
                     return (
                       <Tr key={i} index={i}>
-                        <Td><span className="font-mono text-[#800020] font-bold">{b.id}</span></Td>
+                        <Td><span className="font-mono text-[#0F172A] font-bold">{b.id}</span></Td>
                         <Td>{pName}</Td>
                         <Td>{new Date(b.date).toLocaleDateString()}</Td>
-                        <Td align="right"><span className="font-mono text-[#16A34A] font-bold">₹{b.total}</span></Td>
+                        <Td align="right"><span className="font-mono text-[#059669] font-bold">₹{b.total}</span></Td>
                         <Td align="center"><Badge status={b.status === "Paid" ? "success" : "error"}>{b.status}</Badge></Td>
                       </Tr>
                     );
@@ -365,7 +365,7 @@ export default function ReportsPage() {
           )}
 
           {activeTab === "Inventory Reports" && (
-            <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
               <h2 className="section-heading mb-4">Inventory Status ({allInventory.length})</h2>
               <Table>
                 <THead>
@@ -379,7 +379,7 @@ export default function ReportsPage() {
                 <TBody>
                   {allInventory.map((m, i) => (
                     <Tr key={i} index={i}>
-                      <Td><span className="font-mono text-[#800020] font-bold">{m.medicineId}</span></Td>
+                      <Td><span className="font-mono text-[#0F172A] font-bold">{m.medicineId}</span></Td>
                       <Td>{m.medicineName}</Td>
                       <Td>{m.category}</Td>
                       <Td align="center">

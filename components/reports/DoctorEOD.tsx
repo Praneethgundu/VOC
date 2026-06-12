@@ -33,10 +33,10 @@ Revenue Generated: ₹${report.stats.revenueGenerated}
   };
 
   return (
-    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl print:shadow-none print:w-full border border-[#ECECEC] print:border-none p-8 relative">
+    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl print:shadow-none print:w-full border border-[#E2E8F0] print:border-none p-8 relative">
       <div className="flex justify-between items-center mb-8 print:hidden">
-        <div className="flex items-center gap-2 text-[#1A2332]">
-          <FileText className="text-[#800020]" />
+        <div className="flex items-center gap-2 text-[#1E293B]">
+          <FileText className="text-[#0F172A]" />
           <h1 className="text-xl font-bold">Doctor EOD Report</h1>
         </div>
       </div>
@@ -45,35 +45,35 @@ Revenue Generated: ₹${report.stats.revenueGenerated}
         <div className="flex justify-center mb-2">
           <Image src="/images/logo.jpeg" alt="VOC Logo" width={40} height={40} className="rounded-lg object-cover" />
         </div>
-        <h2 className="text-2xl font-extrabold text-[#800020]">Dr. {report.doctorName}</h2>
-        <p className="text-[#6B7280] text-sm">Daily Performance Summary</p>
-        <div className="mt-3 inline-block border border-[#800020]/20 text-[#800020] rounded-full px-4 py-1 text-sm font-semibold bg-[#800020]/5">
+        <h2 className="text-2xl font-extrabold text-[#0F172A]">Dr. {report.doctorName}</h2>
+        <p className="text-[#64748B] text-sm">Daily Performance Summary</p>
+        <div className="mt-3 inline-block border border-[#0F172A]/20 text-[#0F172A] rounded-full px-4 py-1 text-sm font-semibold bg-[#0F172A]/5">
           {dateStr}
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl p-5">
+        <div className="bg-[#DBEAFE] border border-[#DBEAFE] rounded-xl p-5">
           <p className="text-[#2563EB] text-xs font-bold uppercase tracking-wider mb-2">Consulted</p>
           <p className="text-3xl font-extrabold text-[#2563EB]">{report.stats.patientsConsulted}</p>
         </div>
-        <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl p-5">
-          <p className="text-[#16A34A] text-xs font-bold uppercase tracking-wider mb-2">Completed</p>
-          <p className="text-3xl font-extrabold text-[#16A34A]">{report.stats.patientsCompleted}</p>
+        <div className="bg-[#ECFDF5] border border-[#ECFDF5] rounded-xl p-5">
+          <p className="text-[#059669] text-xs font-bold uppercase tracking-wider mb-2">Completed</p>
+          <p className="text-3xl font-extrabold text-[#059669]">{report.stats.patientsCompleted}</p>
         </div>
-        <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-5">
-          <p className="text-[#DC2626] text-xs font-bold uppercase tracking-wider mb-2">Pending</p>
-          <p className="text-3xl font-extrabold text-[#DC2626]">{report.stats.patientsPending}</p>
+        <div className="bg-[#FEE2E2] border border-[#FEE2E2] rounded-xl p-5">
+          <p className="text-[#991B1B] text-xs font-bold uppercase tracking-wider mb-2">Pending</p>
+          <p className="text-3xl font-extrabold text-[#991B1B]">{report.stats.patientsPending}</p>
         </div>
         <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-xl p-5">
-          <p className="text-[#D97706] text-xs font-bold uppercase tracking-wider mb-2">Revenue</p>
-          <p className="text-3xl font-extrabold text-[#D97706]">₹{(report.stats.revenueGenerated || 0).toLocaleString()}</p>
+          <p className="text-[#92400E] text-xs font-bold uppercase tracking-wider mb-2">Revenue</p>
+          <p className="text-3xl font-extrabold text-[#92400E]">₹{(report.stats.revenueGenerated || 0).toLocaleString()}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">
-        <div className="border border-[#ECECEC] rounded-xl p-5">
-          <h3 className="text-sm font-bold text-[#800020] mb-4 uppercase tracking-wider">Investigations Ordered</h3>
+        <div className="border border-[#E2E8F0] rounded-xl p-5">
+          <h3 className="text-sm font-bold text-[#0F172A] mb-4 uppercase tracking-wider">Investigations Ordered</h3>
           <div className="text-2xl font-bold">{report.stats.investigationsOrdered}</div>
           <ul className="mt-2 space-y-1 text-xs text-gray-600 max-h-[150px] overflow-y-auto">
             {report.investigations.map((inv: any, i: number) => (
@@ -83,8 +83,8 @@ Revenue Generated: ₹${report.stats.revenueGenerated}
             ))}
           </ul>
         </div>
-        <div className="border border-[#ECECEC] rounded-xl p-5">
-          <h3 className="text-sm font-bold text-[#800020] mb-4 uppercase tracking-wider">OT Procedures</h3>
+        <div className="border border-[#E2E8F0] rounded-xl p-5">
+          <h3 className="text-sm font-bold text-[#0F172A] mb-4 uppercase tracking-wider">OT Procedures</h3>
           <div className="text-2xl font-bold">{report.stats.otProceduresScheduled}</div>
           <ul className="mt-2 space-y-1 text-xs text-gray-600 max-h-[150px] overflow-y-auto">
             {report.procedures.map((p: any, i: number) => (

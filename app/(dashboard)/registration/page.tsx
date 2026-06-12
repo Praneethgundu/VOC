@@ -10,7 +10,7 @@ export default function RegistrationPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
-    <div className="flex bg-[#FDF8F8] min-h-screen">
+    <div className="flex bg-[#F8FAFC] min-h-screen">
       <Sidebar />
       <div className="ml-[248px] flex-1 flex flex-col min-h-screen">
         <Navbar pageTitle="Patient Registration" breadcrumb="Registration" />

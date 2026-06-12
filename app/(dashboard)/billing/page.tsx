@@ -21,12 +21,12 @@ export default function BillingPage() {
   const [showNewBillModal, setShowNewBillModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState<any>(null); // holds bill object
   
-  // New Bill State
   const [selectedUnbilled, setSelectedUnbilled] = useState<any>(null);
   const [billItems, setBillItems] = useState<any[]>([]);
   const [paymentMode, setPaymentMode] = useState("Cash");
   const [paymentStatus, setPaymentStatus] = useState("Pay");
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [billError, setBillError] = useState<string>('');
 
   useEffect(() => {
     fetchBills();
@@ -133,6 +133,7 @@ Thank you!
     setBillItems([]);
     setPaymentMode("Cash");
     setPaymentStatus("Pay");
+    setBillError('');
     setShowNewBillModal(true);
   };
 
@@ -142,8 +143,21 @@ Thank you!
   };
 
   const handleCreateBill = async () => {
-    if (!selectedUnbilled) return alert("Select a patient first");
-    if (billItems.length === 0) return alert("Add at least one item");
+    setBillError('');
+    if (!selectedUnbilled) {
+      setBillError("Select a patient first");
+      return;
+    }
+    if (billItems.length === 0) {
+      setBillError("Add at least one item to the bill");
+      return;
+    }
+    
+    const invalidItems = billItems.filter(item => !item.serviceName?.trim() || isNaN(Number(item.amount)) || Number(item.amount) < 0);
+    if (invalidItems.length > 0) {
+      setBillError("Please ensure all items have a valid name and amount >= 0");
+      return;
+    }
     
     try {
       const payload = {
@@ -229,7 +243,7 @@ Thank you!
   const pendingBillsCount = bills.filter(b => b.status === "Unpaid").length;
 
   return (
-    <div className="flex bg-[#FDF8F8] min-h-screen">
+    <div className="flex bg-[#F8FAFC] min-h-screen">
       <Sidebar />
       <div className="ml-[248px] flex-1 flex flex-col min-h-screen">
         <Navbar pageTitle="Billing & Payments" breadcrumb="Generate bills, collect payments and receipts" />
@@ -237,37 +251,37 @@ Thank you!
 
           {/* Summary cards */}
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-5">
-            <div className="bg-white rounded-xl border border-[#ECECEC] p-5 shadow-sm text-center">
-              <p className="text-[12px] font-bold text-[#6B7280] uppercase tracking-wider mb-2">Today's Revenue</p>
-              <p className="text-3xl font-bold text-[#16A34A]">₹{totalBilledToday.toLocaleString("en-IN")}</p>
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm text-center">
+              <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Today's Revenue</p>
+              <p className="text-3xl font-bold text-[#059669]">₹{totalBilledToday.toLocaleString("en-IN")}</p>
             </div>
-            <div className="bg-white rounded-xl border border-[#ECECEC] p-5 shadow-sm text-center">
-              <p className="text-[12px] font-bold text-[#6B7280] uppercase tracking-wider mb-2">Total Collected</p>
-              <p className="text-3xl font-bold text-[#1A2332]">₹{collectedToday.toLocaleString("en-IN")}</p>
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm text-center">
+              <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Total Collected</p>
+              <p className="text-3xl font-bold text-[#1E293B]">₹{collectedToday.toLocaleString("en-IN")}</p>
             </div>
-            <div className="bg-white rounded-xl border border-[#ECECEC] p-5 shadow-sm text-center">
-              <p className="text-[12px] font-bold text-[#6B7280] uppercase tracking-wider mb-2">Pending Amount</p>
-              <p className="text-3xl font-bold text-[#D97706]">₹{pendingToday.toLocaleString("en-IN")}</p>
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm text-center">
+              <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Pending Amount</p>
+              <p className="text-3xl font-bold text-[#92400E]">₹{pendingToday.toLocaleString("en-IN")}</p>
             </div>
-            <div className="bg-white rounded-xl border border-[#ECECEC] p-5 shadow-sm text-center">
-              <p className="text-[12px] font-bold text-[#6B7280] uppercase tracking-wider mb-2">Pending Bills</p>
-              <p className="text-3xl font-bold text-[#D97706]">{pendingBillsCount}</p>
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm text-center">
+              <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Pending Bills</p>
+              <p className="text-3xl font-bold text-[#92400E]">{pendingBillsCount}</p>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex gap-4">
-              <div className="flex items-center gap-2 bg-white border border-[#ECECEC] rounded-lg px-3 h-10 w-64 shadow-sm">
-                <Search size={14} className="text-[#6B7280] shrink-0" />
+              <div className="flex items-center gap-2 bg-white border border-[#E2E8F0] rounded-lg px-3 h-10 w-64 shadow-sm">
+                <Search size={14} className="text-[#64748B] shrink-0" />
                 <input
                   type="text"
                   placeholder="Search bills..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="bg-transparent outline-none text-sm text-[#1A2332] placeholder:text-[#9CA3AF] w-full"
+                  className="bg-transparent outline-none text-sm text-[#1E293B] placeholder:text-[#64748B] w-full"
                 />
               </div>
-              <select className="h-10 px-3 bg-white border border-[#ECECEC] rounded-lg text-sm text-[#6B7280] outline-none shadow-sm">
+              <select className="h-10 px-3 bg-white border border-[#E2E8F0] rounded-lg text-sm text-[#64748B] outline-none shadow-sm">
                 <option>-- All Patients --</option>
               </select>
             </div>
@@ -275,7 +289,7 @@ Thank you!
           </div>
 
           {/* Bills table */}
-          <div className="bg-white rounded-xl border border-[#ECECEC] shadow-sm">
+          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm">
             <Table>
               <THead>
                 <tr>
@@ -293,23 +307,23 @@ Thank you!
               <TBody>
                 {filtered.map((b, i) => (
                   <Tr key={b.id || b._id} index={i}>
-                    <Td><span className="font-mono text-[13px] font-bold text-[#E12D45]">{b.id || b._id || "N/A"}</span></Td>
-                    <Td><span className="font-mono text-[13px] text-[#1A2332]">{b.opNumber || b.op}</span></Td>
-                    <Td><span className="font-medium text-[#1A2332]">
+                    <Td><span className="font-mono text-[13px] font-bold text-[#2563EB]">{b.id || b._id || "N/A"}</span></Td>
+                    <Td><span className="font-mono text-[13px] text-[#1E293B]">{b.opNumber || b.op}</span></Td>
+                    <Td><span className="font-medium text-[#1E293B]">
                       {patients.find(p => p.opNumber === b.opNumber)?.fullName || b.patientName || b.patient || "Unknown"}
                     </span></Td>
-                    <Td><span className="text-[13px] text-[#6B7280]">{b.date && !isNaN(new Date(b.date).getTime()) ? new Date(b.date).toISOString().split('T')[0] : "N/A"}</span></Td>
-                    <Td><span className="font-bold text-[#1A2332]">₹{(b.total || 0).toLocaleString("en-IN")}</span></Td>
-                    <Td><span className="font-bold text-[#16A34A]">₹{b.status === "Paid" ? (b.total || 0).toLocaleString("en-IN") : "0"}</span></Td>
-                    <Td><span className="text-[13px] text-[#6B7280]">{b.paymentMode || (b.status === "Paid" ? "Cash" : "Pending")}</span></Td>
+                    <Td><span className="text-[13px] text-[#64748B]">{b.date && !isNaN(new Date(b.date).getTime()) ? new Date(b.date).toISOString().split('T')[0] : "N/A"}</span></Td>
+                    <Td><span className="font-bold text-[#1E293B]">₹{(b.total || 0).toLocaleString("en-IN")}</span></Td>
+                    <Td><span className="font-bold text-[#059669]">₹{b.status === "Paid" ? (b.total || 0).toLocaleString("en-IN") : "0"}</span></Td>
+                    <Td><span className="text-[13px] text-[#64748B]">{b.paymentMode || (b.status === "Paid" ? "Cash" : "Pending")}</span></Td>
                     <Td align="center">
                       {b.status === "Paid" ? (
-                        <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded text-[#16A34A] bg-[#F0FDF4]">
+                        <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded text-[#059669] bg-[#ECFDF5]">
                           PAID
                         </span>
                       ) : (
                         <select
-                          className="text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] outline-none cursor-pointer"
+                          className="text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded text-[#92400E] bg-[#FFFBEB] border border-[#FDE68A] outline-none cursor-pointer"
                           value="Pending"
                           onChange={(e) => handleStatusChange(b.id || b._id, e.target.value)}
                         >
@@ -322,7 +336,7 @@ Thank you!
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setShowReceiptModal(b)}
-                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#ECECEC] text-[#1A2332] text-[11px] font-bold hover:bg-gray-50 transition-colors shadow-sm"
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#E2E8F0] text-[#1E293B] text-[11px] font-bold hover:bg-gray-50 transition-colors shadow-sm"
                         >
                           <Receipt size={12} />
                           Receipt
@@ -350,10 +364,10 @@ Thank you!
           <div className="bg-white rounded-2xl w-full max-w-5xl h-[80vh] flex overflow-hidden shadow-2xl flex-col md:flex-row">
             
             {/* Left Panel: Unbilled */}
-            <div className="w-[300px] border-r border-[#ECECEC] bg-[#FDF8F8] flex flex-col">
-              <div className="p-4 border-b border-[#ECECEC]">
-                <h3 className="font-bold text-[#800020] text-[14px]">UNBILLED PATIENTS</h3>
-                <p className="text-[11px] text-[#6B7280]">Select a patient to bill</p>
+            <div className="w-[300px] border-r border-[#E2E8F0] bg-[#F8FAFC] flex flex-col">
+              <div className="p-4 border-b border-[#E2E8F0]">
+                <h3 className="font-bold text-[#0F172A] text-[14px]">UNBILLED PATIENTS</h3>
+                <p className="text-[11px] text-[#64748B]">Select a patient to bill</p>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
                 {unbilled.length === 0 ? (
@@ -366,19 +380,19 @@ Thank you!
                       onDragStart={(e) => handleDragStart(e, p)}
                       onClick={() => selectPatientForBill(p)}
                       className={`p-3 rounded-xl border cursor-pointer bg-white shadow-sm transition-all ${
-                        selectedUnbilled?.opNumber === p.opNumber ? "border-[#E12D45] ring-1 ring-[#E12D45]" : "border-[#ECECEC] hover:border-gray-300"
+                        selectedUnbilled?.opNumber === p.opNumber ? "border-[#2563EB] ring-1 ring-[#2563EB]" : "border-[#E2E8F0] hover:border-gray-300"
                       } active:scale-95`}
                     >
                       <div>
-                        <p className="text-[13px] font-bold text-[#1A2332]">{p.patientName}</p>
-                        <p className="text-[11px] text-[#6B7280]">{p.opNumber} • {p.department}</p>
+                        <p className="text-[13px] font-bold text-[#1E293B]">{p.patientName}</p>
+                        <p className="text-[11px] text-[#64748B]">{p.opNumber} • {p.department}</p>
                         {p.complaint && p.complaint !== "N/A" && (
-                          <p className="text-[11px] font-semibold text-[#800020] mt-0.5">{p.complaint}</p>
+                          <p className="text-[11px] font-semibold text-[#0F172A] mt-0.5">{p.complaint}</p>
                         )}
                       </div>
                       <div className="flex justify-between items-center mt-2">
                         <Badge status="error">WAITING</Badge>
-                        <span className="font-bold text-[#800020]">₹{p.total}</span>
+                        <span className="font-bold text-[#0F172A]">₹{p.total}</span>
                       </div>
                     </div>
                   ))
@@ -388,56 +402,63 @@ Thank you!
 
             {/* Right Panel: Invoice Builder */}
             <div 
-              className={`flex-1 flex flex-col transition-colors duration-300 ${isDraggingOver ? "bg-red-50 border-2 border-dashed border-[#E12D45]" : "bg-white"}`}
+              className={`flex-1 flex flex-col transition-colors duration-300 ${isDraggingOver ? "bg-red-50 border-2 border-dashed border-[#2563EB]" : "bg-white"}`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <div className="p-5 border-b border-[#ECECEC] flex items-center gap-2">
-                <Receipt className="text-[#800020]" size={20} />
-                <h2 className="text-xl font-bold text-[#1A2332]">Create New Bill {isDraggingOver && <span className="text-sm font-normal text-[#E12D45] animate-pulse ml-2">Drop to auto-fill</span>}</h2>
+              <div className="p-5 border-b border-[#E2E8F0] flex items-center gap-2">
+                <Receipt className="text-[#0F172A]" size={20} />
+                <h2 className="text-xl font-bold text-[#1E293B]">Create New Bill {isDraggingOver && <span className="text-sm font-normal text-[#2563EB] animate-pulse ml-2">Drop to auto-fill</span>}</h2>
               </div>
               
               <div className="p-6 flex-1 overflow-y-auto">
                 <div className="grid grid-cols-2 gap-4 mb-6 relative">
                   {isDraggingOver && (
-                    <div className="absolute inset-0 bg-[#E12D45]/5 border-2 border-[#E12D45] border-dashed rounded-lg flex items-center justify-center z-10 pointer-events-none">
-                       <span className="font-bold text-[#E12D45]">Drop Patient Here</span>
+                    <div className="absolute inset-0 bg-[#2563EB]/5 border-2 border-[#2563EB] border-dashed rounded-lg flex items-center justify-center z-10 pointer-events-none">
+                       <span className="font-bold text-[#2563EB]">Drop Patient Here</span>
                     </div>
                   )}
                   <div>
-                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">OP Number</label>
+                    <label className="block text-[11px] font-bold text-[#64748B] uppercase mb-1">OP Number</label>
                     <input 
                       type="text" 
                       value={selectedUnbilled?.opNumber || ""} 
                       onChange={(e) => {
                         const val = e.target.value;
                         setSelectedUnbilled((prev: any) => ({ ...(prev || {}), opNumber: val }));
-                        const p = patients.find(p => p.opNumber === val);
-                        if (p) {
-                          setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: p.fullName }));
+                        if (val.trim()) {
+                          const searchOp = val.trim().toLowerCase();
+                          const p = patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp);
+                          if (p) {
+                            setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: p.fullName || p.patientName || "Unknown Name" }));
+                          } else {
+                            setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: "Patient not found" }));
+                          }
+                        } else {
+                          setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: "" }));
                         }
                       }}
-                      className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm bg-white" 
+                      className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm bg-white" 
                       placeholder="Enter OP Number"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">Patient Name</label>
-                    <input type="text" readOnly value={selectedUnbilled?.patientName || ""} className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg bg-gray-50 text-sm" />
+                    <label className="block text-[11px] font-bold text-[#64748B] uppercase mb-1">Patient Name</label>
+                    <input type="text" readOnly value={selectedUnbilled?.patientName || ""} className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg bg-gray-50 text-sm" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">Bill Number</label>
-                    <input type="text" readOnly value="Auto-generated" className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg bg-gray-50 text-sm text-gray-400 italic" />
+                    <label className="block text-[11px] font-bold text-[#64748B] uppercase mb-1">Bill Number</label>
+                    <input type="text" readOnly value="Auto-generated" className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg bg-gray-50 text-sm text-gray-400 italic" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">Date</label>
-                    <input type="text" readOnly value={new Date().toLocaleDateString('en-GB')} className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg bg-gray-50 text-sm text-gray-500" />
+                    <label className="block text-[11px] font-bold text-[#64748B] uppercase mb-1">Date</label>
+                    <input type="text" readOnly value={new Date().toLocaleDateString('en-GB')} className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg bg-gray-50 text-sm text-gray-500" />
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="font-bold text-[#1A2332]">Bill Items</h4>
+                  <h4 className="font-bold text-[#1E293B]">Bill Items</h4>
                   <button onClick={addNewItem} className="text-[#2563EB] text-[12px] font-bold hover:underline">+ Add Item</button>
                 </div>
 
@@ -448,14 +469,14 @@ Thank you!
                         type="text" 
                         value={item.serviceName}
                         onChange={(e) => updateItem(idx, "serviceName", e.target.value)}
-                        className="flex-1 h-10 px-3 border border-[#ECECEC] rounded-lg text-sm" 
+                        className="flex-1 h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm" 
                         placeholder="Service name"
                       />
                       <input 
                         type="number" 
                         value={item.amount}
                         onChange={(e) => updateItem(idx, "amount", Number(e.target.value))}
-                        className="w-24 h-10 px-3 border border-[#ECECEC] rounded-lg text-sm text-right" 
+                        className="w-24 h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm text-right" 
                         placeholder="Amount"
                       />
                       <button onClick={() => removeItem(idx)} className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg">
@@ -466,18 +487,18 @@ Thank you!
                   {billItems.length === 0 && <p className="text-sm text-gray-500">No items added yet.</p>}
                 </div>
 
-                <div className="bg-[#800020] rounded-xl p-5 flex justify-between items-center text-white shadow-sm mb-6">
+                <div className="bg-[#0F172A] rounded-xl p-5 flex justify-between items-center text-white shadow-sm mb-6">
                   <span className="font-bold text-lg">Total Amount</span>
                   <span className="text-3xl font-bold">₹{billItems.reduce((acc, it) => acc + (Number(it.amount) || 0), 0).toLocaleString("en-IN")}</span>
                 </div>
 
                 <div className="mb-6 grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-2">Payment Mode</label>
+                    <label className="block text-[11px] font-bold text-[#64748B] uppercase mb-2">Payment Mode</label>
                     <select 
                       value={paymentMode}
                       onChange={(e) => setPaymentMode(e.target.value)}
-                      className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm text-[#1A2332] outline-none"
+                      className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm text-[#1E293B] outline-none"
                     >
                       <option value="Cash">Cash</option>
                       <option value="Card">Card</option>
@@ -485,29 +506,31 @@ Thank you!
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-2">Payment Status</label>
+                    <label className="block text-[11px] font-bold text-[#64748B] uppercase mb-2">Payment Status</label>
                     <select 
                       value={paymentStatus}
                       onChange={(e) => setPaymentStatus(e.target.value)}
-                      className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm text-[#1A2332] outline-none"
+                      className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm text-[#1E293B] outline-none"
                     >
                       <option value="Pay">Pay (Completed)</option>
                       <option value="Pending">Pending</option>
                     </select>
                   </div>
                 </div>
+
+                {billError && <p className="text-[12px] text-[#2563EB] font-medium mb-4">{billError}</p>}
               </div>
 
-              <div className="p-5 border-t border-[#ECECEC] flex gap-3">
+              <div className="p-5 border-t border-[#E2E8F0] flex gap-3">
                 <button 
                   onClick={handleCreateBill}
-                  className="flex-1 h-12 bg-[#E12D45] text-white font-bold rounded-lg hover:bg-[#C82239] shadow-sm transition-colors"
+                  className="flex-1 h-12 bg-[#2563EB] text-white font-bold rounded-lg hover:bg-[#1D4ED8] shadow-sm transition-colors"
                 >
                   Save & Generate Bill
                 </button>
                 <button 
                   onClick={() => setShowNewBillModal(false)}
-                  className="px-6 h-12 bg-white text-[#1A2332] font-bold rounded-lg border border-[#ECECEC] hover:bg-gray-50 transition-colors"
+                  className="px-6 h-12 bg-white text-[#1E293B] font-bold rounded-lg border border-[#E2E8F0] hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
@@ -521,54 +544,54 @@ Thank you!
       {showReceiptModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl p-8 flex flex-col">
-            <div className="text-center mb-6 border-b border-[#ECECEC] pb-4">
-              <h2 className="text-2xl font-bold text-[#800020]">VOC Orthopaedic Hospital</h2>
-              <p className="text-sm text-[#6B7280] mt-1">Main Road, Kavali — Ph: 0861-XXXXXX</p>
-              <h3 className="mt-4 font-bold tracking-widest text-[#1A2332]">RECEIPT</h3>
+            <div className="text-center mb-6 border-b border-[#E2E8F0] pb-4">
+              <h2 className="text-2xl font-bold text-[#0F172A]">VOC Orthopaedic Hospital</h2>
+              <p className="text-sm text-[#64748B] mt-1">Main Road, Kavali — Ph: 0861-XXXXXX</p>
+              <h3 className="mt-4 font-bold tracking-widest text-[#1E293B]">RECEIPT</h3>
             </div>
             
             <div className="space-y-2 text-[13px] mb-6">
               <div className="flex justify-between">
-                <span className="text-[#6B7280]">Bill No.</span>
-                <span className="font-bold text-[#1A2332]">{showReceiptModal.id || showReceiptModal._id}</span>
+                <span className="text-[#64748B]">Bill No.</span>
+                <span className="font-bold text-[#1E293B]">{showReceiptModal.id || showReceiptModal._id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6B7280]">Patient</span>
-                <span className="font-bold text-[#1A2332]">
+                <span className="text-[#64748B]">Patient</span>
+                <span className="font-bold text-[#1E293B]">
                   {patients.find(p => p.opNumber === showReceiptModal.opNumber)?.fullName || showReceiptModal.patientName || showReceiptModal.patient || "Unknown"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6B7280]">OP No.</span>
-                <span className="font-bold text-[#1A2332]">{showReceiptModal.opNumber || showReceiptModal.op}</span>
+                <span className="text-[#64748B]">OP No.</span>
+                <span className="font-bold text-[#1E293B]">{showReceiptModal.opNumber || showReceiptModal.op}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6B7280]">Date</span>
-                <span className="font-bold text-[#1A2332]">{showReceiptModal.date && !isNaN(new Date(showReceiptModal.date).getTime()) ? new Date(showReceiptModal.date).toISOString().split('T')[0] : "N/A"}</span>
+                <span className="text-[#64748B]">Date</span>
+                <span className="font-bold text-[#1E293B]">{showReceiptModal.date && !isNaN(new Date(showReceiptModal.date).getTime()) ? new Date(showReceiptModal.date).toISOString().split('T')[0] : "N/A"}</span>
               </div>
             </div>
 
-            <div className="border-t border-b border-dashed border-[#ECECEC] py-4 mb-6 space-y-2">
+            <div className="border-t border-b border-dashed border-[#E2E8F0] py-4 mb-6 space-y-2">
               {showReceiptModal.items && showReceiptModal.items.length > 0 ? (
                 showReceiptModal.items.map((item: any, idx: number) => (
                   <div key={idx} className="flex justify-between text-[13px]">
-                    <span className="text-[#1A2332]">{item.serviceName}</span>
-                    <span className="font-bold text-[#1A2332]">₹{item.amount}</span>
+                    <span className="text-[#1E293B]">{item.serviceName}</span>
+                    <span className="font-bold text-[#1E293B]">₹{item.amount}</span>
                   </div>
                 ))
               ) : (
                 <>
                   <div className="flex justify-between text-[13px]">
-                    <span className="text-[#1A2332]">Consultation Fee</span>
-                    <span className="font-bold text-[#1A2332]">₹{showReceiptModal.consultation || 0}</span>
+                    <span className="text-[#1E293B]">Consultation Fee</span>
+                    <span className="font-bold text-[#1E293B]">₹{showReceiptModal.consultation || 0}</span>
                   </div>
                   <div className="flex justify-between text-[13px]">
-                    <span className="text-[#1A2332]">Pharmacy Charges</span>
-                    <span className="font-bold text-[#1A2332]">₹{showReceiptModal.pharmacy || 0}</span>
+                    <span className="text-[#1E293B]">Pharmacy Charges</span>
+                    <span className="font-bold text-[#1E293B]">₹{showReceiptModal.pharmacy || 0}</span>
                   </div>
                   <div className="flex justify-between text-[13px]">
-                    <span className="text-[#1A2332]">Lab Charges</span>
-                    <span className="font-bold text-[#1A2332]">₹{showReceiptModal.lab || 0}</span>
+                    <span className="text-[#1E293B]">Lab Charges</span>
+                    <span className="font-bold text-[#1E293B]">₹{showReceiptModal.lab || 0}</span>
                   </div>
                 </>
               )}
@@ -576,12 +599,12 @@ Thank you!
 
             <div className="flex justify-between items-end mb-8">
               <div>
-                <span className="text-xl font-bold text-[#1A2332]">TOTAL</span>
-                <p className="text-[11px] text-[#6B7280] mt-1">Payment: {showReceiptModal.paymentMode || (showReceiptModal.status === "Paid" ? "Cash" : "Pending")}</p>
+                <span className="text-xl font-bold text-[#1E293B]">TOTAL</span>
+                <p className="text-[11px] text-[#64748B] mt-1">Payment: {showReceiptModal.paymentMode || (showReceiptModal.status === "Paid" ? "Cash" : "Pending")}</p>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-bold text-[#800020]">₹{showReceiptModal.total.toLocaleString("en-IN")}</span>
-                <p className={`text-[12px] font-bold mt-1 ${showReceiptModal.status === "Paid" ? "text-[#16A34A]" : "text-[#D97706]"}`}>
+                <span className="text-2xl font-bold text-[#0F172A]">₹{showReceiptModal.total.toLocaleString("en-IN")}</span>
+                <p className={`text-[12px] font-bold mt-1 ${showReceiptModal.status === "Paid" ? "text-[#059669]" : "text-[#92400E]"}`}>
                   {showReceiptModal.status || "PENDING"}
                 </p>
               </div>
@@ -590,7 +613,7 @@ Thank you!
             <div className="flex gap-3">
               <button 
                 onClick={downloadReceipt}
-                className="flex items-center justify-center gap-2 h-12 bg-gray-100 text-[#1A2332] font-bold rounded-lg hover:bg-gray-200 transition-colors px-4"
+                className="flex items-center justify-center gap-2 h-12 bg-gray-100 text-[#1E293B] font-bold rounded-lg hover:bg-gray-200 transition-colors px-4"
                 title="Download Receipt"
               >
                 <Download size={18} />
@@ -599,13 +622,13 @@ Thank you!
                 onClick={() => {
                   window.print();
                 }}
-                className="flex-1 h-12 bg-[#E12D45] text-white font-bold rounded-lg hover:bg-[#C82239] transition-colors"
+                className="flex-1 h-12 bg-[#2563EB] text-white font-bold rounded-lg hover:bg-[#1D4ED8] transition-colors"
               >
                 Print
               </button>
               <button 
                 onClick={() => setShowReceiptModal(null)}
-                className="flex-1 h-12 bg-white text-[#1A2332] font-bold rounded-lg border border-[#ECECEC] hover:bg-gray-50 transition-colors"
+                className="flex-1 h-12 bg-white text-[#1E293B] font-bold rounded-lg border border-[#E2E8F0] hover:bg-gray-50 transition-colors"
               >
                 Close
               </button>

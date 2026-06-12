@@ -26,6 +26,6 @@ export interface PatientRecord {
 
 export const getPatientRecord = async (opNumber: string): Promise<PatientRecord> => {
   const encodeOp = encodeURIComponent(opNumber);
-  const response = await api.get(`/patients/${encodeOp}/record`);
+  const response = await api.get(`/patients/record?opNumber=${encodeOp}`);
   return response.data;
 };

@@ -21,16 +21,58 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     complaint: "",
     fee: 500,
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.fullName.trim() || formData.fullName.length < 3) {
+      newErrors.fullName = "Patient name must be at least 3 characters";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.fullName)) {
+      newErrors.fullName = "Patient name cannot contain special characters or numbers";
+    }
+
+    if (!formData.age || isNaN(Number(formData.age)) || Number(formData.age) <= 0 || Number(formData.age) > 150) {
+      newErrors.age = "Enter a valid age between 1 and 150";
+    }
+    if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+      newErrors.phone = "Enter a valid 10-digit phone number";
+    }
+    if (!formData.bloodGroup) {
+      newErrors.bloodGroup = "Blood group is required";
+    }
+    if (!formData.complaint) {
+      newErrors.complaint = "Patient complaint is required";
+    }
+    if (formData.fee === undefined || formData.fee === null || Number(formData.fee) < 0) {
+      newErrors.fee = "Enter a valid consultation fee";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let value = e.target.value;
+
+    if (e.target.name === "fullName") {
+      value = value.replace(/[^a-zA-Z\s]/g, ""); // Allow only letters and spaces
+    }
+
+    if (e.target.name === "age" && value !== "") {
+      const numVal = Number(value);
+      if (numVal > 150) return; // Block typing more than 150
+      if (numVal < 0) return; // Block typing negative numbers
+    }
+
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
     try {
       await addPatient(formData);
@@ -60,19 +102,19 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-xl border border-[#ECECEC] p-6"
+      className="bg-white rounded-xl border border-[#E2E8F0] p-6"
       style={{
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04)",
       }}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6 pb-5 border-b border-[#ECECEC]">
+      <div className="flex items-center gap-3 mb-6 pb-5 border-b border-[#E2E8F0]">
         <div className="w-10 h-10 rounded-xl bg-[#FFF0F2] flex items-center justify-center">
-          <UserPlus size={18} className="text-[#E12D45]" />
+          <UserPlus size={18} className="text-[#2563EB]" />
         </div>
         <div>
           <h2 className="page-title !text-[20px]">New Patient Registration</h2>
-          <p className="text-[12px] text-[#6B7280] mt-0.5">
+          <p className="text-[12px] text-[#64748B] mt-0.5">
             Fill in patient details to register
           </p>
         </div>
@@ -91,6 +133,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           value={formData.fullName}
           onChange={handleChange}
           placeholder="Enter full name"
+          error={errors.fullName}
           required
         />
         <Input
@@ -100,6 +143,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           value={formData.age}
           onChange={handleChange}
           placeholder="Age in years"
+          error={errors.age}
           required
         />
         <Select
@@ -118,6 +162,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           value={formData.phone}
           onChange={handleChange}
           placeholder="+91 XXXXX XXXXX"
+          error={errors.phone}
           required
         />
         <Select
@@ -125,6 +170,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           name="bloodGroup"
           value={formData.bloodGroup}
           onChange={handleChange}
+          error={errors.bloodGroup}
         >
           <option value="">Select Blood Group</option>
           <option>A+</option>
@@ -148,6 +194,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           name="complaint"
           value={formData.complaint}
           onChange={handleChange}
+          error={errors.complaint}
           required
         >
           <option value="">Select Complaint</option>
@@ -185,6 +232,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           name="fee"
           value={formData.fee}
           onChange={handleChange}
+          error={errors.fee}
         />
       </div>
 
@@ -196,7 +244,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           type="button"
           variant="outline"
           size="lg"
-          onClick={() =>
+          onClick={() => {
             setFormData({
               opNumber: generateOP(),
               fullName: "",
@@ -209,8 +257,9 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
               doctor: "",
               complaint: "",
               fee: 500,
-            })
-          }
+            });
+            setErrors({});
+          }}
         >
           Cancel
         </Button>

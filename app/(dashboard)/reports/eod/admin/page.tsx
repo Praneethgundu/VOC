@@ -55,7 +55,7 @@ export default function AdminEODPage() {
   };
 
   return (
-    <div className="flex bg-[#FDF8F8] min-h-screen">
+    <div className="flex bg-[#F8FAFC] min-h-screen">
       <div className="print:hidden">
         <Sidebar />
       </div>
@@ -69,10 +69,10 @@ export default function AdminEODPage() {
           <div className="w-full max-w-5xl mb-6 print:hidden flex justify-between items-center">
             
             <div className="flex gap-2">
-              <button onClick={() => handleTabChange("master")} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeTab === 'master' ? 'bg-[#800020] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}>Master Summary</button>
-              <button onClick={() => handleTabChange("reception")} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeTab === 'reception' ? 'bg-[#800020] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}>Reception EOD</button>
-              <button onClick={() => handleTabChange("doctor")} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeTab === 'doctor' ? 'bg-[#800020] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}>Doctor EOD</button>
-              <button onClick={() => handleTabChange("pharmacy")} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeTab === 'pharmacy' ? 'bg-[#800020] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}>Pharmacy EOD</button>
+              <button onClick={() => handleTabChange("master")} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeTab === 'master' ? 'bg-[#0F172A] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}>Master Summary</button>
+              <button onClick={() => handleTabChange("reception")} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeTab === 'reception' ? 'bg-[#0F172A] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}>Reception EOD</button>
+              <button onClick={() => handleTabChange("doctor")} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeTab === 'doctor' ? 'bg-[#0F172A] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}>Doctor EOD</button>
+              <button onClick={() => handleTabChange("pharmacy")} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeTab === 'pharmacy' ? 'bg-[#0F172A] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}>Pharmacy EOD</button>
             </div>
 
             <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ export default function AdminEODPage() {
                   <select
                     value={selectedDoctor}
                     onChange={(e) => setSelectedDoctor(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#800020] bg-white mr-2"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#0F172A] bg-white mr-2"
                   >
                     <option value="Dr. Sharma">Dr. Sharma</option>
                     <option value="Dr. Reddy">Dr. Reddy</option>
@@ -96,7 +96,7 @@ export default function AdminEODPage() {
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 max={new Date().toISOString().split("T")[0]}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#800020]"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#0F172A]"
               />
             </div>
           </div>

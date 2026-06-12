@@ -46,36 +46,36 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
         if (e.target === overlayRef.current) onClose();
       }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(92,0,24,0.18)", backdropFilter: "blur(4px)" }}
+      style={{ backgroundColor: "rgba(15,23,42,0.18)", backdropFilter: "blur(4px)" }}
     >
       <div
         className={[
           "relative w-full rounded-[20px] overflow-hidden animate-fade-in",
-          "border border-[rgba(128,0,32,0.12)]",
+          "border border-[rgba(15,23,42,0.12)]",
           sizeStyles[size],
         ].join(" ")}
         style={{
           background: "rgba(255,255,255,0.94)",
           backdropFilter: "blur(24px)",
-          boxShadow: "0 32px 80px rgba(92,0,24,0.2)",
+          boxShadow: "0 32px 80px rgba(15,23,42,0.2)",
         }}
       >
         {/* Header */}
         {(title || subtitle) && (
-          <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-[#ECECEC]">
+          <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-[#E2E8F0]">
             <div>
               {title && (
-                <h2 className="text-[18px] font-800 text-[#800020] font-extrabold leading-tight">
+                <h2 className="text-[18px] font-800 text-[#0F172A] font-extrabold leading-tight">
                   {title}
                 </h2>
               )}
               {subtitle && (
-                <p className="text-[13px] text-[#6B7280] mt-1">{subtitle}</p>
+                <p className="text-[13px] text-[#64748B] mt-1">{subtitle}</p>
               )}
             </div>
             <button
               onClick={onClose}
-              className="ml-4 p-1.5 rounded-lg text-[#6B7280] hover:bg-[#FDF8F8] hover:text-[#800020] transition-colors shrink-0"
+              className="ml-4 p-1.5 rounded-lg text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors shrink-0"
             >
               <X size={18} />
             </button>
@@ -87,7 +87,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#ECECEC] bg-[#FDF8F8]">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC]">
             {footer}
           </div>
         )}

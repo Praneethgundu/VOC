@@ -35,9 +35,9 @@ export async function GET(req: Request) {
       prisma.patient.findMany(),
       prisma.consultation.findMany({ include: { patient: true } }),
       prisma.bill.findMany({ select: { opNumber: true, items: true } }),
-      prisma.investigationTransaction.findMany({ where: { status: "Completed" } }),
+      prisma.investigationTransaction.findMany({ where: { status: { in: ["Completed", "COMPLETED"] } } }),
       prisma.pharmacyDispense.findMany(),
-      prisma.oTProcedure.findMany({ where: { status: "Completed" } })
+      prisma.oTProcedure.findMany({ where: { status: { in: ["Completed", "COMPLETED"] } } })
     ]);
 
     // Map OP Number to a Map of { serviceName: count }
@@ -101,7 +101,7 @@ export async function GET(req: Request) {
 
     // 2. Process consultations for Consultation Fee
     for (const c of consultations) {
-      if (c.status === "Completed") {
+      if (c.status === "Completed" || c.status === "COMPLETED") {
         const serviceName = `Consultation Fee (${c.department || "General"})`;
         if (!isBilled(c.opNumber, serviceName)) {
            const entry = getOrInitPatient(c.opNumber, c.patient?.fullName || "Unknown", c.patientId, c.department, c.patient?.complaint || "");
@@ -134,18 +134,11 @@ export async function GET(req: Request) {
         const p = patients.find(pat => pat.opNumber === ph.opNumber);
         const entry = getOrInitPatient(ph.opNumber, p?.fullName || "Unknown", ph.patientId, p?.department || "General", p?.complaint || "");
         
-        // Since we decrement counts per item, we should add each individual dispense as a separate item, or aggregate correctly.
-        // It's safer to aggregate them in the unbilled list to avoid too many duplicate items.
-        const existingItem = entry.items.find((i: any) => i.serviceName === serviceName);
-        if (existingItem) {
-           existingItem.amount += ph.amount;
-        } else {
-           entry.items.push({
-             serviceName: serviceName,
-             category: "Pharmacy",
-             amount: ph.amount,
-           });
-        }
+        entry.items.push({
+          serviceName: serviceName,
+          category: "Pharmacy",
+          amount: ph.amount,
+        });
       }
     }
 

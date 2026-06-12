@@ -27,7 +27,7 @@ export default function PatientSearchList({ patients, loading, selectedOpNumber,
     <div className="flex flex-col h-full bg-white">
       {/* Header & Search */}
       <div className="p-5">
-        <h2 className="text-[15px] font-bold text-[#1A2332] mb-4">Patient Search</h2>
+        <h2 className="text-[15px] font-bold text-[#1E293B] mb-4">Patient Search</h2>
         <div className="relative">
           <input
             type="text"
@@ -51,10 +51,10 @@ export default function PatientSearchList({ patients, loading, selectedOpNumber,
               <li 
                 key={p.opNumber}
                 onClick={() => onSelect(p.opNumber)}
-                className={`p-5 cursor-pointer hover:bg-[#FDF8F8] transition-colors ${selectedOpNumber === p.opNumber ? 'bg-[#FDF8F8] border-l-4 border-[#800020]' : 'border-l-4 border-transparent'}`}
+                className={`p-5 cursor-pointer hover:bg-[#F8FAFC] transition-colors ${selectedOpNumber === p.opNumber ? 'bg-[#F8FAFC] border-l-4 border-[#0F172A]' : 'border-l-4 border-transparent'}`}
               >
                 <div className="flex flex-col">
-                  <span className={`font-semibold text-[14px] ${selectedOpNumber === p.opNumber ? 'text-[#1A2332]' : 'text-[#1A2332]'}`}>
+                  <span className={`font-semibold text-[14px] ${selectedOpNumber === p.opNumber ? 'text-[#1E293B]' : 'text-[#1E293B]'}`}>
                     {p.fullName}
                   </span>
                   <span className="text-[13px] text-gray-400 mt-1">

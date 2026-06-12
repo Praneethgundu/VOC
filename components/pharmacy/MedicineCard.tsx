@@ -12,14 +12,14 @@ export default function MedicineCard({ medicine, onRestock, onDelete }: Medicine
   const isLowStock = qty < 50;
   
   return (
-    <div className="bg-white rounded-xl border border-[#ECECEC] p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+    <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
       <div className="flex items-start gap-3 mb-4">
-        <div className="bg-[#FFF4F4] text-[#E12D45] p-2 rounded-lg shrink-0">
+        <div className="bg-[#FEE2E2] text-[#2563EB] p-2 rounded-lg shrink-0">
           <Pill size={20} className="fill-current opacity-20" />
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-bold text-[#1A2332] leading-tight mb-0.5">{medicine.medicineName}</h3>
-          <p className="text-xs text-[#6B7280]">{medicine.category}</p>
+          <h3 className="text-sm font-bold text-[#1E293B] leading-tight mb-0.5">{medicine.medicineName}</h3>
+          <p className="text-xs text-[#64748B]">{medicine.category}</p>
         </div>
         <button 
           onClick={() => onDelete(medicine.medicineId)}
@@ -32,30 +32,30 @@ export default function MedicineCard({ medicine, onRestock, onDelete }: Medicine
       
       <div className="grid grid-cols-3 gap-2 mb-4">
         <div>
-          <p className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider mb-1">Stock</p>
-          <p className={`text-sm font-bold ${isLowStock ? 'text-[#E12D45]' : 'text-[#1A2332]'}`}>{qty} <span className="text-[10px] font-normal text-[#6B7280]">Units</span></p>
+          <p className="text-[10px] text-[#64748B] font-semibold uppercase tracking-wider mb-1">Stock</p>
+          <p className={`text-sm font-bold ${isLowStock ? 'text-[#2563EB]' : 'text-[#1E293B]'}`}>{qty} <span className="text-[10px] font-normal text-[#64748B]">Units</span></p>
         </div>
         <div>
-          <p className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider mb-1">Price</p>
-          <p className="text-sm font-bold text-[#E12D45]">₹{medicine.price}</p>
+          <p className="text-[10px] text-[#64748B] font-semibold uppercase tracking-wider mb-1">Price</p>
+          <p className="text-sm font-bold text-[#2563EB]">₹{medicine.price}</p>
         </div>
         <div>
-          <p className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider mb-1">Expiry</p>
-          <p className="text-sm font-bold text-[#1A2332]">{medicine.expiryDate}</p>
+          <p className="text-[10px] text-[#64748B] font-semibold uppercase tracking-wider mb-1">Expiry</p>
+          <p className="text-sm font-bold text-[#1E293B]">{medicine.expiryDate}</p>
         </div>
       </div>
 
       <div className="w-full bg-gray-100 rounded-full h-1 mb-4">
-        <div className={`h-1 rounded-full ${isLowStock ? 'bg-[#E12D45]' : 'bg-[#16A34A]'}`} style={{ width: `${Math.min(100, (qty / 500) * 100)}%` }}></div>
+        <div className={`h-1 rounded-full ${isLowStock ? 'bg-[#2563EB]' : 'bg-[#059669]'}`} style={{ width: `${Math.min(100, (qty / 500) * 100)}%` }}></div>
       </div>
       
-      <div className="flex justify-between items-center pt-3 border-t border-[#ECECEC] mt-auto">
-        <span className="text-[10px] font-semibold text-[#6B7280] px-2 py-1 bg-gray-50 rounded">
+      <div className="flex justify-between items-center pt-3 border-t border-[#E2E8F0] mt-auto">
+        <span className="text-[10px] font-semibold text-[#64748B] px-2 py-1 bg-gray-50 rounded">
           {medicine.medicineId}
         </span>
         <button 
           onClick={() => onRestock(medicine)}
-          className="text-xs font-bold text-[#E12D45] border border-[#E12D45]/20 hover:bg-[#FFF4F4] px-3 py-1.5 rounded transition-colors flex items-center gap-1"
+          className="text-xs font-bold text-[#2563EB] border border-[#2563EB]/20 hover:bg-[#FEE2E2] px-3 py-1.5 rounded transition-colors flex items-center gap-1"
         >
           📦 Restock
         </button>

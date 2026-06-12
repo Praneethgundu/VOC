@@ -15,14 +15,14 @@ export function Input({ label, error, hint, icon, className = "", id, ...props }
       {label && (
         <label
           htmlFor={inputId}
-          className="text-[13px] font-semibold text-[#1A2332]"
+          className="text-[13px] font-semibold text-[#1E293B]"
         >
           {label}
         </label>
       )}
       <div className="relative">
         {icon && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280] pointer-events-none">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none">
             {icon}
           </span>
         )}
@@ -30,13 +30,13 @@ export function Input({ label, error, hint, icon, className = "", id, ...props }
           id={inputId}
           {...props}
           className={[
-            "w-full h-12 rounded-lg border border-[rgba(128,0,32,0.12)] bg-white px-3 py-0",
-            "text-[14px] text-[#1A2332] placeholder:text-[#9CA3AF]",
+            "w-full h-12 rounded-lg border border-[rgba(15,23,42,0.12)] bg-white px-3 py-0",
+            "text-[14px] text-[#1E293B] placeholder:text-[#64748B]",
             "outline-none transition-all duration-200",
-            "focus:border-[#E12D45] focus:shadow-[0_0_0_3px_rgba(225,45,69,0.12)]",
+            "focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]",
             "disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#F9F9F9]",
-            "read-only:bg-[#FDF8F8] read-only:cursor-default",
-            error ? "border-[#E12D45] focus:shadow-[0_0_0_3px_rgba(225,45,69,0.18)]" : "",
+            "read-only:bg-[#F8FAFC] read-only:cursor-default",
+            error ? "border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.18)]" : "",
             icon ? "pl-10" : "",
             className,
           ]
@@ -44,8 +44,8 @@ export function Input({ label, error, hint, icon, className = "", id, ...props }
             .join(" ")}
         />
       </div>
-      {error && <p className="text-[12px] text-[#E12D45] font-medium">{error}</p>}
-      {hint && !error && <p className="text-[12px] text-[#6B7280]">{hint}</p>}
+      {error && <p className="text-[12px] text-[#2563EB] font-medium">{error}</p>}
+      {hint && !error && <p className="text-[12px] text-[#64748B]">{hint}</p>}
     </div>
   );
 }
@@ -62,7 +62,7 @@ export function Select({ label, error, hint, className = "", id, children, ...pr
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={selectId} className="text-[13px] font-semibold text-[#1A2332]">
+        <label htmlFor={selectId} className="text-[13px] font-semibold text-[#1E293B]">
           {label}
         </label>
       )}
@@ -70,12 +70,12 @@ export function Select({ label, error, hint, className = "", id, children, ...pr
         id={selectId}
         {...props}
         className={[
-          "w-full h-12 rounded-lg border border-[rgba(128,0,32,0.12)] bg-white px-3",
-          "text-[14px] text-[#1A2332]",
+          "w-full h-12 rounded-lg border border-[rgba(15,23,42,0.12)] bg-white px-3",
+          "text-[14px] text-[#1E293B]",
           "outline-none transition-all duration-200 cursor-pointer",
-          "focus:border-[#E12D45] focus:shadow-[0_0_0_3px_rgba(225,45,69,0.12)]",
+          "focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]",
           "disabled:opacity-60 disabled:cursor-not-allowed",
-          error ? "border-[#E12D45]" : "",
+          error ? "border-[#2563EB]" : "",
           className,
         ]
           .filter(Boolean)
@@ -83,8 +83,8 @@ export function Select({ label, error, hint, className = "", id, children, ...pr
       >
         {children}
       </select>
-      {error && <p className="text-[12px] text-[#E12D45] font-medium">{error}</p>}
-      {hint && !error && <p className="text-[12px] text-[#6B7280]">{hint}</p>}
+      {error && <p className="text-[12px] text-[#2563EB] font-medium">{error}</p>}
+      {hint && !error && <p className="text-[12px] text-[#64748B]">{hint}</p>}
     </div>
   );
 }
@@ -101,7 +101,7 @@ export function Textarea({ label, error, hint, className = "", id, ...props }: T
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={textareaId} className="text-[13px] font-semibold text-[#1A2332]">
+        <label htmlFor={textareaId} className="text-[13px] font-semibold text-[#1E293B]">
           {label}
         </label>
       )}
@@ -109,19 +109,19 @@ export function Textarea({ label, error, hint, className = "", id, ...props }: T
         id={textareaId}
         {...props}
         className={[
-          "w-full rounded-lg border border-[rgba(128,0,32,0.12)] bg-white px-3 py-3",
-          "text-[14px] text-[#1A2332] placeholder:text-[#9CA3AF]",
+          "w-full rounded-lg border border-[rgba(15,23,42,0.12)] bg-white px-3 py-3",
+          "text-[14px] text-[#1E293B] placeholder:text-[#64748B]",
           "outline-none transition-all duration-200 resize-y min-h-[96px]",
-          "focus:border-[#E12D45] focus:shadow-[0_0_0_3px_rgba(225,45,69,0.12)]",
+          "focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]",
           "disabled:opacity-60 disabled:cursor-not-allowed",
-          error ? "border-[#E12D45]" : "",
+          error ? "border-[#2563EB]" : "",
           className,
         ]
           .filter(Boolean)
           .join(" ")}
       />
-      {error && <p className="text-[12px] text-[#E12D45] font-medium">{error}</p>}
-      {hint && !error && <p className="text-[12px] text-[#6B7280]">{hint}</p>}
+      {error && <p className="text-[12px] text-[#2563EB] font-medium">{error}</p>}
+      {hint && !error && <p className="text-[12px] text-[#64748B]">{hint}</p>}
     </div>
   );
 }

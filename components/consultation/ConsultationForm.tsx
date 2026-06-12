@@ -40,6 +40,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     investigations: [] as InvestigationMasterData[],
     otProcedures: [] as string[]
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [pharmacyMedicines, setPharmacyMedicines] = useState<any[]>([]);
   const [currentPrescription, setCurrentPrescription] = useState<PrescriptionData>({ medicineName: "", dose: "1 Tablet", frequency: "1-0-1", timing: "After Food", days: "5" });
@@ -53,52 +54,76 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
   useEffect(() => {
     if (selectedPatient && selectedPatient.opNumber) {
-      setFormData(prev => ({
-        ...prev,
+      let parsedPrescriptions = [];
+      let legacyPrescription = "";
+      if (selectedPatient.prescription) {
+         try {
+            const parsed = JSON.parse(selectedPatient.prescription);
+            if (Array.isArray(parsed)) {
+              parsedPrescriptions = parsed;
+            } else {
+              legacyPrescription = selectedPatient.prescription;
+            }
+         } catch(e) {
+            legacyPrescription = selectedPatient.prescription;
+         }
+      }
+
+      let parsedNotes = { 
+         chiefComplaints: selectedPatient.complaint || "", 
+         examination: "", 
+         advice: "", 
+         summary: "", 
+         remarks: "", 
+         vitals: { bp: "", pulse: "", temp: "", spo2: "", weight: "", height: "" } 
+      };
+      if (selectedPatient.clinicalNotes) {
+         try {
+            const notes = JSON.parse(selectedPatient.clinicalNotes);
+            parsedNotes = {
+               chiefComplaints: notes.chiefComplaints || selectedPatient.complaint || "",
+               examination: notes.examination || "",
+               advice: notes.advice || "",
+               summary: notes.summary || "",
+               remarks: notes.remarks || "",
+               vitals: notes.vitals || { bp: "", pulse: "", temp: "", spo2: "", weight: "", height: "" }
+            };
+         } catch(e) {
+            parsedNotes.examination = selectedPatient.clinicalNotes;
+         }
+      }
+
+      let formattedDate = "";
+      if (selectedPatient.followUpDate) {
+         try {
+             formattedDate = new Date(selectedPatient.followUpDate).toISOString().split('T')[0];
+         } catch (e) {
+             formattedDate = selectedPatient.followUpDate;
+         }
+      }
+
+      setFormData({
         opNumber: selectedPatient.opNumber || "",
         patientName: selectedPatient.patientName || selectedPatient.fullName || "",
         doctor: selectedPatient.doctor || "",
         department: selectedPatient.department || "Orthopaedics",
-        chiefComplaints: selectedPatient.complaint || "", // Auto-populate complaint
-      }));
+        diagnosis: selectedPatient.diagnosis || "",
+        prescriptions: parsedPrescriptions,
+        legacyPrescription: legacyPrescription,
+        chiefComplaints: parsedNotes.chiefComplaints,
+        examination: parsedNotes.examination,
+        advice: parsedNotes.advice,
+        summary: parsedNotes.summary,
+        remarks: parsedNotes.remarks,
+        followUpDate: formattedDate,
+        vitals: parsedNotes.vitals,
+        investigations: [],
+        otProcedures: []
+      });
       
-      // Fetch full patient record for history and demographic data
-      api.get(`/patients/${encodeURIComponent(selectedPatient.opNumber)}/record`)
+      api.get(`/patients/record?opNumber=${encodeURIComponent(selectedPatient.opNumber)}`)
         .then(res => {
           setHistory(res.data);
-          // If we want to populate existing consultation data (if resuming an active consultation)
-          // We can parse clinicalNotes if it's JSON, or just use the fields
-          if (selectedPatient.diagnosis) {
-             setFormData(prev => ({ ...prev, diagnosis: selectedPatient.diagnosis }));
-          }
-          if (selectedPatient.prescription) {
-             try {
-                const parsed = JSON.parse(selectedPatient.prescription);
-                if (Array.isArray(parsed)) {
-                  setFormData(prev => ({ ...prev, prescriptions: parsed }));
-                } else {
-                  setFormData(prev => ({ ...prev, legacyPrescription: selectedPatient.prescription }));
-                }
-             } catch(e) {
-                setFormData(prev => ({ ...prev, legacyPrescription: selectedPatient.prescription }));
-             }
-          }
-          if (selectedPatient.clinicalNotes) {
-             try {
-                const notes = JSON.parse(selectedPatient.clinicalNotes);
-                setFormData(prev => ({ 
-                   ...prev, 
-                   chiefComplaints: notes.chiefComplaints || selectedPatient.complaint || "",
-                   examination: notes.examination || "",
-                   advice: notes.advice || "",
-                   summary: notes.summary || "",
-                   remarks: notes.remarks || "",
-                   vitals: notes.vitals || prev.vitals
-                }));
-             } catch(e) {
-                setFormData(prev => ({ ...prev, examination: selectedPatient.clinicalNotes }));
-             }
-          }
         })
         .catch(console.error);
 
@@ -143,9 +168,14 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
   const handleAddPrescription = () => {
     if (!currentPrescription.medicineName || !currentPrescription.dose || !currentPrescription.frequency || !currentPrescription.timing || !currentPrescription.days) {
-      alert("Please fill all prescription fields before adding.");
+      setErrors(prev => ({ ...prev, prescription: "Please fill all prescription fields before adding." }));
       return;
     }
+    if (isNaN(Number(currentPrescription.days)) || Number(currentPrescription.days) <= 0) {
+      setErrors(prev => ({ ...prev, prescription: "Days must be greater than 0." }));
+      return;
+    }
+    setErrors(prev => ({ ...prev, prescription: "" }));
     setFormData(prev => ({ ...prev, prescriptions: [...prev.prescriptions, currentPrescription] }));
     setCurrentPrescription({ medicineName: "", dose: "1 Tablet", frequency: "1-0-1", timing: "After Food", days: "5" });
   };
@@ -203,6 +233,47 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!selectedPatient) return alert("Please select a patient from the queue");
+
+    const newErrors: Record<string, string> = {};
+    if (!formData.diagnosis.trim()) {
+      newErrors.diagnosis = "Diagnosis is required before saving.";
+    }
+    if (formData.followUpDate) {
+      const d = new Date();
+      const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (formData.followUpDate <= todayStr) {
+        newErrors.followUpDate = "Follow-up date must be a future date.";
+      }
+    }
+
+    if (formData.vitals.bp && !/^\d{2,3}\/\d{2,3}$/.test(formData.vitals.bp)) {
+      newErrors.general = "BP must be in standard format (e.g. 120/80)";
+    }
+    if (formData.vitals.pulse && (isNaN(Number(formData.vitals.pulse)) || Number(formData.vitals.pulse) < 0 || Number(formData.vitals.pulse) > 300)) {
+      newErrors.general = "Pulse must be a valid number (0-300)";
+    }
+    if (formData.vitals.temp && (isNaN(Number(formData.vitals.temp)) || Number(formData.vitals.temp) < 90 || Number(formData.vitals.temp) > 110)) {
+      newErrors.general = "Temperature must be a valid number (90-110 °F)";
+    }
+    if (formData.vitals.spo2 && (isNaN(Number(formData.vitals.spo2)) || Number(formData.vitals.spo2) < 0 || Number(formData.vitals.spo2) > 100)) {
+      newErrors.general = "SpO2 must be a valid percentage (0-100)";
+    }
+
+    if (
+      !formData.diagnosis.trim() &&
+      !formData.chiefComplaints.trim() &&
+      !formData.examination.trim() &&
+      formData.prescriptions.length === 0
+    ) {
+      newErrors.general = "Cannot submit an empty consultation.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     setLoading(true);
     try {
       const payload = {
@@ -280,7 +351,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
   if (!selectedPatient) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-[#ECECEC] text-[#6B7280]">
+      <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-[#E2E8F0] text-[#64748B]">
         <p>Please select a patient from the queue to begin consultation.</p>
       </div>
     );
@@ -289,7 +360,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
   return (
     <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-6 h-full overflow-y-auto print:h-auto print:overflow-visible print:block">
       {/* Header Banner */}
-      <div className="bg-[#800020] rounded-xl text-white p-5 flex justify-between items-center shadow-sm">
+      <div className="bg-[#0F172A] rounded-xl text-white p-5 flex justify-between items-center shadow-sm">
         <div>
           <h2 className="text-xl font-bold">{formData.patientName}</h2>
           <p className="text-[13px] text-white/80 mt-1">
@@ -313,8 +384,8 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
       </div>
 
       {/* Vitals */}
-      <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
-        <h3 className="flex items-center gap-2 text-[#800020] font-bold mb-4">
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
+        <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4">
           <Stethoscope size={16} /> Vitals
         </h3>
         <div className="grid grid-cols-3 gap-6">
@@ -327,13 +398,13 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
             { label: "HEIGHT", field: "height", placeholder: "170 cm" },
           ].map((v) => (
             <div key={v.field}>
-              <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">{v.label}</label>
+              <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">{v.label}</label>
               <input
                 type="text"
                 value={(formData.vitals as any)[v.field]}
                 onChange={(e) => handleVitalChange(v.field, e.target.value)}
                 placeholder={v.placeholder}
-                className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] transition-colors"
+                className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] transition-colors"
               />
             </div>
           ))}
@@ -341,18 +412,18 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
       </div>
 
       {/* Clinical Notes */}
-      <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
-        <h3 className="flex items-center gap-2 text-[#800020] font-bold mb-4">
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
+        <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4">
           <span className="text-xl">📋</span> Clinical Notes
         </h3>
         
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Chief Complaints</label>
+            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Chief Complaints</label>
             <select 
               value={formData.chiefComplaints || ""} 
               onChange={(e) => setFormData(prev => ({ ...prev, chiefComplaints: e.target.value }))}
-              className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm mb-2 outline-none"
+              className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm mb-2 outline-none"
             >
               <option value="">-- Select --</option>
               <option value="Neck Pain">Neck Pain</option>
@@ -377,16 +448,16 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
               value={formData.chiefComplaints}
               onChange={(e) => setFormData(prev => ({ ...prev, chiefComplaints: e.target.value }))}
               placeholder="Patient's complaints..."
-              className="w-full h-24 p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none"
+              className="w-full h-24 p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none"
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Examination</label>
+            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Examination</label>
             <div className="flex gap-2 mb-2">
               <button 
                 type="button" 
                 onClick={handleSaveTemplate}
-                className="text-[10px] font-bold px-2 py-1 bg-white border border-[#ECECEC] rounded text-gray-700 hover:border-[#E12D45] transition-colors"
+                className="text-[10px] font-bold px-2 py-1 bg-white border border-[#E2E8F0] rounded text-gray-700 hover:border-[#2563EB] transition-colors"
               >
                 Save as Template
               </button>
@@ -404,7 +475,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
                        }
                      });
                 }}
-                className="text-[10px] font-bold px-2 py-1 bg-white border border-[#ECECEC] rounded text-gray-700 hover:border-[#E12D45] transition-colors"
+                className="text-[10px] font-bold px-2 py-1 bg-white border border-[#E2E8F0] rounded text-gray-700 hover:border-[#2563EB] transition-colors"
               >
                 Load Template
               </button>
@@ -412,7 +483,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
                 <button 
                   type="button" 
                   onClick={handleDeleteTemplate}
-                  className="text-[10px] font-bold px-2 py-1 bg-[#FFF4F4] text-[#E12D45] border border-[#E12D45]/30 rounded hover:border-[#E12D45] transition-colors ml-auto"
+                  className="text-[10px] font-bold px-2 py-1 bg-[#FEE2E2] text-[#2563EB] border border-[#2563EB]/30 rounded hover:border-[#2563EB] transition-colors ml-auto"
                 >
                   Delete Template
                 </button>
@@ -422,41 +493,45 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
               value={formData.examination}
               onChange={(e) => setFormData(prev => ({ ...prev, examination: e.target.value }))}
               placeholder="Clinical examination findings..."
-              className="w-full h-[calc(100%-2.5rem)] p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none"
+              className="w-full h-[calc(100%-2.5rem)] p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none"
             />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Diagnosis</label>
+            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Diagnosis</label>
             <textarea
               value={formData.diagnosis}
-              onChange={(e) => setFormData(prev => ({ ...prev, diagnosis: e.target.value }))}
+              onChange={(e) => {
+                 setFormData(prev => ({ ...prev, diagnosis: e.target.value }));
+                 if (errors.diagnosis) setErrors(prev => ({ ...prev, diagnosis: "" }));
+              }}
               placeholder="Clinical diagnosis..."
-              className="w-full h-full p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none min-h-[120px]"
+              className={`w-full h-full p-3 border ${errors.diagnosis ? 'border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]' : 'border-[#E2E8F0] focus:border-[#2563EB]'} rounded-lg text-sm outline-none resize-none min-h-[120px]`}
             />
+            {errors.diagnosis && <p className="text-[12px] text-[#2563EB] font-medium mt-1">{errors.diagnosis}</p>}
           </div>
           <div>
-            <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Summary</label>
+            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Summary</label>
             <textarea
               value={formData.summary}
               onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
               placeholder="Clinical summary..."
-              className="w-full h-full p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none min-h-[120px]"
+              className="w-full h-full p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none min-h-[120px]"
             />
           </div>
         </div>
 
         <div>
-            <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-2">Prescription</label>
+            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Prescription</label>
             
             {/* Add Medicine Inputs */}
-            <div className="flex flex-col gap-4 mb-5 bg-[#F9FAFB] p-4 rounded-xl border border-[#ECECEC] shadow-sm">
+            <div className="flex flex-col gap-4 mb-5 bg-[#F8FAFC] p-4 rounded-xl border border-[#E2E8F0] shadow-sm">
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Medicine (From Pharmacy)</label>
+                  <label className="block text-[10px] font-bold text-[#64748B] uppercase mb-1">Medicine (From Pharmacy)</label>
                   <select 
-                    className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm outline-none bg-white"
+                    className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none bg-white"
                     value={currentPrescription.medicineName}
                     onChange={(e) => setCurrentPrescription(prev => ({ ...prev, medicineName: e.target.value }))}
                   >
@@ -470,9 +545,9 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
                   </select>
                 </div>
                 <div className="w-48">
-                  <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Dose</label>
+                  <label className="block text-[10px] font-bold text-[#64748B] uppercase mb-1">Dose</label>
                   <select 
-                    className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm outline-none bg-white"
+                    className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none bg-white"
                     value={currentPrescription.dose}
                     onChange={(e) => setCurrentPrescription(prev => ({ ...prev, dose: e.target.value }))}
                   >
@@ -493,9 +568,9 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
               
               <div className="flex gap-4 items-end">
                 <div className="flex-1">
-                  <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Frequency</label>
+                  <label className="block text-[10px] font-bold text-[#64748B] uppercase mb-1">Frequency</label>
                   <select 
-                    className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm outline-none bg-white"
+                    className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none bg-white"
                     value={currentPrescription.frequency}
                     onChange={(e) => setCurrentPrescription(prev => ({ ...prev, frequency: e.target.value }))}
                   >
@@ -510,9 +585,9 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Timing</label>
+                  <label className="block text-[10px] font-bold text-[#64748B] uppercase mb-1">Timing</label>
                   <select 
-                    className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm outline-none bg-white"
+                    className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none bg-white"
                     value={currentPrescription.timing}
                     onChange={(e) => setCurrentPrescription(prev => ({ ...prev, timing: e.target.value }))}
                   >
@@ -524,11 +599,11 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
                   </select>
                 </div>
                 <div className="w-32">
-                  <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Days</label>
+                  <label className="block text-[10px] font-bold text-[#64748B] uppercase mb-1">Days</label>
                   <input 
                     type="number" 
                     min="1"
-                    className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm outline-none bg-white"
+                    className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none bg-white"
                     value={currentPrescription.days}
                     onChange={(e) => setCurrentPrescription(prev => ({ ...prev, days: e.target.value }))}
                     placeholder="e.g. 5"
@@ -537,33 +612,34 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
                 <button 
                   type="button" 
                   onClick={handleAddPrescription}
-                  className="h-10 px-6 bg-[#E12D45] text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-[#C82239] transition-colors"
+                  className="h-10 px-6 bg-[#2563EB] text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-[#1D4ED8] transition-colors"
                 >
                   <Plus size={16} /> Add
                 </button>
               </div>
+              {errors.prescription && <p className="text-[12px] text-[#2563EB] font-medium mt-1">{errors.prescription}</p>}
             </div>
 
             {/* Prescriptions List */}
             {formData.prescriptions.length > 0 && (
               <div className="flex flex-col gap-3 mb-4">
                 {formData.prescriptions.map((med, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-4 border border-[#ECECEC] rounded-xl bg-white shadow-sm">
+                  <div key={idx} className="flex justify-between items-center p-4 border border-[#E2E8F0] rounded-xl bg-white shadow-sm">
                     <div>
-                      <p className="font-bold text-[#800020] text-[15px]">{med.medicineName}</p>
-                      <p className="text-[12px] text-[#6B7280] mt-1">
+                      <p className="font-bold text-[#0F172A] text-[15px]">{med.medicineName}</p>
+                      <p className="text-[12px] text-[#64748B] mt-1">
                         {med.dose} • {med.timing}
                       </p>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="text-right">
-                        <p className="font-bold text-[#1A2332] text-[14px]">{med.frequency}</p>
-                        <p className="text-[12px] text-[#6B7280] mt-0.5">{med.days} Days</p>
+                        <p className="font-bold text-[#1E293B] text-[14px]">{med.frequency}</p>
+                        <p className="text-[12px] text-[#64748B] mt-0.5">{med.days} Days</p>
                       </div>
                       <button 
                         type="button" 
                         onClick={() => handleRemovePrescription(idx)} 
-                        className="w-8 h-8 rounded-full bg-[#FFF4F4] text-[#E12D45] flex items-center justify-center hover:bg-[#FEE2E2] transition-colors"
+                        className="w-8 h-8 rounded-full bg-[#FEE2E2] text-[#2563EB] flex items-center justify-center hover:bg-[#FEE2E2] transition-colors"
                       >
                         <X size={14} strokeWidth={3} />
                       </button>
@@ -576,61 +652,73 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
             {/* Legacy text area */}
             {formData.legacyPrescription && (
               <div className="mt-3">
-                <label className="block text-[10px] font-bold text-[#6B7280] uppercase mb-1">Legacy Notes</label>
+                <label className="block text-[10px] font-bold text-[#64748B] uppercase mb-1">Legacy Notes</label>
                 <textarea
                   value={formData.legacyPrescription}
                   onChange={(e) => setFormData(prev => ({ ...prev, legacyPrescription: e.target.value }))}
-                  className="w-full h-16 p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none"
+                  className="w-full h-16 p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none"
                 />
               </div>
             )}
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Advice & Instructions</label>
+          <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Advice & Instructions</label>
           <textarea
             value={formData.advice}
             onChange={(e) => setFormData(prev => ({ ...prev, advice: e.target.value }))}
             placeholder="Patient advice..."
-            className="w-full h-20 p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none"
+            className="w-full h-20 p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none"
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
-        <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">FOLLOW-UP DATE (OPTIONAL)</label>
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
+        <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">FOLLOW-UP DATE (OPTIONAL)</label>
         <div className="relative max-w-xs">
-          <input
-            type="date"
-            value={formData.followUpDate}
-            onChange={(e) => setFormData(prev => ({ ...prev, followUpDate: e.target.value }))}
-            className="w-full h-10 px-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45]"
-          />
+          {(() => {
+             const tomorrow = new Date();
+             tomorrow.setDate(tomorrow.getDate() + 1);
+             const minDateStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth()+1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+             return (
+               <input
+                 type="date"
+                 min={minDateStr}
+                 value={formData.followUpDate}
+                 onChange={(e) => {
+                    setFormData(prev => ({ ...prev, followUpDate: e.target.value }));
+                    if (errors.followUpDate) setErrors(prev => ({ ...prev, followUpDate: "" }));
+                 }}
+                 className={`w-full h-10 px-3 border ${errors.followUpDate ? 'border-[#2563EB]' : 'border-[#E2E8F0]'} rounded-lg text-sm outline-none focus:border-[#2563EB]`}
+               />
+             );
+          })()}
+          {errors.followUpDate && <p className="text-[12px] text-[#2563EB] font-medium mt-1">{errors.followUpDate}</p>}
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
-        <h3 className="flex items-center gap-2 text-[#800020] font-bold mb-4">
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
+        <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4">
           <span className="text-xl">🔬</span> Order Investigations
         </h3>
         
         <div className="mb-4">
-          <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Search & Add Test</label>
+          <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Search & Add Test</label>
           <InvestigationSelect value={null} onChange={handleInvestigationSelect} className="max-w-md" />
         </div>
 
         {formData.investigations.length > 0 && (
           <div className="flex flex-col gap-2 max-w-md">
             {formData.investigations.map((test) => (
-              <div key={test.code} className="flex items-center justify-between p-3 border border-[#ECECEC] bg-gray-50 rounded-lg">
+              <div key={test.code} className="flex items-center justify-between p-3 border border-[#E2E8F0] bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="text-[13px] text-[#1A2332] font-medium leading-tight">
+                  <div className="text-[13px] text-[#1E293B] font-medium leading-tight">
                     {test.name}
                     <div className="text-[11px] text-gray-500 mt-0.5">{test.code}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-[13px] font-bold text-[#800020]">₹{test.price}</span>
+                  <span className="text-[13px] font-bold text-[#0F172A]">₹{test.price}</span>
                   <button type="button" onClick={() => removeInvestigation(test.code)} className="text-gray-400 hover:text-red-500">
                     <X size={16} />
                   </button>
@@ -642,51 +730,57 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
       </div>
 
       {/* Schedule OT Procedures */}
-      <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm">
-        <h3 className="flex items-center gap-2 text-[#800020] font-bold mb-4">
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
+        <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4">
           <Scissors size={20} /> Schedule OT Procedure
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {otProceduresList.map((proc) => (
-            <label key={proc.name} className="flex items-center justify-between p-3 border border-[#ECECEC] rounded-lg cursor-pointer hover:border-[#E12D45] transition-colors">
+            <label key={proc.name} className="flex items-center justify-between p-3 border border-[#E2E8F0] rounded-lg cursor-pointer hover:border-[#2563EB] transition-colors">
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={formData.otProcedures.includes(proc.name)}
                   onChange={() => handleOTToggle(proc.name)}
-                  className="w-4 h-4 accent-[#E12D45]"
+                  className="w-4 h-4 accent-[#2563EB]"
                 />
-                <span className="text-[13px] text-[#1A2332] font-medium">{proc.name}</span>
+                <span className="text-[13px] text-[#1E293B] font-medium">{proc.name}</span>
               </div>
-              <span className="text-[13px] font-bold text-[#800020]">₹{proc.price}</span>
+              <span className="text-[13px] font-bold text-[#0F172A]">₹{proc.price}</span>
             </label>
           ))}
         </div>
       </div>
 
       {/* Remarks */}
-      <div className="bg-white rounded-xl border border-[#ECECEC] p-6 shadow-sm mb-4">
-        <label className="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">REMARKS / ADDITIONAL NOTES</label>
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm mb-4">
+        <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">REMARKS / ADDITIONAL NOTES</label>
         <textarea
           value={formData.remarks}
           onChange={(e) => setFormData(prev => ({ ...prev, remarks: e.target.value }))}
           placeholder="Any extra remarks..."
-          className="w-full h-20 p-3 border border-[#ECECEC] rounded-lg text-sm outline-none focus:border-[#E12D45] resize-none"
+          className="w-full h-20 p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none"
         />
       </div>
+
+      {errors.general && (
+        <div className="bg-[#FEE2E2] text-[#2563EB] p-3 rounded-lg border border-[#2563EB]/30 text-sm font-medium">
+          {errors.general}
+        </div>
+      )}
 
       <div className="pb-8 flex gap-4 print:hidden">
         <button
           type="submit"
           disabled={loading}
-          className="w-[200px] h-12 bg-[#E12D45] text-white font-bold rounded-lg hover:bg-[#C82239] transition-colors disabled:opacity-50"
+          className="w-[200px] h-12 bg-[#2563EB] text-white font-bold rounded-lg hover:bg-[#1D4ED8] transition-colors disabled:opacity-50"
         >
           {loading ? "Saving..." : "Save Consultation"}
         </button>
         <button
           type="button"
           onClick={() => window.print()}
-          className="w-[120px] h-12 bg-white text-[#E12D45] border border-[#E12D45] font-bold rounded-lg hover:bg-[#FFF4F4] transition-colors"
+          className="w-[120px] h-12 bg-white text-[#2563EB] border border-[#2563EB] font-bold rounded-lg hover:bg-[#FEE2E2] transition-colors"
         >
           Print
         </button>
@@ -702,7 +796,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
               });
             }
           }}
-          className="w-[120px] h-12 bg-white border border-[#ECECEC] text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors"
+          className="w-[120px] h-12 bg-white border border-[#E2E8F0] text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors"
         >
           Cancel
         </button>

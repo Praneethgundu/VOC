@@ -25,7 +25,8 @@ export default function ClientAuthGuard({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   // Compute allowed status synchronously to prevent UI flicker
-  const isPublicRoute = pathname === "/login" || pathname === "/";
+  // Handle trailing slashes like /login/ gracefully
+  const isPublicRoute = pathname === "/" || pathname.startsWith("/login");
   let isAllowed = false;
   
   if (isAuthenticated && role) {

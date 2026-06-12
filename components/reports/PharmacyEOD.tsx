@@ -29,10 +29,10 @@ Out of Stock Items: ${report.stats.outOfStockMedicines}
   };
 
   return (
-    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl print:shadow-none print:w-full border border-[#ECECEC] print:border-none p-8 relative">
+    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl print:shadow-none print:w-full border border-[#E2E8F0] print:border-none p-8 relative">
       <div className="flex justify-between items-center mb-8 print:hidden">
-        <div className="flex items-center gap-2 text-[#1A2332]">
-          <FileText className="text-[#800020]" />
+        <div className="flex items-center gap-2 text-[#1E293B]">
+          <FileText className="text-[#0F172A]" />
           <h1 className="text-xl font-bold">Pharmacy EOD Report</h1>
         </div>
       </div>
@@ -41,35 +41,35 @@ Out of Stock Items: ${report.stats.outOfStockMedicines}
         <div className="flex justify-center mb-2">
           <Image src="/images/logo.jpeg" alt="VOC Logo" width={40} height={40} className="rounded-lg object-cover" />
         </div>
-        <h2 className="text-2xl font-extrabold text-[#800020]">Pharmacy Department</h2>
-        <p className="text-[#6B7280] text-sm">Daily Operations Summary</p>
-        <div className="mt-3 inline-block border border-[#800020]/20 text-[#800020] rounded-full px-4 py-1 text-sm font-semibold bg-[#800020]/5">
+        <h2 className="text-2xl font-extrabold text-[#0F172A]">Pharmacy Department</h2>
+        <p className="text-[#64748B] text-sm">Daily Operations Summary</p>
+        <div className="mt-3 inline-block border border-[#0F172A]/20 text-[#0F172A] rounded-full px-4 py-1 text-sm font-semibold bg-[#0F172A]/5">
           {dateStr}
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl p-5">
+        <div className="bg-[#DBEAFE] border border-[#DBEAFE] rounded-xl p-5">
           <p className="text-[#2563EB] text-xs font-bold uppercase tracking-wider mb-2">Dispensed</p>
           <p className="text-3xl font-extrabold text-[#2563EB]">{report.stats.medicinesDispensed}</p>
         </div>
-        <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl p-5">
-          <p className="text-[#16A34A] text-xs font-bold uppercase tracking-wider mb-2">Revenue</p>
-          <p className="text-3xl font-extrabold text-[#16A34A]">₹{(report.stats.revenueGenerated || 0).toLocaleString()}</p>
+        <div className="bg-[#ECFDF5] border border-[#ECFDF5] rounded-xl p-5">
+          <p className="text-[#059669] text-xs font-bold uppercase tracking-wider mb-2">Revenue</p>
+          <p className="text-3xl font-extrabold text-[#059669]">₹{(report.stats.revenueGenerated || 0).toLocaleString()}</p>
         </div>
         <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-xl p-5">
-          <p className="text-[#D97706] text-xs font-bold uppercase tracking-wider mb-2">Low Stock</p>
-          <p className="text-3xl font-extrabold text-[#D97706]">{report.stats.lowStockMedicines}</p>
+          <p className="text-[#92400E] text-xs font-bold uppercase tracking-wider mb-2">Low Stock</p>
+          <p className="text-3xl font-extrabold text-[#92400E]">{report.stats.lowStockMedicines}</p>
         </div>
-        <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-5">
-          <p className="text-[#DC2626] text-xs font-bold uppercase tracking-wider mb-2">Out of Stock</p>
-          <p className="text-3xl font-extrabold text-[#DC2626]">{report.stats.outOfStockMedicines}</p>
+        <div className="bg-[#FEE2E2] border border-[#FEE2E2] rounded-xl p-5">
+          <p className="text-[#991B1B] text-xs font-bold uppercase tracking-wider mb-2">Out of Stock</p>
+          <p className="text-3xl font-extrabold text-[#991B1B]">{report.stats.outOfStockMedicines}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">
-        <div className="border border-[#ECECEC] rounded-xl overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b border-[#ECECEC]">
+        <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
+          <div className="bg-gray-50 px-4 py-2 border-b border-[#E2E8F0]">
             <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Medicine Usage Summary</h3>
           </div>
           <div className="p-4 max-h-[250px] overflow-y-auto">
@@ -86,7 +86,7 @@ Out of Stock Items: ${report.stats.outOfStockMedicines}
             </ul>
           </div>
         </div>
-        <div className="border border-[#ECECEC] rounded-xl overflow-hidden">
+        <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
           <div className="bg-red-50 px-4 py-2 border-b border-red-100">
             <h3 className="text-xs font-bold text-red-700 uppercase tracking-wider">Inventory Alerts</h3>
           </div>

@@ -32,10 +32,10 @@ Pending Bills: ${report.stats.pendingBills}
   };
 
   return (
-    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl print:shadow-none print:w-full border border-[#ECECEC] print:border-none p-8 relative">
+    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl print:shadow-none print:w-full border border-[#E2E8F0] print:border-none p-8 relative">
       <div className="flex justify-between items-center mb-8 print:hidden">
-        <div className="flex items-center gap-2 text-[#1A2332]">
-          <FileText className="text-[#800020]" />
+        <div className="flex items-center gap-2 text-[#1E293B]">
+          <FileText className="text-[#0F172A]" />
           <h1 className="text-xl font-bold">Admin Master EOD Report</h1>
         </div>
       </div>
@@ -44,21 +44,21 @@ Pending Bills: ${report.stats.pendingBills}
         <div className="flex justify-center mb-2">
           <Image src="/images/logo.jpeg" alt="VOC Logo" width={40} height={40} className="rounded-lg object-cover" />
         </div>
-        <h2 className="text-2xl font-extrabold text-[#800020]">VOC Orthopaedic Hospital</h2>
-        <p className="text-[#6B7280] text-sm">Master Hospital Summary</p>
-        <div className="mt-3 inline-block border border-[#800020]/20 text-[#800020] rounded-full px-4 py-1 text-sm font-semibold bg-[#800020]/5">
+        <h2 className="text-2xl font-extrabold text-[#0F172A]">VOC Orthopaedic Hospital</h2>
+        <p className="text-[#64748B] text-sm">Master Hospital Summary</p>
+        <div className="mt-3 inline-block border border-[#0F172A]/20 text-[#0F172A] rounded-full px-4 py-1 text-sm font-semibold bg-[#0F172A]/5">
           {dateStr}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl p-5">
-          <p className="text-[#16A34A] text-xs font-bold uppercase tracking-wider mb-2">Total Revenue</p>
-          <p className="text-3xl font-extrabold text-[#16A34A]">₹{(report.stats.totalRevenue || 0).toLocaleString()}</p>
+        <div className="bg-[#ECFDF5] border border-[#ECFDF5] rounded-xl p-5">
+          <p className="text-[#059669] text-xs font-bold uppercase tracking-wider mb-2">Total Revenue</p>
+          <p className="text-3xl font-extrabold text-[#059669]">₹{(report.stats.totalRevenue || 0).toLocaleString()}</p>
         </div>
-        <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-5">
-          <p className="text-[#DC2626] text-xs font-bold uppercase tracking-wider mb-2">Pending Amount</p>
-          <p className="text-3xl font-extrabold text-[#DC2626]">₹{(report.stats.pendingRevenue || 0).toLocaleString()}</p>
+        <div className="bg-[#FEE2E2] border border-[#FEE2E2] rounded-xl p-5">
+          <p className="text-[#991B1B] text-xs font-bold uppercase tracking-wider mb-2">Pending Amount</p>
+          <p className="text-3xl font-extrabold text-[#991B1B]">₹{(report.stats.pendingRevenue || 0).toLocaleString()}</p>
         </div>
       </div>
 
@@ -86,8 +86,8 @@ Pending Bills: ${report.stats.pendingBills}
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">
-        <div className="border border-[#ECECEC] rounded-xl overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b border-[#ECECEC]">
+        <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
+          <div className="bg-gray-50 px-4 py-2 border-b border-[#E2E8F0]">
             <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Department Revenue</h3>
           </div>
           <div className="p-4 max-h-[250px] overflow-y-auto">
@@ -95,14 +95,14 @@ Pending Bills: ${report.stats.pendingBills}
               {report.departmentRevenue.map((d: any, i: number) => (
                 <li key={i} className="flex justify-between border-b border-dashed border-gray-100 pb-1">
                   <span>{d.department}</span>
-                  <span className="font-bold text-[#16A34A]">₹{d.amount}</span>
+                  <span className="font-bold text-[#059669]">₹{d.amount}</span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
-        <div className="border border-[#ECECEC] rounded-xl overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b border-[#ECECEC]">
+        <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
+          <div className="bg-gray-50 px-4 py-2 border-b border-[#E2E8F0]">
             <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Doctor Revenue</h3>
           </div>
           <div className="p-4 max-h-[250px] overflow-y-auto">
@@ -110,7 +110,7 @@ Pending Bills: ${report.stats.pendingBills}
               {report.doctorRevenue.map((d: any, i: number) => (
                 <li key={i} className="flex justify-between border-b border-dashed border-gray-100 pb-1">
                   <span>Dr. {d.doctor}</span>
-                  <span className="font-bold text-[#16A34A]">₹{d.amount}</span>
+                  <span className="font-bold text-[#059669]">₹{d.amount}</span>
                 </li>
               ))}
             </ul>

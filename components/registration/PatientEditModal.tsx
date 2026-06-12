@@ -7,12 +7,31 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    if (name === "fullName") {
+      value = value.replace(/[^a-zA-Z\s]/g, "");
+    }
+
+    if (name === "age" && value !== "") {
+      const numVal = Number(value);
+      if (numVal > 150 || numVal < 0) return;
+    }
+
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.fullName || formData.fullName.length < 3 || !/^[a-zA-Z\s]+$/.test(formData.fullName)) {
+       setError("Patient name must be at least 3 characters and contain no numbers or special characters.");
+       return;
+    }
+    const ageNum = Number(formData.age);
+    if (isNaN(ageNum) || ageNum <= 0 || ageNum > 150) {
+       setError("Enter a valid age between 1 and 150.");
+       return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -29,7 +48,7 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-xl shadow-xl w-[500px] p-6 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-[#800020] mb-4">Edit Patient - {patient.opNumber}</h2>
+        <h2 className="text-xl font-bold text-[#0F172A] mb-4">Edit Patient - {patient.opNumber}</h2>
         {error && <div className="mb-4 text-red-500 text-sm font-semibold">{error}</div>}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
@@ -93,7 +112,7 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
           </div>
           <div className="flex justify-end gap-3 mt-4">
             <button type="button" onClick={onClose} className="px-4 py-2 border rounded font-semibold text-gray-600">Cancel</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-[#800020] text-white rounded font-semibold disabled:opacity-50">
+            <button type="submit" disabled={loading} className="px-4 py-2 bg-[#0F172A] text-white rounded font-semibold disabled:opacity-50">
               {loading ? "Saving..." : "Save Changes"}
             </button>
           </div>

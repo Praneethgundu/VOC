@@ -3,8 +3,7 @@ import { prisma } from "@/utils/db";
 import { getSession } from "@/utils/auth";
 
 export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ opNumber: string }> }
+  req: Request
 ) {
   try {
     const session = await getSession(req);
@@ -12,7 +11,12 @@ export async function GET(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { opNumber } = await params;
+    const { searchParams } = new URL(req.url);
+    const opNumber = searchParams.get("opNumber");
+
+    if (!opNumber) {
+      return NextResponse.json({ message: "OP Number is required" }, { status: 400 });
+    }
 
     const profile = await prisma.patient.findUnique({
       where: { opNumber },

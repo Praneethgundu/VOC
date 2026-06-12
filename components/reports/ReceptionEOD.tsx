@@ -37,15 +37,15 @@ Pending Amount: ₹${report.stats?.pendingAmount}
   };
 
   return (
-    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl print:shadow-none print:w-full border border-[#ECECEC] print:border-none p-8 relative">
+    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl print:shadow-none print:w-full border border-[#E2E8F0] print:border-none p-8 relative">
       {/* Action Bar */}
       <div className="flex justify-between items-center mb-8 print:hidden">
-        <div className="flex items-center gap-2 text-[#1A2332]">
-          <FileText className="text-[#800020]" />
+        <div className="flex items-center gap-2 text-[#1E293B]">
+          <FileText className="text-[#0F172A]" />
           <h1 className="text-xl font-bold">Reception EOD Report</h1>
         </div>
         <div className="flex items-center gap-3">
-          <span className="bg-[#E6F4EA] text-[#137333] px-3 py-1 rounded-full text-xs font-semibold">WhatsApp Ready</span>
+          <span className="bg-[#ECFDF5] text-[#047857] px-3 py-1 rounded-full text-xs font-semibold">WhatsApp Ready</span>
         </div>
       </div>
 
@@ -54,59 +54,59 @@ Pending Amount: ₹${report.stats?.pendingAmount}
         <div className="flex justify-center mb-2">
           <Image src="/images/logo.jpeg" alt="VOC Logo" width={40} height={40} className="rounded-lg object-cover" />
         </div>
-        <h2 className="text-2xl font-extrabold text-[#800020]">VOC Orthopaedic Hospital</h2>
-        <p className="text-[#6B7280] text-sm">Reception Daily Summary</p>
-        <div className="mt-3 inline-block border border-[#800020]/20 text-[#800020] rounded-full px-4 py-1 text-sm font-semibold bg-[#800020]/5">
+        <h2 className="text-2xl font-extrabold text-[#0F172A]">VOC Orthopaedic Hospital</h2>
+        <p className="text-[#64748B] text-sm">Reception Daily Summary</p>
+        <div className="mt-3 inline-block border border-[#0F172A]/20 text-[#0F172A] rounded-full px-4 py-1 text-sm font-semibold bg-[#0F172A]/5">
           {dateStr}
         </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl p-5">
+        <div className="bg-[#DBEAFE] border border-[#DBEAFE] rounded-xl p-5">
           <p className="text-[#2563EB] text-xs font-bold uppercase tracking-wider mb-2">Total Registrations</p>
           <p className="text-3xl font-extrabold text-[#2563EB]">{report.stats.totalRegistrations}</p>
         </div>
-        <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl p-5">
-          <p className="text-[#16A34A] text-xs font-bold uppercase tracking-wider mb-2">Collections</p>
-          <p className="text-3xl font-extrabold text-[#16A34A]">₹{(report.stats.collectionsReceived || 0).toLocaleString()}</p>
+        <div className="bg-[#ECFDF5] border border-[#ECFDF5] rounded-xl p-5">
+          <p className="text-[#059669] text-xs font-bold uppercase tracking-wider mb-2">Collections</p>
+          <p className="text-3xl font-extrabold text-[#059669]">₹{(report.stats.collectionsReceived || 0).toLocaleString()}</p>
         </div>
-        <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-5">
-          <p className="text-[#DC2626] text-xs font-bold uppercase tracking-wider mb-2">Pending Bills</p>
-          <p className="text-3xl font-extrabold text-[#DC2626]">{report.stats.billsPending}</p>
+        <div className="bg-[#FEE2E2] border border-[#FEE2E2] rounded-xl p-5">
+          <p className="text-[#991B1B] text-xs font-bold uppercase tracking-wider mb-2">Pending Bills</p>
+          <p className="text-3xl font-extrabold text-[#991B1B]">{report.stats.billsPending}</p>
         </div>
       </div>
 
       {/* Breakdowns */}
       <div className="grid grid-cols-2 gap-6 mb-6">
-        <div className="border border-[#ECECEC] rounded-xl p-5">
-          <h3 className="text-sm font-bold text-[#800020] mb-4 uppercase tracking-wider">Payment Breakdown</h3>
+        <div className="border border-[#E2E8F0] rounded-xl p-5">
+          <h3 className="text-sm font-bold text-[#0F172A] mb-4 uppercase tracking-wider">Payment Breakdown</h3>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-gray-600">Cash</span><span className="font-bold">₹{report.paymentModeBreakdown?.cash || 0}</span></div>
             <div className="flex justify-between"><span className="text-gray-600">UPI</span><span className="font-bold">₹{report.paymentModeBreakdown?.upi || 0}</span></div>
             <div className="flex justify-between"><span className="text-gray-600">Card</span><span className="font-bold">₹{report.paymentModeBreakdown?.card || 0}</span></div>
           </div>
         </div>
-        <div className="border border-[#ECECEC] rounded-xl p-5">
-          <h3 className="text-sm font-bold text-[#800020] mb-4 uppercase tracking-wider">Queue Status</h3>
+        <div className="border border-[#E2E8F0] rounded-xl p-5">
+          <h3 className="text-sm font-bold text-[#0F172A] mb-4 uppercase tracking-wider">Queue Status</h3>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-gray-600">Completed Consultations</span><span className="font-bold text-[#16A34A]">{report.queueStatus?.completedRegistrations || 0}</span></div>
-            <div className="flex justify-between"><span className="text-gray-600">Pending Consultations</span><span className="font-bold text-[#D97706]">{report.queueStatus?.pendingRegistrations || 0}</span></div>
+            <div className="flex justify-between"><span className="text-gray-600">Completed Consultations</span><span className="font-bold text-[#059669]">{report.queueStatus?.completedRegistrations || 0}</span></div>
+            <div className="flex justify-between"><span className="text-gray-600">Pending Consultations</span><span className="font-bold text-[#92400E]">{report.queueStatus?.pendingRegistrations || 0}</span></div>
             <div className="flex justify-between"><span className="text-gray-600">New Patients</span><span className="font-bold">{report.stats?.newPatients || 0}</span></div>
           </div>
         </div>
       </div>
 
       {/* Patient List */}
-      <div className="mb-6 rounded-xl border border-[#ECECEC] overflow-hidden">
-        <div className="bg-[#800020]/5 px-4 py-2 border-b border-[#ECECEC]">
-          <h3 className="text-xs font-bold text-[#800020] uppercase tracking-wider">REGISTERED PATIENTS ({report.patients.length})</h3>
+      <div className="mb-6 rounded-xl border border-[#E2E8F0] overflow-hidden">
+        <div className="bg-[#0F172A]/5 px-4 py-2 border-b border-[#E2E8F0]">
+          <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">REGISTERED PATIENTS ({report.patients.length})</h3>
         </div>
         <div className="bg-white p-4 max-h-[400px] overflow-y-auto">
           <ul className="space-y-3">
             {report.patients.map((p: any, i: number) => (
               <li key={i} className="flex justify-between items-center text-sm border-b border-dashed border-gray-200 pb-2 last:border-0 last:pb-0">
-                <span className="text-[#1A2332] font-semibold">{p.fullName} <span className="text-gray-400 font-normal ml-2">{p.opNumber}</span></span>
+                <span className="text-[#1E293B] font-semibold">{p.fullName} <span className="text-gray-400 font-normal ml-2">{p.opNumber}</span></span>
                 <span className="text-xs text-gray-500">{p.doctor || "Unassigned"}</span>
               </li>
             ))}

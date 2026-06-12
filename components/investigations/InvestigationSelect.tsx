@@ -59,7 +59,7 @@ export default function InvestigationSelect({ value, onChange, className = '' }:
   return (
     <div className={`relative ${className}`} ref={wrapperRef}>
       <div 
-        className="h-10 px-3 rounded-lg border border-gray-200 bg-white flex items-center justify-between cursor-pointer focus-within:border-[#E12D45]"
+        className="h-10 px-3 rounded-lg border border-gray-200 bg-white flex items-center justify-between cursor-pointer focus-within:border-[#2563EB]"
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="text-sm truncate pr-2">
@@ -101,7 +101,7 @@ export default function InvestigationSelect({ value, onChange, className = '' }:
                 >
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-sm font-semibold text-gray-900 truncate pr-4">{item.name}</span>
-                    <span className="text-sm font-bold text-[#E12D45] flex-shrink-0">₹{item.price}</span>
+                    <span className="text-sm font-bold text-[#2563EB] flex-shrink-0">₹{item.price}</span>
                   </div>
                   <div className="flex gap-2 text-xs text-gray-500">
                     <span className="bg-gray-100 px-1.5 py-0.5 rounded">{item.code}</span>

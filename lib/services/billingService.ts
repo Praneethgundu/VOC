@@ -16,7 +16,7 @@ export const updatePaymentStatus = async (id: string, status: string) => {
 };
 
 export const getUnbilledPatients = async () => {
-  const response = await api.get("/billing/pending");
+  const response = await api.get("/billing/unbilled");
   return response.data;
 };
 

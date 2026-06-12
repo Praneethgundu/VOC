@@ -30,7 +30,7 @@ export default function DoctorEODPage() {
   };
 
   return (
-    <div className="flex bg-[#FDF8F8] min-h-screen">
+    <div className="flex bg-[#F8FAFC] min-h-screen">
       <div className="print:hidden">
         <Sidebar />
       </div>
@@ -49,7 +49,7 @@ export default function DoctorEODPage() {
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 max={new Date().toISOString().split("T")[0]}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#800020]"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#0F172A]"
               />
             </div>
           </div>

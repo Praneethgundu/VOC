@@ -3,30 +3,30 @@
 
 :root {
   /* Primary Colors */
-  --p: #800020;
-  --pl: #A32845;
-  --pd: #5C0018;
-  --acc: #E12D45;
-  --acc2: #FF5A72;
+  --p: #0F172A;
+  --pl: #334155;
+  --pd: #0F172A;
+  --acc: #2563EB;
+  --acc2: #3B82F6;
 
   /* Background Colors */
-  --bg: #FDF8F8;
+  --bg: #F8FAFC;
   --bg2: #FFFFFF;
   --card: #FFFFFF;
 
   /* Text Colors */
-  --txt: #1A2332;
-  --muted: #6B7280;
+  --txt: #1E293B;
+  --muted: #64748B;
 
   /* Status Colors */
-  --ok: #16A34A;
-  --warn: #F59E0B;
-  --err: #E12D45;
+  --ok: #059669;
+  --warn: #92400E;
+  --err: #2563EB;
   --info: #2563EB;
 
   /* Borders */
   --brd: rgba(128, 0, 32, 0.12);
-  --brd2: #ECECEC;
+  --brd2: #E2E8F0;
 }
 
 @theme {
@@ -54,9 +54,9 @@
   --font-sans: "Plus Jakarta Sans", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  --shadow-custom: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04);
-  --shadow-custom-hover: 0 8px 24px rgba(128,0,32,0.08);
-  --shadow-modal: 0 32px 80px rgba(92,0,24,0.2);
+  --shadow-custom: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04);
+  --shadow-custom-hover: 0 8px 24px rgba(15,23,42,0.08);
+  --shadow-modal: 0 32px 80px rgba(15,23,42,0.2);
 }
 
 body {
@@ -93,7 +93,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--p);
-  background-color: #FBEAEA;
+  background-color: #FEE2E2;
 }
 
 /* Add custom animations */

@@ -11,7 +11,7 @@ export default function ConsultationPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   return (
-    <div className="flex bg-[#FDF8F8] h-screen overflow-hidden print:block print:h-auto print:bg-white">
+    <div className="flex bg-[#F8FAFC] h-screen overflow-hidden print:block print:h-auto print:bg-white">
       <div className="print:hidden">
         <Sidebar />
       </div>

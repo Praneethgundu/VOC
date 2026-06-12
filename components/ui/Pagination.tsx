@@ -13,9 +13,9 @@ export function Pagination({ currentPage, totalPages, onPageChange, className = 
   if (totalPages <= 1) return null;
 
   return (
-    <div className={`flex items-center justify-between px-4 py-3 border-t border-[#ECECEC] ${className}`}>
-      <div className="flex items-center text-[13px] text-[#6B7280]">
-        Showing page <span className="font-semibold text-[#1A2332] mx-1">{currentPage}</span> of <span className="font-semibold text-[#1A2332] mx-1">{totalPages}</span>
+    <div className={`flex items-center justify-between px-4 py-3 border-t border-[#E2E8F0] ${className}`}>
+      <div className="flex items-center text-[13px] text-[#64748B]">
+        Showing page <span className="font-semibold text-[#1E293B] mx-1">{currentPage}</span> of <span className="font-semibold text-[#1E293B] mx-1">{totalPages}</span>
       </div>
       <div className="flex gap-2">
         <Button

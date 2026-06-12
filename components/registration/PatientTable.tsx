@@ -86,34 +86,34 @@ export default function PatientTable() {
 
   return (
     <div
-      className="bg-white rounded-xl border border-[#ECECEC] p-6"
+      className="bg-white rounded-xl border border-[#E2E8F0] p-6"
       style={{
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04)",
       }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="section-heading">Registered Patients</h2>
-          <p className="text-[12px] text-[#6B7280] mt-0.5">
+          <p className="text-[12px] text-[#64748B] mt-0.5">
             {patients.length} patients on record
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Search */}
-          <div className="flex items-center gap-2 bg-[#FDF8F8] border border-[#ECECEC] rounded-lg px-3 h-9">
-            <Search size={13} className="text-[#6B7280] shrink-0" />
+          <div className="flex items-center gap-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-3 h-9">
+            <Search size={13} className="text-[#64748B] shrink-0" />
             <input
               type="text"
               placeholder="Search…"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="bg-transparent outline-none text-[13px] text-[#1A2332] placeholder:text-[#9CA3AF] w-36"
+              className="bg-transparent outline-none text-[13px] text-[#1E293B] placeholder:text-[#64748B] w-36"
             />
           </div>
           <button
             onClick={fetchPatients}
-            className="w-9 h-9 flex items-center justify-center rounded-lg border border-[#ECECEC] text-[#6B7280] hover:border-[#E12D45] hover:text-[#E12D45] transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-lg border border-[#E2E8F0] text-[#64748B] hover:border-[#2563EB] hover:text-[#2563EB] transition-colors"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </button>
@@ -121,12 +121,12 @@ export default function PatientTable() {
       </div>
 
       {loading ? (
-        <div className="py-16 flex flex-col items-center gap-3 text-[#6B7280]">
-          <RefreshCw size={24} className="animate-spin text-[#E12D45]" />
+        <div className="py-16 flex flex-col items-center gap-3 text-[#64748B]">
+          <RefreshCw size={24} className="animate-spin text-[#2563EB]" />
           <p className="text-[13px]">Loading patients…</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-16 text-center text-[#6B7280] text-[13px]">
+        <div className="py-16 text-center text-[#64748B] text-[13px]">
           No patients found.
         </div>
       ) : (
@@ -147,23 +147,23 @@ export default function PatientTable() {
               {paginated.map((patient, i) => (
                 <Tr key={patient.id || `${patient.opNumber}-${i}`} index={i}>
                   <Td>
-                    <span className="font-mono text-[13px] font-semibold text-[#800020]">
+                    <span className="font-mono text-[13px] font-semibold text-[#0F172A]">
                       {patient.opNumber}
                     </span>
                   </Td>
                   <Td>
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#E12D45] to-[#800020] flex items-center justify-center text-white text-[11px] font-bold shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#2563EB] to-[#0F172A] flex items-center justify-center text-white text-[11px] font-bold shrink-0">
                         {patient.fullName?.charAt(0) ?? "?"}
                       </div>
-                      <span className="font-medium text-[#1A2332]">
+                      <span className="font-medium text-[#1E293B]">
                         {patient.fullName}
                       </span>
                     </div>
                   </Td>
                   <Td>
-                    <span className="text-[#1A2332]">{patient.age}</span>
-                    <span className="text-[#6B7280] ml-1 text-[12px]">
+                    <span className="text-[#1E293B]">{patient.age}</span>
+                    <span className="text-[#64748B] ml-1 text-[12px]">
                       / {patient.gender}
                     </span>
                   </Td>
@@ -181,7 +181,7 @@ export default function PatientTable() {
                       <button
                         onClick={() => handlePrintOpSlip(patient)}
                         title="Print OP Slip"
-                        className="flex items-center justify-center p-1.5 rounded bg-[#FDF8F8] border border-[#ECECEC] text-[#E12D45] hover:border-[rgba(128,0,32,0.2)] hover:text-[#800020] transition-colors"
+                        className="flex items-center justify-center p-1.5 rounded bg-[#F8FAFC] border border-[#E2E8F0] text-[#2563EB] hover:border-[rgba(15,23,42,0.2)] hover:text-[#0F172A] transition-colors"
                       >
                         <Printer size={14} />
                       </button>
@@ -207,7 +207,7 @@ export default function PatientTable() {
           </Table>
 
           {totalPages > 1 && (
-            <div className="flex justify-between items-center mt-4 text-[13px] text-[#6B7280]">
+            <div className="flex justify-between items-center mt-4 text-[13px] text-[#64748B]">
               <div>
                 Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length}
               </div>
@@ -215,14 +215,14 @@ export default function PatientTable() {
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(p => p - 1)}
-                  className="px-3 py-1 border border-[#ECECEC] rounded disabled:opacity-50 hover:bg-gray-50"
+                  className="px-3 py-1 border border-[#E2E8F0] rounded disabled:opacity-50 hover:bg-gray-50"
                 >
                   Prev
                 </button>
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(p => p + 1)}
-                  className="px-3 py-1 border border-[#ECECEC] rounded disabled:opacity-50 hover:bg-gray-50"
+                  className="px-3 py-1 border border-[#E2E8F0] rounded disabled:opacity-50 hover:bg-gray-50"
                 >
                   Next
                 </button>

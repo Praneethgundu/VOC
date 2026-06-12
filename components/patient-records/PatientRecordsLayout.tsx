@@ -57,23 +57,23 @@ export default function PatientRecordsLayout() {
   return (
     <div className="flex flex-col h-full bg-[#F8F9FA] print:bg-white print:block print:h-auto">
       {/* Custom Header Matching Screenshot */}
-      <div className="flex justify-between items-center bg-white px-8 py-5 border-b border-[#ECECEC] print:hidden">
+      <div className="flex justify-between items-center bg-white px-8 py-5 border-b border-[#E2E8F0] print:hidden">
         <div>
-          <h1 className="text-[28px] font-bold text-[#800020]">Patient Records</h1>
+          <h1 className="text-[28px] font-bold text-[#0F172A]">Patient Records</h1>
           <p className="text-[14px] text-gray-500">Search and view comprehensive patient history</p>
         </div>
         <div className="flex items-center gap-4">
-          <button className="flex items-center gap-2 px-4 py-2 border border-[#E12D45] text-[#E12D45] rounded-full text-[12px] font-bold tracking-wide hover:bg-red-50 transition-colors">
-            <span className="w-2 h-2 rounded-full bg-[#E12D45]"></span>
+          <button className="flex items-center gap-2 px-4 py-2 border border-[#2563EB] text-[#2563EB] rounded-full text-[12px] font-bold tracking-wide hover:bg-red-50 transition-colors">
+            <span className="w-2 h-2 rounded-full bg-[#2563EB]"></span>
             CONNECT EXCEL DB
           </button>
           <div className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-[13px] font-semibold text-gray-700 bg-white shadow-sm">
-            <Calendar size={16} className="text-[#E12D45]" />
+            <Calendar size={16} className="text-[#2563EB]" />
             {currentDate}
           </div>
           <button className="relative p-2.5 border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 shadow-sm transition-colors">
             <Bell size={18} />
-            <span className="absolute -top-1 -right-1 w-[18px] h-[18px] bg-[#E12D45] text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+            <span className="absolute -top-1 -right-1 w-[18px] h-[18px] bg-[#2563EB] text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
               3
             </span>
           </button>
@@ -83,7 +83,7 @@ export default function PatientRecordsLayout() {
       {/* Main Content Area */}
       <div className="flex flex-1 p-8 gap-8 overflow-hidden bg-[#F8F9FA] print:p-0 print:overflow-visible print:block print:bg-white">
         {/* Left Panel: Search Card */}
-        <div className="w-[360px] bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-[#ECECEC] flex flex-col h-full overflow-hidden shrink-0 print:hidden">
+        <div className="w-[360px] bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-[#E2E8F0] flex flex-col h-full overflow-hidden shrink-0 print:hidden">
           <PatientSearchList 
             patients={patients} 
             loading={loading} 
@@ -95,15 +95,15 @@ export default function PatientRecordsLayout() {
         {/* Right Panel: Detail or Empty State */}
         <div className="flex-1 h-full overflow-y-auto rounded-xl print:overflow-visible print:h-auto print:w-full print:block">
           {!selectedOpNumber ? (
-            <div className="flex flex-col items-center justify-center h-full text-[#6B7280]">
+            <div className="flex flex-col items-center justify-center h-full text-[#64748B]">
               <div className="w-16 h-16 bg-[#F3F4F6] rounded-xl flex items-center justify-center mb-4">
-                <ClipboardList className="w-8 h-8 text-[#6B7280]" />
+                <ClipboardList className="w-8 h-8 text-[#64748B]" />
               </div>
-              <h2 className="text-[16px] font-semibold text-[#4B5563]">Select a patient to view full records</h2>
+              <h2 className="text-[16px] font-semibold text-[#64748B]">Select a patient to view full records</h2>
             </div>
           ) : recordLoading ? (
             <div className="flex justify-center items-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#800020]"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0F172A]"></div>
             </div>
           ) : recordData ? (
             <PatientDetailViewer record={recordData} />

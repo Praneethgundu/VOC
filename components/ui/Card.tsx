@@ -23,10 +23,10 @@ export function Card({
   return (
     <div
       className={[
-        "bg-white rounded-xl border border-[#ECECEC] transition-all duration-200",
-        "shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(128,0,32,0.04)]",
+        "bg-white rounded-xl border border-[#E2E8F0] transition-all duration-200",
+        "shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(15,23,42,0.04)]",
         hover
-          ? "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(128,0,32,0.08)] cursor-pointer"
+          ? "hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] cursor-pointer"
           : "",
         paddingStyles[padding],
         className,
@@ -63,7 +63,7 @@ export function CardHeader({ title, subtitle, action, icon, iconBg }: CardHeader
         <div>
           <h2 className="section-heading">{title}</h2>
           {subtitle && (
-            <p className="text-xs text-[#6B7280] mt-0.5">{subtitle}</p>
+            <p className="text-xs text-[#64748B] mt-0.5">{subtitle}</p>
           )}
         </div>
       </div>

@@ -24,6 +24,7 @@ export default function InvestigationForm({ onClose, onSuccess }: InvestigationF
   const [selectedTests, setSelectedTests] = useState<InvestigationMasterData[]>([]);
   const [doctor, setDoctor] = useState(DOCTORS[0]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   
   const [patients, setPatients] = useState<any[]>([]);
 
@@ -33,18 +34,38 @@ export default function InvestigationForm({ onClose, onSuccess }: InvestigationF
 
   useEffect(() => {
     if (opNumber) {
-      const patient = patients.find(p => p.opNumber === opNumber);
+      const searchOp = opNumber.trim().toLowerCase();
+      const patient = patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp);
       if (patient) {
-        setPatientName(patient.fullName);
+        setPatientName(patient.fullName || patient.patientName || "Unknown Name");
       } else {
-        setPatientName('');
+        setPatientName('Patient not found');
       }
+    } else {
+      setPatientName('');
     }
   }, [opNumber, patients]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!opNumber || !patientName || selectedTests.length === 0 || !doctor) return;
+    setError('');
+
+    if (!opNumber.trim() || !patientName.trim()) {
+      setError("OP Number and Patient Name are required");
+      return;
+    }
+    if (!/^[a-zA-Z\s]+$/.test(patientName)) {
+      setError("Patient Name cannot contain numbers or special characters");
+      return;
+    }
+    if (selectedTests.length === 0) {
+      setError("Please select at least one test to order");
+      return;
+    }
+    if (!doctor) {
+      setError("Ordering doctor is required");
+      return;
+    }
     
     setLoading(true);
     try {
@@ -73,8 +94,8 @@ export default function InvestigationForm({ onClose, onSuccess }: InvestigationF
       <form onSubmit={handleSubmit} className="bg-white rounded-3xl w-full max-w-lg shadow-2xl relative overflow-hidden">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2 text-[#1A2332]">
-              <span className="text-[#800020] text-xl">🔬</span>
+            <div className="flex items-center gap-2 text-[#1E293B]">
+              <span className="text-[#0F172A] text-xl">🔬</span>
               <h2 className="text-xl font-bold">Order Investigation</h2>
             </div>
             <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700">
@@ -89,7 +110,7 @@ export default function InvestigationForm({ onClose, onSuccess }: InvestigationF
                 value={opNumber} 
                 onChange={(e) => setOpNumber(e.target.value)} 
                 placeholder="OP-2024-001" 
-                className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#E12D45] text-sm"
+                className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#2563EB] text-sm"
                 required 
               />
             </div>
@@ -99,7 +120,7 @@ export default function InvestigationForm({ onClose, onSuccess }: InvestigationF
                 value={patientName} 
                 onChange={(e) => setPatientName(e.target.value)} 
                 placeholder="Full name" 
-                className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#E12D45] text-sm"
+                className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#2563EB] text-sm"
                 required
               />
             </div>
@@ -143,7 +164,7 @@ export default function InvestigationForm({ onClose, onSuccess }: InvestigationF
             <select 
               value={doctor} 
               onChange={(e) => setDoctor(e.target.value)} 
-              className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#E12D45] text-sm bg-white"
+              className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#2563EB] text-sm bg-white"
               required
             >
               {DOCTORS.map((d, i) => (
@@ -155,13 +176,14 @@ export default function InvestigationForm({ onClose, onSuccess }: InvestigationF
           </div>
 
           <div className="flex gap-4 mt-6">
-            <button type="submit" disabled={loading} className="flex-1 h-10 bg-[#E12D45] text-white font-bold rounded-lg hover:bg-[#C01D35] transition-colors text-sm">
+            <button type="submit" disabled={loading} className="flex-1 h-10 bg-[#2563EB] text-white font-bold rounded-lg hover:bg-[#1D4ED8] transition-colors text-sm">
               {loading ? "Ordering..." : "Order Test"}
             </button>
             <button type="button" onClick={onClose} className="w-[100px] h-10 border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 rounded-lg transition-colors text-sm bg-white shadow-sm">
               Cancel
             </button>
           </div>
+          {error && <p className="text-[12px] text-[#2563EB] font-medium mt-3">{error}</p>}
         </div>
       </form>
     </div>

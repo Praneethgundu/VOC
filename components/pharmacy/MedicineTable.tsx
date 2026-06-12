@@ -13,13 +13,32 @@ function stockStatus(qty: number): { label: string; status: "success" | "warning
 
 export default function MedicineTable() {
   const [medicines, setMedicines] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
   const [dispenseMedicineData, setDispenseMedicineData] = useState<any>(null);
   const [dispenseForm, setDispenseForm] = useState({ opNumber: "", quantity: 1, amount: 0 });
+  const [patientName, setPatientName] = useState("");
 
-  useEffect(() => { fetchMedicines(); }, []);
+  useEffect(() => { 
+    fetchMedicines(); 
+    import("@/services/patientService").then(m => m.getPatients().then(setPatients).catch(() => {}));
+  }, []);
+
+  useEffect(() => {
+    if (dispenseForm.opNumber) {
+      const searchOp = dispenseForm.opNumber.trim().toLowerCase();
+      const patient = patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp);
+      if (patient) {
+        setPatientName(patient.fullName || patient.patientName || "Unknown Name");
+      } else {
+        setPatientName("Patient not found");
+      }
+    } else {
+      setPatientName("");
+    }
+  }, [dispenseForm.opNumber, patients]);
 
   const fetchMedicines = async () => {
     setLoading(true);
@@ -58,28 +77,28 @@ export default function MedicineTable() {
 
   return (
     <div
-      className="bg-white rounded-xl border border-[#ECECEC] p-6"
-      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(128,0,32,0.04)" }}
+      className="bg-white rounded-xl border border-[#E2E8F0] p-6"
+      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04)" }}
     >
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="section-heading">Medicine Inventory</h2>
-          <p className="text-[12px] text-[#6B7280] mt-0.5">{medicines.length} medicines on record</p>
+          <p className="text-[12px] text-[#64748B] mt-0.5">{medicines.length} medicines on record</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-[#FDF8F8] border border-[#ECECEC] rounded-lg px-3 h-9">
-            <Search size={13} className="text-[#6B7280] shrink-0" />
+          <div className="flex items-center gap-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-3 h-9">
+            <Search size={13} className="text-[#64748B] shrink-0" />
             <input
               type="text"
               placeholder="Search medicine…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent outline-none text-[13px] text-[#1A2332] placeholder:text-[#9CA3AF] w-40"
+              className="bg-transparent outline-none text-[13px] text-[#1E293B] placeholder:text-[#64748B] w-40"
             />
           </div>
           <button
             onClick={fetchMedicines}
-            className="w-9 h-9 flex items-center justify-center rounded-lg border border-[#ECECEC] text-[#6B7280] hover:border-[#E12D45] hover:text-[#E12D45] transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-lg border border-[#E2E8F0] text-[#64748B] hover:border-[#2563EB] hover:text-[#2563EB] transition-colors"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </button>
@@ -87,12 +106,12 @@ export default function MedicineTable() {
       </div>
 
       {loading ? (
-        <div className="py-16 flex flex-col items-center gap-3 text-[#6B7280]">
-          <RefreshCw size={24} className="animate-spin text-[#E12D45]" />
+        <div className="py-16 flex flex-col items-center gap-3 text-[#64748B]">
+          <RefreshCw size={24} className="animate-spin text-[#2563EB]" />
           <p className="text-[13px]">Loading inventory…</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-16 text-center text-[#6B7280] text-[13px]">No medicines found.</div>
+        <div className="py-16 text-center text-[#64748B] text-[13px]">No medicines found.</div>
       ) : (
         <Table>
           <THead>
@@ -114,16 +133,16 @@ export default function MedicineTable() {
               return (
                 <Tr key={m.medicineId ?? i} index={i}>
                   <Td>
-                    <span className="font-mono text-[13px] font-semibold text-[#800020]">{m.medicineId}</span>
+                    <span className="font-mono text-[13px] font-semibold text-[#0F172A]">{m.medicineId}</span>
                   </Td>
                   <Td>
                     <div className="flex items-center gap-2">
-                      {qty < 20 && <AlertTriangle size={13} className="text-[#F59E0B] shrink-0" />}
-                      <span className="font-medium text-[#1A2332]">{m.medicineName}</span>
+                      {qty < 20 && <AlertTriangle size={13} className="text-[#92400E] shrink-0" />}
+                      <span className="font-medium text-[#1E293B]">{m.medicineName}</span>
                     </div>
                   </Td>
                   <Td>
-                    <span className="px-2 py-0.5 bg-[#FDF8F8] border border-[rgba(128,0,32,0.1)] text-[#800020] text-[11px] font-semibold rounded-md">
+                    <span className="px-2 py-0.5 bg-[#F8FAFC] border border-[rgba(15,23,42,0.1)] text-[#0F172A] text-[11px] font-semibold rounded-md">
                       {m.category}
                     </span>
                   </Td>
@@ -131,10 +150,10 @@ export default function MedicineTable() {
                     <span className="font-mono font-bold text-[14px]">{m.quantity}</span>
                   </Td>
                   <Td align="right">
-                    <span className="font-mono text-[14px] font-semibold text-[#16A34A]">₹{Number(m.price).toFixed(2)}</span>
+                    <span className="font-mono text-[14px] font-semibold text-[#059669]">₹{Number(m.price).toFixed(2)}</span>
                   </Td>
                   <Td>
-                    <span className="font-mono text-[13px] text-[#6B7280]">{m.expiryDate}</span>
+                    <span className="font-mono text-[13px] text-[#64748B]">{m.expiryDate}</span>
                   </Td>
                   <Td align="center">
                     <Badge status={stock.status}>{stock.label}</Badge>
@@ -146,7 +165,7 @@ export default function MedicineTable() {
                         setDispenseForm({ opNumber: "", quantity: 1, amount: Number(m.price) });
                       }}
                       disabled={qty <= 0}
-                      className="px-3 py-1 bg-[#16A34A] text-white text-[11px] font-bold rounded hover:bg-[#15803D] disabled:opacity-50"
+                      className="px-3 py-1 bg-[#059669] text-white text-[11px] font-bold rounded hover:bg-[#047857] disabled:opacity-50"
                     >
                       Dispense
                     </button>
@@ -161,10 +180,10 @@ export default function MedicineTable() {
       {dispenseMedicineData && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-[400px]">
-            <h3 className="text-lg font-bold mb-4 text-[#1A2332]">Dispense Medicine</h3>
-            <div className="mb-4 text-[13px] text-[#6B7280]">
-              <p>Medicine: <strong className="text-[#1A2332]">{dispenseMedicineData.medicineName}</strong></p>
-              <p>Available: <strong className="text-[#1A2332]">{dispenseMedicineData.quantity}</strong></p>
+            <h3 className="text-lg font-bold mb-4 text-[#1E293B]">Dispense Medicine</h3>
+            <div className="mb-4 text-[13px] text-[#64748B]">
+              <p>Medicine: <strong className="text-[#1E293B]">{dispenseMedicineData.medicineName}</strong></p>
+              <p>Available: <strong className="text-[#1E293B]">{dispenseMedicineData.quantity}</strong></p>
             </div>
             <div className="space-y-4">
               <div>
@@ -173,8 +192,18 @@ export default function MedicineTable() {
                   type="text"
                   value={dispenseForm.opNumber}
                   onChange={(e) => setDispenseForm({ ...dispenseForm, opNumber: e.target.value })}
-                  className="w-full border border-[#ECECEC] rounded p-2 text-sm"
+                  className="w-full border border-[#E2E8F0] rounded p-2 text-sm"
                   placeholder="e.g. OP1234"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold mb-1">Patient Name</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={patientName}
+                  className="w-full border border-[#E2E8F0] rounded p-2 text-sm bg-gray-50 text-gray-700"
+                  placeholder="Name"
                 />
               </div>
               <div>
@@ -185,7 +214,7 @@ export default function MedicineTable() {
                   max={dispenseMedicineData.quantity}
                   value={dispenseForm.quantity}
                   onChange={(e) => setDispenseForm({ ...dispenseForm, quantity: Number(e.target.value), amount: Number(e.target.value) * Number(dispenseMedicineData.price) })}
-                  className="w-full border border-[#ECECEC] rounded p-2 text-sm"
+                  className="w-full border border-[#E2E8F0] rounded p-2 text-sm"
                 />
               </div>
               <div>
@@ -194,7 +223,7 @@ export default function MedicineTable() {
                   type="number"
                   readOnly
                   value={dispenseForm.amount}
-                  className="w-full border border-[#ECECEC] rounded p-2 text-sm bg-gray-50"
+                  className="w-full border border-[#E2E8F0] rounded p-2 text-sm bg-gray-50"
                 />
               </div>
             </div>
@@ -207,7 +236,7 @@ export default function MedicineTable() {
               </button>
               <button
                 onClick={handleDispense}
-                className="px-4 py-2 bg-[#E12D45] text-white text-sm font-bold rounded"
+                className="px-4 py-2 bg-[#2563EB] text-white text-sm font-bold rounded"
               >
                 Confirm Dispense
               </button>

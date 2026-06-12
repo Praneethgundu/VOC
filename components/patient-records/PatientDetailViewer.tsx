@@ -131,12 +131,12 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
       </div>
 
       {/* Patient Header Card (Dark Red) */}
-      <div className="bg-[#800020] rounded-xl text-white p-6 shadow-md relative overflow-hidden">
+      <div className="bg-[#0F172A] rounded-xl text-white p-6 shadow-md relative overflow-hidden">
         {/* Subtle background pattern/gradient could go here if needed */}
         <div className="flex justify-between items-start z-10 relative">
           <div>
             <h2 className="text-[22px] font-bold mb-1">{p.fullName}</h2>
-            <p className="text-[#FDF8F8] text-[14px] opacity-90">
+            <p className="text-[#F8FAFC] text-[14px] opacity-90">
               {p.opNumber} • {p.age}y / {p.gender} • {p.bloodGroup}
             </p>
           </div>
@@ -166,11 +166,11 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
       </div>
 
       {/* Billing & Payments */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#ECECEC] overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#ECECEC] flex justify-between items-center bg-[#FDF8F8]">
+      <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#E2E8F0] flex justify-between items-center bg-[#F8FAFC]">
           <div className="flex items-center gap-2">
-            <FileText size={18} className="text-[#800020] opacity-70" />
-            <h3 className="font-bold text-[#800020] text-[16px]">Billing & Payments</h3>
+            <FileText size={18} className="text-[#0F172A] opacity-70" />
+            <h3 className="font-bold text-[#0F172A] text-[16px]">Billing & Payments</h3>
           </div>
           <div className="font-bold text-[15px]">
             <span className="text-green-600">Total Paid: ₹{totalPaid.toLocaleString()}</span>
@@ -185,14 +185,14 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
           ) : (
             <div className="flex gap-8">
               {/* Invoices List */}
-              <div className="w-1/3 border-r border-[#ECECEC] pr-8">
+              <div className="w-1/3 border-r border-[#E2E8F0] pr-8">
                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Invoices</p>
                 <div className="space-y-4">
                   {record.bills.map((b) => (
-                    <div key={b.id} className="border border-[#ECECEC] rounded-lg p-4 bg-gray-50/50">
+                    <div key={b.id} className="border border-[#E2E8F0] rounded-lg p-4 bg-gray-50/50">
                       <div className="flex justify-between items-start mb-3">
-                        <p className="font-bold text-[#1A2332] text-[14px]">Invoice: {b.id}</p>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${b.status === 'Paid' ? 'bg-[#E6F4EA] text-[#137333]' : 'bg-[#FEF3C7] text-[#D97706]'}`}>
+                        <p className="font-bold text-[#1E293B] text-[14px]">Invoice: {b.id}</p>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${b.status === 'Paid' ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#FFFBEB] text-[#92400E]'}`}>
                           {b.status}
                         </span>
                       </div>
@@ -217,14 +217,14 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
                     let items = [];
                     try { items = typeof b.items === 'string' ? JSON.parse(b.items) : b.items; } catch (e) {}
                     return items.map((item: any, i: number) => (
-                      <div key={`${b.id}-${i}`} className="border border-[#ECECEC] rounded-lg p-4 flex justify-between items-center bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                      <div key={`${b.id}-${i}`} className="border border-[#E2E8F0] rounded-lg p-4 flex justify-between items-center bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
                         <div>
-                          <p className="font-bold text-[#800020] text-[14px]">{item.serviceName}</p>
+                          <p className="font-bold text-[#0F172A] text-[14px]">{item.serviceName}</p>
                           <p className="text-[12px] text-gray-400 flex items-center gap-1 mt-1">
                             <Calendar size={12}/> {new Date(b.date).toLocaleDateString()} · Inv {b.id}
                           </p>
                         </div>
-                        <p className="font-bold text-[16px] text-[#1A2332]">₹{item.amount}</p>
+                        <p className="font-bold text-[16px] text-[#1E293B]">₹{item.amount}</p>
                       </div>
                     ));
                   })}
@@ -236,10 +236,10 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
       </div>
 
       {/* Investigations & Tests */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#ECECEC] overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#ECECEC] bg-[#FDF8F8] flex items-center gap-2">
-          <Activity size={18} className="text-[#800020] opacity-70" />
-          <h3 className="font-bold text-[#800020] text-[16px]">Investigations & Tests</h3>
+      <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#E2E8F0] bg-[#F8FAFC] flex items-center gap-2">
+          <Activity size={18} className="text-[#0F172A] opacity-70" />
+          <h3 className="font-bold text-[#0F172A] text-[16px]">Investigations & Tests</h3>
         </div>
         <div className="p-6">
           {record.investigations.length === 0 ? (
@@ -247,10 +247,10 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {record.investigations.map(i => (
-                <div key={i.id} className="border border-[#ECECEC] rounded-lg p-4 bg-white">
+                <div key={i.id} className="border border-[#E2E8F0] rounded-lg p-4 bg-white">
                   <div className="flex justify-between items-start mb-2">
-                    <p className="font-bold text-[#1A2332] text-[14px]">{i.testName}</p>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${i.status === 'COMPLETED' ? 'bg-[#E6F4EA] text-[#137333]' : 'bg-[#FEF3C7] text-[#D97706]'}`}>
+                    <p className="font-bold text-[#1E293B] text-[14px]">{i.testName}</p>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${i.status === 'COMPLETED' ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#FFFBEB] text-[#92400E]'}`}>
                       {i.status}
                     </span>
                   </div>
@@ -267,10 +267,10 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
       </div>
 
       {/* Consultation History */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#ECECEC] overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#ECECEC] bg-[#FDF8F8] flex items-center gap-2">
-          <Stethoscope size={18} className="text-[#800020] opacity-70" />
-          <h3 className="font-bold text-[#800020] text-[16px]">Consultation History</h3>
+      <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#E2E8F0] bg-[#F8FAFC] flex items-center gap-2">
+          <Stethoscope size={18} className="text-[#0F172A] opacity-70" />
+          <h3 className="font-bold text-[#0F172A] text-[16px]">Consultation History</h3>
         </div>
         <div className="p-6">
           {record.consultations.length === 0 ? (
@@ -278,13 +278,13 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
           ) : (
             <div className="space-y-4">
               {record.consultations.map(c => (
-                <div key={c.id} className="border border-[#ECECEC] rounded-lg p-5 bg-white">
+                <div key={c.id} className="border border-[#E2E8F0] rounded-lg p-5 bg-white">
                   <div className="flex justify-between mb-4 border-b border-gray-100 pb-3">
                     <div>
-                      <p className="font-bold text-[#1A2332] text-[15px]">{new Date(c.consultationDate).toLocaleDateString()}</p>
+                      <p className="font-bold text-[#1E293B] text-[15px]">{new Date(c.consultationDate).toLocaleDateString()}</p>
                       <p className="text-[13px] text-gray-500">{c.doctor} • {c.department}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded text-[11px] font-bold uppercase tracking-wider h-fit ${c.status === 'Completed' ? 'bg-[#E6F4EA] text-[#137333]' : 'bg-[#F3F4F6] text-gray-600'}`}>
+                    <span className={`px-2 py-1 rounded text-[11px] font-bold uppercase tracking-wider h-fit ${c.status === 'Completed' ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#F3F4F6] text-gray-600'}`}>
                       {c.status}
                     </span>
                   </div>
@@ -310,10 +310,10 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
       </div>
 
       {/* Medicines Dispensed */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#ECECEC] overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#ECECEC] bg-[#FDF8F8] flex items-center gap-2">
-          <Pill size={18} className="text-[#800020] opacity-70" />
-          <h3 className="font-bold text-[#800020] text-[16px]">Medicines Dispensed</h3>
+      <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#E2E8F0] bg-[#F8FAFC] flex items-center gap-2">
+          <Pill size={18} className="text-[#0F172A] opacity-70" />
+          <h3 className="font-bold text-[#0F172A] text-[16px]">Medicines Dispensed</h3>
         </div>
         <div className="p-6">
           {record.pharmacy.length === 0 ? (
@@ -322,7 +322,7 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#ECECEC] text-[12px] text-gray-500 uppercase tracking-wider">
+                  <tr className="border-b border-[#E2E8F0] text-[12px] text-gray-500 uppercase tracking-wider">
                     <th className="pb-3 font-bold">Medicine Name</th>
                     <th className="pb-3 font-bold">Dispensed Date</th>
                     <th className="pb-3 font-bold text-center">Quantity</th>
@@ -332,7 +332,7 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
                 <tbody className="text-[14px]">
                   {record.pharmacy.map((p: any) => (
                     <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="py-3 font-semibold text-[#1A2332]">{p.medicineName || p.medicineId}</td>
+                      <td className="py-3 font-semibold text-[#1E293B]">{p.medicineName || p.medicineId}</td>
                       <td className="py-3 text-gray-600">{new Date(p.dispensedDate).toLocaleDateString()}</td>
                       <td className="py-3 text-center">{p.quantity}</td>
                       <td className="py-3 text-right font-bold">₹{p.amount}</td>
@@ -346,10 +346,10 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
       </div>
 
       {/* OT Procedures */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#ECECEC] overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#ECECEC] bg-[#FDF8F8] flex items-center gap-2">
-          <Scissors size={18} className="text-[#800020] opacity-70" />
-          <h3 className="font-bold text-[#800020] text-[16px]">OT / Procedures</h3>
+      <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#E2E8F0] bg-[#F8FAFC] flex items-center gap-2">
+          <Scissors size={18} className="text-[#0F172A] opacity-70" />
+          <h3 className="font-bold text-[#0F172A] text-[16px]">OT / Procedures</h3>
         </div>
         <div className="p-6">
           {record.procedures.length === 0 ? (
@@ -357,17 +357,17 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {record.procedures.map(p => (
-                <div key={p.id} className="border border-[#ECECEC] rounded-lg p-4 bg-white flex justify-between items-center">
+                <div key={p.id} className="border border-[#E2E8F0] rounded-lg p-4 bg-white flex justify-between items-center">
                   <div>
-                    <p className="font-bold text-[#1A2332] text-[15px]">{p.procedure}</p>
+                    <p className="font-bold text-[#1E293B] text-[15px]">{p.procedure}</p>
                     <p className="text-[13px] text-gray-500 mt-1">{new Date(p.date).toLocaleDateString()} at {p.time} • Dr. {p.doctor}</p>
                     <p className="text-[13px] text-gray-700 mt-2">Notes: {p.notes}</p>
                   </div>
                   <div className="text-right">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${p.status === 'COMPLETED' ? 'bg-[#E6F4EA] text-[#137333]' : 'bg-[#E0F2FE] text-[#0369A1]'}`}>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${p.status === 'COMPLETED' ? 'bg-[#ECFDF5] text-[#047857]' : 'bg-[#DBEAFE] text-[#0369A1]'}`}>
                       {p.status}
                     </span>
-                    <p className="font-bold text-[#1A2332] mt-2">₹{p.fee}</p>
+                    <p className="font-bold text-[#1E293B] mt-2">₹{p.fee}</p>
                   </div>
                 </div>
               ))}
@@ -377,12 +377,12 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
       </div>
 
       {/* Unified Timeline */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#ECECEC] overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#ECECEC] bg-[#FDF8F8] flex items-center gap-2">
-          <Calendar size={18} className="text-[#800020] opacity-70" />
-          <h3 className="font-bold text-[#800020] text-[16px]">Unified Patient Timeline</h3>
+      <div className="bg-white rounded-xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#E2E8F0] bg-[#F8FAFC] flex items-center gap-2">
+          <Calendar size={18} className="text-[#0F172A] opacity-70" />
+          <h3 className="font-bold text-[#0F172A] text-[16px]">Unified Patient Timeline</h3>
         </div>
-        <div className="p-6 bg-[#FDF8F8]/50">
+        <div className="p-6 bg-[#F8FAFC]/50">
           <PatientTimeline record={record} />
         </div>
       </div>
