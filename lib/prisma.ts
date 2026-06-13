@@ -9,8 +9,9 @@ if (!process.env.DATABASE_URL) {
 } else if (process.env.DATABASE_URL.startsWith("file:")) {
   const filePath = process.env.DATABASE_URL.substring(5); // remove 'file:'
   if (!path.isAbsolute(filePath)) {
-    // Relative paths in Prisma are resolved relative to the prisma directory
-    const dbPath = path.resolve(process.cwd(), "prisma", filePath);
+    // Resolve relative paths to the project root (process.cwd()) where dev.db is located
+    const fileName = path.basename(filePath);
+    const dbPath = path.resolve(process.cwd(), fileName);
     process.env.DATABASE_URL = `file:${dbPath}`;
   }
 }
