@@ -36,7 +36,7 @@ api.interceptors.response.use(
         await axios.post(`${API_URL}/auth/refresh-token`, {}, { withCredentials: true });
         return api(originalRequest);
       } catch (refreshError) {
-        if (typeof window !== "undefined") {
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);

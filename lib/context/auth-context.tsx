@@ -23,8 +23,25 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("auth_user");
+        return saved ? JSON.parse(saved) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("auth_user");
+    }
+    return true;
+  });
+
   const router = useRouter();
 
   useEffect(() => {
@@ -38,9 +55,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           loginTimestamp: Date.now()
         };
         setCurrentUser(userProfile);
-      } catch (error) {
-        // Not logged in or expired
-        setCurrentUser(null);
+        localStorage.setItem("auth_user", JSON.stringify(userProfile));
+      } catch (error: any) {
+        // Only invalidate session on explicit auth errors (401, 403, 404).
+        // Keep session active if it's a network issue or temporary server 500/503.
+        if (error.response && [401, 403, 404].includes(error.response.status)) {
+          setCurrentUser(null);
+          localStorage.removeItem("auth_user");
+        }
       }
       setIsLoading(false);
     };
@@ -60,6 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     
     setCurrentUser(userProfile);
+    localStorage.setItem("auth_user", JSON.stringify(userProfile));
     
     return userProfile;
   };
@@ -71,6 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error(e);
     } finally {
       setCurrentUser(null);
+      localStorage.removeItem("auth_user");
       router.push("/login");
     }
   };

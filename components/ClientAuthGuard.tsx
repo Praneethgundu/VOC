@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { toast } from "sonner";
@@ -23,6 +23,11 @@ export default function ClientAuthGuard({ children }: { children: React.ReactNod
   const { isAuthenticated, isLoading, role } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Compute allowed status synchronously to prevent UI flicker
   // Handle trailing slashes like /login/ gracefully
@@ -55,7 +60,7 @@ export default function ClientAuthGuard({ children }: { children: React.ReactNod
     }
   }, [isAuthenticated, isLoading, router, pathname, role, isAllowed, isPublicRoute]);
 
-  if (isLoading) {
+  if (!mounted || isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
