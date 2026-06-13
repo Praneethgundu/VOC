@@ -19,11 +19,12 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
   const bodyBgClass = token ? "bg-[#F8FAFC]" : "bg-[#0F172A]";
+  const hasToken = !!token;
 
   return (
     <html lang="en">
       <body className={`antialiased ${bodyBgClass}`}>
-        <AuthProvider>
+        <AuthProvider initialHasSession={hasToken}>
           <ClientAuthGuard>
             {children}
           </ClientAuthGuard>

@@ -22,8 +22,17 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ 
+  children,
+  initialHasSession = false
+}: { 
+  children: ReactNode;
+  initialHasSession?: boolean;
+}) => {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    if (!initialHasSession) {
+      return null;
+    }
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("auth_user");
@@ -36,6 +45,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const [isLoading, setIsLoading] = useState(() => {
+    if (!initialHasSession) {
+      return false;
+    }
     if (typeof window !== "undefined") {
       return false;
     }
@@ -45,6 +57,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
+    if (!initialHasSession) {
+      setCurrentUser(null);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_user");
+      }
+      setIsLoading(false);
+      return;
+    }
+
     const initAuth = async () => {
       try {
         const res = await api.get("/auth/profile");
@@ -68,7 +89,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     initAuth();
-  }, []);
+  }, [initialHasSession]);
+
 
   const login = async (credentials: any) => {
     const res = await api.post("/auth/login", credentials);
