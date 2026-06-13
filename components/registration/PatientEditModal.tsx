@@ -7,7 +7,8 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    let { name, value } = e.target;
+    const name = e.target.name;
+    let value = e.target.value;
 
     if (name === "fullName") {
       value = value.replace(/[^a-zA-Z\s]/g, "");

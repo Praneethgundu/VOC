@@ -12,7 +12,6 @@ interface DispenseModalProps {
 
 export default function DispenseModal({ initialMedicineId, medicines, onClose, onSuccess }: DispenseModalProps) {
   const [opNumber, setOpNumber] = useState('');
-  const [patientName, setPatientName] = useState('');
   const [items, setItems] = useState<{medicineId: string, quantity: string}[]>([{medicineId: initialMedicineId || '', quantity: '1'}]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,17 +22,11 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
     getPatients().then(setPatients).catch(console.error);
   }, []);
 
-  useEffect(() => {
-    if (opNumber) {
-      const searchOp = opNumber.trim().toLowerCase();
-      const patient = patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp);
-      if (patient) {
-        setPatientName(patient.fullName || patient.patientName || patient.name || 'Unknown Name');
-      } else {
-        setPatientName('Patient not found');
-      }
-    }
-  }, [opNumber, patients]);
+  const searchOp = opNumber ? opNumber.trim().toLowerCase() : "";
+  const patient = searchOp ? patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp) : null;
+  const patientName = searchOp 
+    ? (patient ? (patient.fullName || patient.patientName || patient.name || 'Unknown Name') : 'Patient not found')
+    : '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

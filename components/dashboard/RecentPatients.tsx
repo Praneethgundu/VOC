@@ -1,5 +1,6 @@
 import { Table, THead, TBody, Th, Tr, Td, Badge } from "@/components/ui/Table";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getPatients } from "@/services/patientService";
 
 export default function RecentPatients() {
@@ -34,12 +35,12 @@ export default function RecentPatients() {
             Latest patient activity
           </p>
         </div>
-        <a
+        <Link
           href="/registration"
           className="text-[12px] text-[#2563EB] font-semibold hover:underline"
         >
           View all →
-        </a>
+        </Link>
       </div>
 
       <Table>

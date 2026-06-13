@@ -19,26 +19,6 @@ export default function MedicineTable() {
 
   const [dispenseMedicineData, setDispenseMedicineData] = useState<any>(null);
   const [dispenseForm, setDispenseForm] = useState({ opNumber: "", quantity: 1, amount: 0 });
-  const [patientName, setPatientName] = useState("");
-
-  useEffect(() => { 
-    fetchMedicines(); 
-    import("@/services/patientService").then(m => m.getPatients().then(setPatients).catch(() => {}));
-  }, []);
-
-  useEffect(() => {
-    if (dispenseForm.opNumber) {
-      const searchOp = dispenseForm.opNumber.trim().toLowerCase();
-      const patient = patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp);
-      if (patient) {
-        setPatientName(patient.fullName || patient.patientName || "Unknown Name");
-      } else {
-        setPatientName("Patient not found");
-      }
-    } else {
-      setPatientName("");
-    }
-  }, [dispenseForm.opNumber, patients]);
 
   const fetchMedicines = async () => {
     setLoading(true);
@@ -48,6 +28,17 @@ export default function MedicineTable() {
     } catch { /* silence */ }
     finally { setLoading(false); }
   };
+
+  useEffect(() => { 
+    fetchMedicines(); 
+    import("@/services/patientService").then(m => m.getPatients().then(setPatients).catch(() => {}));
+  }, []);
+
+  const searchOp = dispenseForm.opNumber ? dispenseForm.opNumber.trim().toLowerCase() : "";
+  const foundPatient = searchOp ? patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp) : null;
+  const patientName = searchOp 
+    ? (foundPatient ? (foundPatient.fullName || foundPatient.patientName || "Unknown Name") : "Patient not found")
+    : "";
 
   const handleDispense = async () => {
     if (!dispenseMedicineData) return;

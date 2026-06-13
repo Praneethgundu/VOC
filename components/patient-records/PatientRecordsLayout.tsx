@@ -16,10 +16,6 @@ export default function PatientRecordsLayout() {
   const [recordData, setRecordData] = useState<PatientRecord | null>(null);
   const [recordLoading, setRecordLoading] = useState(false);
 
-  useEffect(() => {
-    fetchPatients();
-  }, []);
-
   const fetchPatients = async () => {
     try {
       setLoading(true);
@@ -31,6 +27,10 @@ export default function PatientRecordsLayout() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPatients();
+  }, []);
 
   const handleSelectPatient = async (opNumber: string) => {
     setSelectedOpNumber(opNumber);

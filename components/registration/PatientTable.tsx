@@ -11,10 +11,6 @@ export default function PatientTable() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchPatients();
-  }, []);
-
   const fetchPatients = async () => {
     setLoading(true);
     try {
@@ -26,6 +22,10 @@ export default function PatientTable() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPatients();
+  }, []);
 
   const handleDelete = async (opNumber: string) => {
     if (!confirm(`Are you sure you want to delete patient ${opNumber}?`)) return;

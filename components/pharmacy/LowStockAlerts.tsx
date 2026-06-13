@@ -7,10 +7,6 @@ import { AlertTriangle, TrendingDown } from "lucide-react";
 export default function LowStockAlerts() {
   const [lowStockMeds, setLowStockMeds] = useState<any[]>([]);
 
-  useEffect(() => {
-    fetchMedicines();
-  }, []);
-
   const fetchMedicines = async () => {
     try {
       const data = await getMedicines();
@@ -20,6 +16,10 @@ export default function LowStockAlerts() {
       /* silence */
     }
   };
+
+  useEffect(() => {
+    fetchMedicines();
+  }, []);
 
   if (lowStockMeds.length === 0) return null;
 

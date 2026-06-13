@@ -16,6 +16,8 @@ api.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Bypass cached 308 redirects from previous trailingSlash config
+    config.params = { ...config.params, _t: Date.now() };
     return config;
   },
   (error) => Promise.reject(error)

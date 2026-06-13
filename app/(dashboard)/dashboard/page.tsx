@@ -6,6 +6,7 @@ import StatsCards from "@/components/dashboard/StatsCards";
 import RevenueChart from "@/components/dashboard/RevenueChart";
 import RecentPatients from "@/components/dashboard/RecentPatients";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getPatients } from "@/services/patientService";
 import { getConsultations } from "@/services/consultationService";
 import { getInvestigations } from "@/services/investigationService";
@@ -124,36 +125,36 @@ export default function DashboardPage() {
 
                 {/* Quick actions */}
                 <div className="mt-6 pt-5 border-t border-[#E2E8F0] grid grid-cols-2 gap-2">
-                  <a
+                  <Link
                     href="/registration"
                     className="flex items-center justify-center py-2 rounded-lg bg-[#FFF0F2] text-[#2563EB] text-[12px] font-semibold hover:bg-[#FEE2E2] transition-colors"
                   >
                     + Register
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/billing"
                     className="flex items-center justify-center py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] text-[12px] font-semibold hover:border-[rgba(15,23,42,0.2)] hover:text-[#0F172A] transition-colors"
                   >
                     New Bill
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/pharmacy"
                     className="flex items-center justify-center py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] text-[12px] font-semibold hover:border-[rgba(15,23,42,0.2)] hover:text-[#0F172A] transition-colors"
                   >
                     Dispense Meds
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/investigations"
                     className="flex items-center justify-center py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] text-[12px] font-semibold hover:border-[rgba(15,23,42,0.2)] hover:text-[#0F172A] transition-colors"
                   >
                     Order Test
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/reports/eod"
                     className="flex items-center justify-center py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#64748B] text-[12px] font-semibold hover:border-[rgba(15,23,42,0.2)] hover:text-[#0F172A] transition-colors col-span-2"
                   >
                     View Full EOD Report
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
