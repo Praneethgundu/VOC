@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/context/auth-context";
 import ClientAuthGuard from "@/components/ClientAuthGuard";
 import { Toaster } from "sonner";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: "VOC Orthopaedic HMS | Hospital Management System",
@@ -10,14 +11,18 @@ export const metadata: Metadata = {
     "A modern Hospital Management System for VOC Orthopaedic Hospital — manage patients, consultations, billing, pharmacy and more.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
+  const bodyBgClass = token ? "bg-[#F8FAFC]" : "bg-[#0F172A]";
+
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className={`antialiased ${bodyBgClass}`}>
         <AuthProvider>
           <ClientAuthGuard>
             {children}
@@ -27,4 +32,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+}
