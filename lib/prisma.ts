@@ -38,8 +38,7 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")) {
   if (path.isAbsolute(pathPart)) {
     absoluteDbUrl = process.env.DATABASE_URL;
   } else {
-    const fileName = path.basename(pathPart);
-    const resolvedPath = path.resolve(projectRoot, fileName);
+    const resolvedPath = path.resolve(projectRoot, pathPart);
     const queryParams = filePath.substring(pathPart.length);
     absoluteDbUrl = `file:${resolvedPath}${queryParams}`;
   }
