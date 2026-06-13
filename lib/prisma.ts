@@ -1,31 +1,42 @@
 import { PrismaClient } from "@prisma/client";
 import path from "path";
+import fs from "fs";
 
-// Ensure DATABASE_URL is set correctly for runtime
-if (!process.env.DATABASE_URL) {
-  // Default to dev.db at the project root
-  const dbPath = path.resolve(/*turbopackIgnore: true*/ process.cwd(), "dev.db");
-  process.env.DATABASE_URL = `file:${dbPath}`;
-} else if (process.env.DATABASE_URL.startsWith("file:")) {
-  const filePath = process.env.DATABASE_URL.substring(5); // remove 'file:'
-  if (!path.isAbsolute(filePath)) {
-    // Resolve relative paths to the project root (process.cwd()) where dev.db is located
-    const fileName = path.basename(filePath);
-    const dbPath = path.resolve(/*turbopackIgnore: true*/ process.cwd(), fileName);
-    process.env.DATABASE_URL = `file:${dbPath}`;
+// Robust project root detector that works under Passenger/Hostinger
+function findProjectRoot(): string {
+  const startDir = typeof __dirname !== "undefined" ? __dirname : process.cwd();
+  let currentDir = startDir;
+  
+  for (let i = 0; i < 10; i++) {
+    if (fs.existsSync(path.join(currentDir, "package.json"))) {
+      return currentDir;
+    }
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) break;
+    currentDir = parentDir;
   }
+  return process.cwd();
 }
+
+const projectRoot = findProjectRoot();
+const dbPath = path.resolve(projectRoot, "dev.db");
+const absoluteDbUrl = `file:${dbPath}?connection_limit=1`;
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
+    datasources: {
+      db: {
+        url: absoluteDbUrl,
+      },
+    },
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 
 // Optimize SQLite for concurrent read/write and reliability under load
-if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")) {
+if (absoluteDbUrl.startsWith("file:")) {
   (async () => {
     try {
       await prisma.$queryRawUnsafe(`PRAGMA journal_mode = WAL;`);
@@ -41,4 +52,5 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")) {
 }
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
 
