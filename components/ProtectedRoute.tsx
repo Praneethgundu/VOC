@@ -58,8 +58,18 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }
   }, [isAuthenticated, isLoading, router, pathname, role, isAllowed, isPublicRoute]);
 
+  const isLoginPage = pathname.startsWith("/login");
+  const loadingBg = isLoginPage ? "bg-[#0F172A] text-white" : "bg-[#F8FAFC] text-[#0F172A]";
+
   if (!mounted || isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className={`min-h-screen flex flex-col items-center justify-center ${loadingBg}`}>
+        <div className="flex items-center gap-3">
+          <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-semibold tracking-wide">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   if (isPublicRoute) {
