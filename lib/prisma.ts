@@ -47,7 +47,11 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")) {
   absoluteDbUrl = `file:${path.resolve(projectRoot, "dev.db")}?connection_limit=1`;
 }
 
+// Force override process.env.DATABASE_URL so Prisma Client query engine uses the absolute path
+process.env.DATABASE_URL = absoluteDbUrl;
+
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
 
 export const prisma =
   globalForPrisma.prisma ||

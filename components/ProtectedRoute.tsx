@@ -9,7 +9,7 @@ const roleRouteMap: Record<string, string[]> = {
   RECEPTIONIST: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/records", "/settings"],
   DOCTOR: ["/dashboard", "/consultation", "/investigations", "/ot", "/reports", "/reports/eod", "/records"],
   PHARMACIST: ["/dashboard", "/pharmacy", "/reports/eod", "/records"],
-  ADMIN: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/records", "/settings"],
+  ADMIN: ["/dashboard", "/registration", "/consultation", "/investigations", "/ot", "/pharmacy", "/billing", "/reports", "/reports/eod", "/records", "/settings", "/financials"],
 };
 
 const defaultLandingPage: Record<string, string> = {
