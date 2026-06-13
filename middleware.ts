@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // Redirect HTTP to HTTPS in production
+  // HTTP to HTTPS redirect is handled by the web server (e.g. Apache/Nginx/LiteSpeed) in Hostinger.
+  // Next.js middleware redirect is disabled to prevent reverse-proxy redirect loops and broken POST requests.
+  /*
   if (
     process.env.NODE_ENV === 'production' &&
     request.headers.get('x-forwarded-proto') !== 'https' &&
@@ -12,6 +14,7 @@ export function middleware(request: NextRequest) {
     const httpsUrl = `https://${request.headers.get('host')}${request.nextUrl.pathname}${request.nextUrl.search}`
     return NextResponse.redirect(httpsUrl, 301)
   }
+  */
 
   return NextResponse.next()
 }
