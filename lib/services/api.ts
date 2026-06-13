@@ -37,6 +37,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          localStorage.removeItem("auth_user");
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);

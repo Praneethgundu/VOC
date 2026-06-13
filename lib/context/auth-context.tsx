@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const [isLoading, setIsLoading] = useState(() => {
     if (typeof window !== "undefined") {
-      return !localStorage.getItem("auth_user");
+      return false;
     }
     return true;
   });
