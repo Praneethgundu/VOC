@@ -5,18 +5,18 @@ import fs from "fs";
 // Robust project root detector that works under Passenger/Hostinger
 function findProjectRoot(): string {
   // Check 1: Is package.json in process.cwd()?
-  if (fs.existsSync(path.join(process.cwd(), "package.json"))) {
-    return process.cwd();
+  if (fs.existsSync(path.join(/*turbopackIgnore: true*/ process.cwd(), "package.json"))) {
+    return /*turbopackIgnore: true*/ process.cwd();
   }
   
   // Check 2: Is package.json in process.cwd() + "/public_html"?
-  const publicHtmlPath = path.join(process.cwd(), "public_html");
+  const publicHtmlPath = path.join(/*turbopackIgnore: true*/ process.cwd(), "public_html");
   if (fs.existsSync(path.join(publicHtmlPath, "package.json"))) {
     return publicHtmlPath;
   }
   
   // Check 3: Search upwards from __dirname
-  const startDir = typeof __dirname !== "undefined" ? __dirname : process.cwd();
+  const startDir = typeof __dirname !== "undefined" ? __dirname : /*turbopackIgnore: true*/ process.cwd();
   let currentDir = startDir;
   for (let i = 0; i < 10; i++) {
     if (fs.existsSync(path.join(currentDir, "package.json"))) {
@@ -26,24 +26,44 @@ function findProjectRoot(): string {
     if (parentDir === currentDir) break;
     currentDir = parentDir;
   }
-  return process.cwd();
+  return /*turbopackIgnore: true*/ process.cwd();
 }
 
 const projectRoot = findProjectRoot();
 let absoluteDbUrl: string;
 
+let pathPart = "dev.db";
+let queryParams = "?connection_limit=1";
+
 if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")) {
   const filePath = process.env.DATABASE_URL.substring(5); // remove 'file:'
-  const pathPart = filePath.split("?")[0];
-  if (path.isAbsolute(pathPart)) {
-    absoluteDbUrl = process.env.DATABASE_URL;
-  } else {
-    const resolvedPath = path.resolve(projectRoot, pathPart);
-    const queryParams = filePath.substring(pathPart.length);
-    absoluteDbUrl = `file:${resolvedPath}${queryParams}`;
-  }
+  pathPart = filePath.split("?")[0];
+  queryParams = filePath.substring(pathPart.length);
+}
+
+if (path.isAbsolute(pathPart)) {
+  absoluteDbUrl = `file:${pathPart}${queryParams}`;
 } else {
-  absoluteDbUrl = `file:${path.resolve(projectRoot, "dev.db")}?connection_limit=1`;
+  // Scan multiple possible locations to find the database file that actually exists with data
+  const candidates = [
+    path.resolve(projectRoot, pathPart),
+    path.resolve(projectRoot, "dev.db"),
+    path.resolve(/*turbopackIgnore: true*/ process.cwd(), pathPart),
+    path.resolve(projectRoot, "prisma", "dev.db"),
+  ];
+
+  let resolvedPath = candidates[0];
+  for (const candidate of candidates) {
+    try {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).size > 1024) {
+        resolvedPath = candidate;
+        break;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  absoluteDbUrl = `file:${resolvedPath}${queryParams}`;
 }
 
 // Force override process.env.DATABASE_URL so Prisma Client query engine uses the absolute path
