@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "fallback_secret_key");
 const JWT_REFRESH_SECRET = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET || "fallback_refresh_secret_key");
@@ -8,7 +9,7 @@ export async function signAccessToken(payload: any) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("15m")
+    .setExpirationTime("8h")
     .sign(JWT_SECRET);
 }
 
@@ -54,12 +55,12 @@ export async function comparePassword(password: string, hash: string): Promise<b
 }
 
 // Verification helper for route handlers to enforce Authentication and Authorization
-export async function getSession(req: Request) {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+export async function getSession(req?: Request) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
+  if (!token) {
     return null;
   }
-  const token = authHeader.split(" ")[1];
   return await verifyAccessToken(token);
 }
 

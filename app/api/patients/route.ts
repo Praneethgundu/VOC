@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/utils/db";
 import { getSession, authorizeRole } from "@/utils/auth";
+import { logAuditAction } from "@/lib/utils/auditLogger";
+import { patientSchema } from "@/lib/validations/schemas";
 
 export async function GET(req: Request) {
   try {
@@ -31,37 +33,43 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+    const validation = patientSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ message: "Invalid input data", errors: validation.error.format() }, { status: 400 });
+    }
+    const data = validation.data;
+
     const count = await prisma.patient.count();
     
-    const opNumber = body.opNumber || `OP/${new Date().getFullYear()}/${String(count + 1).padStart(3, '0')}`;
+    const opNumber = data.opNumber || `OP/${new Date().getFullYear()}/${String(count + 1).padStart(3, '0')}`;
     const patientId = require("crypto").randomUUID();
 
     const newPatient = await prisma.patient.create({
       data: {
         patientId,
         opNumber,
-        fullName: body.fullName || "",
-        age: String(body.age || ""),
-        gender: body.gender || "Other",
-        phone: String(body.phone || ""),
-        bloodGroup: body.bloodGroup || "Unknown",
-        department: body.department || "Orthopaedics",
-        doctor: body.doctor || "",
-        complaint: body.complaint || "",
-        address: body.address || "",
-        status: body.status || "Active",
+        fullName: data.fullName || "",
+        age: String(data.age || ""),
+        gender: data.gender || "Other",
+        phone: String(data.phone || ""),
+        bloodGroup: data.bloodGroup || "Unknown",
+        department: data.department || "Orthopaedics",
+        doctor: data.doctor || "",
+        complaint: data.complaint || "",
+        address: data.address || "",
+        status: data.status || "Active",
       },
     });
 
     // Write audit log
-    await prisma.auditLog.create({
-      data: {
-        user: session.username,
-        role: session.role,
-        module: "PATIENTS",
-        action: "REGISTER_PATIENT",
-        recordId: newPatient.opNumber,
-      },
+    await logAuditAction({
+      req,
+      user: session.username,
+      role: session.role,
+      module: "PATIENTS",
+      action: "REGISTER_PATIENT",
+      recordId: newPatient.opNumber,
+      patientId: newPatient.patientId
     });
 
     // Automatically add to consultation queue
@@ -76,14 +84,14 @@ export async function POST(req: Request) {
         },
       });
       // Log audit action for consultation queue insertion
-      await prisma.auditLog.create({
-        data: {
-          user: "System",
-          role: "Backend",
-          module: "CONSULTATIONS",
-          action: "AUTO_QUEUE",
-          recordId: newPatient.opNumber,
-        },
+      await logAuditAction({
+        req,
+        user: "System",
+        role: "Backend",
+        module: "CONSULTATIONS",
+        action: "AUTO_QUEUE",
+        recordId: newPatient.opNumber,
+        patientId: newPatient.patientId
       });
     } catch (err) {
       console.error("Failed to auto add patient to consultation queue:", err);
@@ -118,6 +126,11 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
+    const validation = patientSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ message: "Invalid input data", errors: validation.error.format() }, { status: 400 });
+    }
+    const data = validation.data;
 
     const existing = await prisma.patient.findUnique({
       where: { opNumber },
@@ -130,27 +143,27 @@ export async function PUT(req: Request) {
     const updated = await prisma.patient.update({
       where: { opNumber },
       data: {
-        fullName: body.fullName !== undefined ? body.fullName : existing.fullName,
-        age: body.age !== undefined ? String(body.age) : existing.age,
-        gender: body.gender !== undefined ? body.gender : existing.gender,
-        phone: body.phone !== undefined ? String(body.phone) : existing.phone,
-        bloodGroup: body.bloodGroup !== undefined ? body.bloodGroup : existing.bloodGroup,
-        department: body.department !== undefined ? body.department : existing.department,
-        doctor: body.doctor !== undefined ? body.doctor : existing.doctor,
-        complaint: body.complaint !== undefined ? body.complaint : existing.complaint,
-        address: body.address !== undefined ? body.address : existing.address,
-        status: body.status !== undefined ? body.status : existing.status,
+        fullName: data.fullName !== undefined ? data.fullName : existing.fullName,
+        age: data.age !== undefined ? String(data.age) : existing.age,
+        gender: data.gender !== undefined ? data.gender : existing.gender,
+        phone: data.phone !== undefined ? String(data.phone) : existing.phone,
+        bloodGroup: data.bloodGroup !== undefined ? data.bloodGroup : existing.bloodGroup,
+        department: data.department !== undefined ? data.department : existing.department,
+        doctor: data.doctor !== undefined ? data.doctor : existing.doctor,
+        complaint: data.complaint !== undefined ? data.complaint : existing.complaint,
+        address: data.address !== undefined ? data.address : existing.address,
+        status: data.status !== undefined ? data.status : existing.status,
       },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        user: session.username,
-        role: session.role,
-        module: "PATIENTS",
-        action: "UPDATE_PATIENT",
-        recordId: opNumber,
-      },
+    await logAuditAction({
+      req,
+      user: session.username,
+      role: session.role,
+      module: "PATIENTS",
+      action: "UPDATE_PATIENT",
+      recordId: opNumber,
+      patientId: existing.patientId
     });
 
     return NextResponse.json({ message: "Patient updated successfully", patient: updated });
@@ -189,14 +202,14 @@ export async function DELETE(req: Request) {
       where: { opNumber },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        user: session.username,
-        role: session.role,
-        module: "PATIENTS",
-        action: "DELETE_PATIENT",
-        recordId: opNumber,
-      },
+    await logAuditAction({
+      req,
+      user: session.username,
+      role: session.role,
+      module: "PATIENTS",
+      action: "DELETE_PATIENT",
+      recordId: opNumber,
+      patientId: existing.patientId
     });
 
     return NextResponse.json({ message: "Patient deleted successfully" });

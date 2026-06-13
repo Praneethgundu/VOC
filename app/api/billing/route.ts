@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/utils/db";
 import { getSession, authorizeRole } from "@/utils/auth";
+import { logAuditAction } from "@/lib/utils/auditLogger";
+import { billingSchema } from "@/lib/validations/schemas";
 
 export async function GET(req: Request) {
   try {
@@ -53,12 +55,20 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const items = Array.isArray(body.items) ? body.items : [];
-    const total = items.reduce((acc: number, item: any) => acc + (Number(item.amount) || 0), 0);
+    const validation = billingSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ message: "Invalid input data", errors: validation.error.format() }, { status: 400 });
+    }
+    const data = validation.data;
 
-    const paidAmount = Number(body.paidAmount) !== undefined && !isNaN(Number(body.paidAmount))
-      ? Number(body.paidAmount)
-      : (body.paymentMode === "Pending" ? 0 : total);
+    const items = Array.isArray(data.items) ? data.items : [];
+    const total = items.reduce((acc: number, item: any) => acc + (Number(item.amount) || 0), 0) + 
+                  (data.consultationCharges || 0) + (data.investigationCharges || 0) + 
+                  (data.medicineCharges || 0) + (data.otCharges || 0);
+
+    const paidAmount = Number(data.paidAmount) !== undefined && !isNaN(Number(data.paidAmount))
+      ? Number(data.paidAmount)
+      : (data.paymentMode === "Pending" ? 0 : total);
     
     const pendingAmount = Math.max(0, total - paidAmount);
     const billNumber = "BILL-" + require("crypto").randomBytes(3).toString("hex").toUpperCase();
@@ -66,30 +76,30 @@ export async function POST(req: Request) {
     const newBill = await prisma.bill.create({
       data: {
         billNumber,
-        patientId: body.patientId || "",
-        opNumber: body.opNumber || "Unknown",
+        patientId: data.patientId || "",
+        opNumber: data.opNumber || "Unknown",
         items: JSON.stringify(items),
         total,
         paidAmount,
         pendingAmount,
-        paymentMode: body.paymentMode || "Pending",
-        status: body.status || (pendingAmount > 0 ? "Unpaid" : "Paid"),
-        consultationCharges: Number(body.consultationCharges) || 0,
-        investigationCharges: Number(body.investigationCharges) || 0,
-        medicineCharges: Number(body.medicineCharges) || 0,
-        otCharges: Number(body.otCharges) || 0,
+        paymentMode: data.paymentMode || "Pending",
+        status: pendingAmount > 0 ? "Unpaid" : "Paid",
+        consultationCharges: Number(data.consultationCharges) || 0,
+        investigationCharges: Number(data.investigationCharges) || 0,
+        medicineCharges: Number(data.medicineCharges) || 0,
+        otCharges: Number(data.otCharges) || 0,
       },
     });
 
     // Write audit log
-    await prisma.auditLog.create({
-      data: {
-        user: session.username,
-        role: session.role,
-        module: "BILLING",
-        action: "GENERATE_BILL",
-        recordId: billNumber,
-      },
+    await logAuditAction({
+      req,
+      user: session.username,
+      role: session.role,
+      module: "BILLING",
+      action: "GENERATE_BILL",
+      recordId: billNumber,
+      patientId: newBill.patientId
     });
 
     return NextResponse.json({

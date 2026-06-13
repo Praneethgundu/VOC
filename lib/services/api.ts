@@ -1,10 +1,10 @@
 import axios from "axios";
-import { getAccessToken, getRefreshToken, setTokens, removeTokens } from "../utils/jwt";
 
 const API_URL = "/api";
 
 const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -12,10 +12,6 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = getAccessToken();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     // Bypass cached 308 redirects from previous trailingSlash config
     config.params = { ...config.params, _t: Date.now() };
     return config;
@@ -35,31 +31,15 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = getRefreshToken();
 
-      if (refreshToken) {
-        try {
-          const res = await axios.post(`${API_URL}/auth/refresh-token`, {
-            refreshToken,
-          });
-
-          const { accessToken, refreshToken: newRefreshToken } = res.data;
-          setTokens(accessToken, newRefreshToken);
-
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          removeTokens();
-          if (typeof window !== "undefined") {
-            window.location.href = "/login";
-          }
-          return Promise.reject(refreshError);
-        }
-      } else {
-        removeTokens();
+      try {
+        await axios.post(`${API_URL}/auth/refresh-token`, {}, { withCredentials: true });
+        return api(originalRequest);
+      } catch (refreshError) {
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }
+        return Promise.reject(refreshError);
       }
     }
 

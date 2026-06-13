@@ -38,11 +38,6 @@ export default function LoginForm() {
       await response.json();
 
     if (data.success) {
-      localStorage.setItem(
-        "token",
-        data.token
-      );
-
       router.push("/dashboard");
     } else {
       alert("Invalid Credentials");

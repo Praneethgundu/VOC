@@ -2,7 +2,6 @@
 
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import api from "../services/api";
-import { getAccessToken, setTokens, removeTokens } from "../utils/jwt";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -30,24 +29,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = getAccessToken();
-      if (token) {
-        try {
-          const res = await api.get("/auth/profile");
-          const userProfile = {
-            id: res.data.user.id,
-            username: res.data.user.username,
-            role: res.data.user.role,
-            loginTimestamp: Date.now()
-          };
-          setCurrentUser(userProfile);
-        } catch (error) {
-          console.error("Failed to fetch profile", error);
-          removeTokens();
-          setCurrentUser(null);
-        }
-      } else {
-        removeTokens();
+      try {
+        const res = await api.get("/auth/profile");
+        const userProfile = {
+          id: res.data.user.id,
+          username: res.data.user.username,
+          role: res.data.user.role,
+          loginTimestamp: Date.now()
+        };
+        setCurrentUser(userProfile);
+      } catch (error) {
+        // Not logged in or expired
         setCurrentUser(null);
       }
       setIsLoading(false);
@@ -58,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: any) => {
     const res = await api.post("/auth/login", credentials);
-    const { accessToken, refreshToken, user } = res.data;
+    const { user } = res.data;
     
     const userProfile = { 
       id: user.id, 
@@ -67,7 +59,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loginTimestamp: Date.now()
     };
     
-    setTokens(accessToken, refreshToken);
     setCurrentUser(userProfile);
     
     return userProfile;
@@ -79,7 +70,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (e) {
       console.error(e);
     } finally {
-      removeTokens();
       setCurrentUser(null);
       router.push("/login");
     }

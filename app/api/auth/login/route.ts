@@ -1,17 +1,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/utils/db";
 import { comparePassword, signAccessToken, signRefreshToken } from "@/utils/auth";
+import { cookies } from "next/headers";
+import { logAuditAction } from "@/lib/utils/auditLogger";
+import { loginSchema } from "@/lib/validations/schemas";
 
 export async function POST(req: Request) {
   try {
-    const { username, password, role } = await req.json();
+    const body = await req.json();
+    const validation = loginSchema.safeParse(body);
 
-    if (!username || !password || !role) {
+    if (!validation.success) {
       return NextResponse.json(
-        { message: "Username, password, and role are required" },
+        { message: "Invalid input data", errors: validation.error.format() },
         { status: 400 }
       );
     }
+
+    const { username, password, role } = validation.data;
 
     const user = await prisma.user.findUnique({
       where: { username },
@@ -20,11 +26,16 @@ export async function POST(req: Request) {
     if (!user) {
       if (username.toLowerCase() === "admin" && password === "admin123") {
         const payload = { userId: "admin-fallback", username: "admin", role: "ADMIN" };
+        const accessToken = await signAccessToken(payload);
+        const refreshToken = await signRefreshToken(payload);
+        
+        const cookieStore = await cookies();
+        cookieStore.set("accessToken", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", maxAge: 8 * 60 * 60 });
+        cookieStore.set("refreshToken", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", maxAge: 7 * 24 * 60 * 60 });
+
         return NextResponse.json({
           success: true,
           user: payload,
-          accessToken: await signAccessToken(payload),
-          refreshToken: await signRefreshToken(payload),
         });
       }
       return NextResponse.json(
@@ -67,15 +78,19 @@ export async function POST(req: Request) {
     const accessToken = await signAccessToken(payload);
     const refreshToken = await signRefreshToken(payload);
 
+    const cookieStore = await cookies();
+    cookieStore.set("accessToken", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", maxAge: 8 * 60 * 60 });
+    cookieStore.set("refreshToken", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", maxAge: 7 * 24 * 60 * 60 });
+
     // Write audit log
-    await prisma.auditLog.create({
-      data: {
-        user: user.username,
-        role: user.role,
-        module: "AUTH",
-        action: "LOGIN",
-        recordId: user.id,
-      },
+    await logAuditAction({
+      req,
+      user: user.username,
+      role: user.role,
+      module: "AUTH",
+      action: "LOGIN",
+      recordId: user.id,
+      status: "Success"
     });
 
     return NextResponse.json({
@@ -85,8 +100,6 @@ export async function POST(req: Request) {
         username: user.username,
         role: user.role,
       },
-      accessToken,
-      refreshToken,
     });
   } catch (error: any) {
     console.error("Login API Error:", error);
