@@ -11,7 +11,7 @@ const isSocket = isNaN(Number(port));
 const hostname = isSocket ? undefined : "localhost";
 const nextPort = isSocket ? undefined : Number(port);
 
-const app = next({ dev, hostname, port: nextPort });
+const app = next({ dev, hostname, port: nextPort, dir: __dirname });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {

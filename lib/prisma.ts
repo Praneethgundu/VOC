@@ -4,9 +4,20 @@ import fs from "fs";
 
 // Robust project root detector that works under Passenger/Hostinger
 function findProjectRoot(): string {
+  // Check 1: Is package.json in process.cwd()?
+  if (fs.existsSync(path.join(process.cwd(), "package.json"))) {
+    return process.cwd();
+  }
+  
+  // Check 2: Is package.json in process.cwd() + "/public_html"?
+  const publicHtmlPath = path.join(process.cwd(), "public_html");
+  if (fs.existsSync(path.join(publicHtmlPath, "package.json"))) {
+    return publicHtmlPath;
+  }
+  
+  // Check 3: Search upwards from __dirname
   const startDir = typeof __dirname !== "undefined" ? __dirname : process.cwd();
   let currentDir = startDir;
-  
   for (let i = 0; i < 10; i++) {
     if (fs.existsSync(path.join(currentDir, "package.json"))) {
       return currentDir;
@@ -19,8 +30,22 @@ function findProjectRoot(): string {
 }
 
 const projectRoot = findProjectRoot();
-const dbPath = path.resolve(projectRoot, "dev.db");
-const absoluteDbUrl = `file:${dbPath}?connection_limit=1`;
+let absoluteDbUrl: string;
+
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")) {
+  const filePath = process.env.DATABASE_URL.substring(5); // remove 'file:'
+  const pathPart = filePath.split("?")[0];
+  if (path.isAbsolute(pathPart)) {
+    absoluteDbUrl = process.env.DATABASE_URL;
+  } else {
+    const fileName = path.basename(pathPart);
+    const resolvedPath = path.resolve(projectRoot, fileName);
+    const queryParams = filePath.substring(pathPart.length);
+    absoluteDbUrl = `file:${resolvedPath}${queryParams}`;
+  }
+} else {
+  absoluteDbUrl = `file:${path.resolve(projectRoot, "dev.db")}?connection_limit=1`;
+}
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
@@ -52,5 +77,6 @@ if (absoluteDbUrl.startsWith("file:")) {
 }
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
 
 
