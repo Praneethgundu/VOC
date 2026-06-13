@@ -60,23 +60,8 @@ export const prisma =
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 
-// Optimize SQLite for concurrent read/write and reliability under load
-if (absoluteDbUrl.startsWith("file:")) {
-  (async () => {
-    try {
-      await prisma.$queryRawUnsafe(`PRAGMA journal_mode = WAL;`);
-      await prisma.$queryRawUnsafe(`PRAGMA busy_timeout = 10000;`);
-      await prisma.$queryRawUnsafe(`PRAGMA synchronous = NORMAL;`);
-    } catch (error) {
-      // Catch errors silently during build or when database is not yet fully available
-      if (process.env.NODE_ENV === "development") {
-        console.warn("Failed to apply SQLite performance optimizations:", error);
-      }
-    }
-  })();
-}
-
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
 
 
 
