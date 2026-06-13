@@ -29,41 +29,27 @@ export const AuthProvider = ({
   children: ReactNode;
   initialHasSession?: boolean;
 }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    if (!initialHasSession) {
-      return null;
-    }
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("auth_user");
-        return saved ? JSON.parse(saved) : null;
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  });
-
-  const [isLoading, setIsLoading] = useState(() => {
-    if (!initialHasSession) {
-      return false;
-    }
-    if (typeof window !== "undefined") {
-      return false;
-    }
-    return true;
-  });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const router = useRouter();
 
   useEffect(() => {
     if (!initialHasSession) {
       setCurrentUser(null);
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("auth_user");
-      }
+      localStorage.removeItem("auth_user");
       setIsLoading(false);
       return;
+    }
+
+    // Since initialHasSession is true, try to load from localStorage first for immediate UI
+    try {
+      const saved = localStorage.getItem("auth_user");
+      if (saved) {
+        setCurrentUser(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error("Failed to parse auth_user", e);
     }
 
     const initAuth = async () => {
