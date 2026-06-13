@@ -113,7 +113,6 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Patient Name</label>
               <input 
                 value={patientName} 
-                onChange={(e) => setPatientName(e.target.value)} 
                 placeholder="Name" 
                 className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#059669] text-sm bg-white"
                 readOnly
