@@ -17,7 +17,7 @@ async function main() {
     if (error.response) {
       console.log("Error Status:", error.response.status);
       console.log("Error Headers:", error.response.headers);
-      console.log("Error Data (first 500 chars):", String(error.response.data).substring(0, 500));
+      console.log("Error Data:", JSON.stringify(error.response.data, null, 2));
     } else {
       console.error("Network / Axios Error:", error.message);
     }
