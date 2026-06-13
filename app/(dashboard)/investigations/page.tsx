@@ -125,19 +125,31 @@ export default function InvestigationPage() {
         <main className="flex-1 p-8">
           {/* KPI Cards */}
           <div className="grid grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm">
+            <div 
+              onClick={() => setActiveTab('All')}
+              className={`bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-[#2563EB] ${activeTab === 'All' ? 'border-[#2563EB] ring-2 ring-[#2563EB]/20' : 'border-[#E2E8F0]'}`}
+            >
               <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2">Total Orders</p>
               <p className="text-4xl font-extrabold text-[#1E293B]">{totalOrders}</p>
             </div>
-            <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm">
+            <div 
+              onClick={() => setActiveTab('Pending')}
+              className={`bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-[#2563EB] ${activeTab === 'Pending' ? 'border-[#2563EB] ring-2 ring-[#2563EB]/20' : 'border-[#E2E8F0]'}`}
+            >
               <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2">Pending</p>
               <p className="text-4xl font-extrabold text-[#1E293B]">{pendingOrders}</p>
             </div>
-            <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm">
+            <div 
+              onClick={() => setActiveTab('In Progress')}
+              className={`bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-[#2563EB] ${activeTab === 'In Progress' ? 'border-[#2563EB] ring-2 ring-[#2563EB]/20' : 'border-[#E2E8F0]'}`}
+            >
               <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2">In Progress</p>
               <p className="text-4xl font-extrabold text-[#1E293B]">{inProgressOrders}</p>
             </div>
-            <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm">
+            <div 
+              onClick={() => setActiveTab('Completed')}
+              className={`bg-white rounded-2xl p-6 border shadow-sm flex flex-col justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-[#2563EB] ${activeTab === 'Completed' ? 'border-[#2563EB] ring-2 ring-[#2563EB]/20' : 'border-[#E2E8F0]'}`}
+            >
               <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2">Completed</p>
               <p className="text-4xl font-extrabold text-[#1E293B]">{completedOrders}</p>
             </div>

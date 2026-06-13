@@ -17,7 +17,13 @@ export default function ConsultationQueue({ onSelect, selectedId }: { onSelect: 
     setLoading(true);
     try {
       const data = await getConsultations();
-      setConsultations(data);
+      const todayStr = new Date().toISOString().split("T")[0];
+      // Fallback: If no date is saved, we might miss them, but let's assume they have consultationDate
+      const todaysData = data.filter((c: any) => {
+        if (!c.consultationDate) return false;
+        return c.consultationDate.startsWith(todayStr);
+      });
+      setConsultations(todaysData);
     } catch {
       // ignore
     } finally {

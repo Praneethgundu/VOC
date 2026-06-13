@@ -10,6 +10,7 @@ export default function OTProceduresPage() {
   const [procedures, setProcedures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("All");
 
   const d = new Date();
   const initialTodayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -56,16 +57,23 @@ export default function OTProceduresPage() {
     }
   };
 
-  const filteredProcedures = procedures.filter((proc) => {
+  const dateFilteredProcedures = procedures.filter((proc) => {
     if (!filterDate) return true;
     if (!proc.date) return false;
     const procDateStr = proc.date.split('T')[0]; // since it's saved as YYYY-MM-DDTHH:mm:ss or YYYY-MM-DD
     return procDateStr === filterDate;
   });
 
-  const todaysCases = filteredProcedures.length;
-  const inProgressCases = filteredProcedures.filter(p => p.status?.toUpperCase() === "IN PROGRESS" || p.status?.toUpperCase() === "SCHEDULED").length;
-  const completedCases = filteredProcedures.filter(p => p.status?.toUpperCase() === "COMPLETED").length;
+  const todaysCases = dateFilteredProcedures.length;
+  const inProgressCases = dateFilteredProcedures.filter(p => p.status?.toUpperCase() === "IN PROGRESS" || p.status?.toUpperCase() === "SCHEDULED").length;
+  const completedCases = dateFilteredProcedures.filter(p => p.status?.toUpperCase() === "COMPLETED").length;
+
+  const displayProcedures = dateFilteredProcedures.filter((p) => {
+    if (statusFilter === "All") return true;
+    if (statusFilter === "In Progress") return p.status?.toUpperCase() === "IN PROGRESS" || p.status?.toUpperCase() === "SCHEDULED";
+    if (statusFilter === "Completed") return p.status?.toUpperCase() === "COMPLETED";
+    return true;
+  });
 
   return (
     <div className="flex bg-[#F8FAFC] min-h-screen font-sans">
@@ -96,15 +104,24 @@ export default function OTProceduresPage() {
         <main className="flex-1 p-8">
           {/* KPI Cards */}
           <div className="grid grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm">
+            <div 
+              onClick={() => setStatusFilter("All")}
+              className={`bg-white rounded-2xl p-6 shadow-sm flex flex-col justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 border ${statusFilter === "All" ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-[#E2E8F0] hover:border-[#2563EB]"}`}
+            >
               <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2">Today's Cases</p>
               <p className="text-4xl font-extrabold text-[#1E293B]">{todaysCases}</p>
             </div>
-            <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm">
+            <div 
+              onClick={() => setStatusFilter("In Progress")}
+              className={`bg-white rounded-2xl p-6 shadow-sm flex flex-col justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 border ${statusFilter === "In Progress" ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-[#E2E8F0] hover:border-[#2563EB]"}`}
+            >
               <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2">In Progress</p>
               <p className="text-4xl font-extrabold text-[#1E293B]">{inProgressCases}</p>
             </div>
-            <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm">
+            <div 
+              onClick={() => setStatusFilter("Completed")}
+              className={`bg-white rounded-2xl p-6 shadow-sm flex flex-col justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 border ${statusFilter === "Completed" ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-[#E2E8F0] hover:border-[#2563EB]"}`}
+            >
               <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2">Completed</p>
               <p className="text-4xl font-extrabold text-[#1E293B]">{completedCases}</p>
             </div>
@@ -123,10 +140,10 @@ export default function OTProceduresPage() {
           <div className="space-y-4">
             {loading ? (
               <div className="p-8 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563EB] mx-auto"></div></div>
-            ) : filteredProcedures.length === 0 ? (
-              <div className="p-8 text-center bg-white rounded-2xl border border-[#E2E8F0] shadow-sm text-gray-500 font-medium">No procedures scheduled for this date.</div>
+            ) : displayProcedures.length === 0 ? (
+              <div className="p-8 text-center bg-white rounded-2xl border border-[#E2E8F0] shadow-sm text-gray-500 font-medium">No procedures found for the selected filters.</div>
             ) : (
-              filteredProcedures.map((proc, i) => (
+              displayProcedures.map((proc, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-6 flex flex-col gap-4">
                   
                   {/* Top Section */}

@@ -2,12 +2,24 @@
 
 import { useState } from "react";
 import { generateOP } from "@/utils/generateOP";
-import { addPatient } from "@/services/patientService";
+import { addPatient, getPatients } from "@/services/patientService";
 import { Input, Select } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { UserPlus } from "lucide-react";
 
 export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void }) {
+  const [selectedComplaints, setSelectedComplaints] = useState<string[]>([]);
+  const [otherComplaint, setOtherComplaint] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const getDefaults = () => {
+    const now = new Date();
+    return {
+      date: now.toISOString().split("T")[0],
+      time: now.toTimeString().slice(0, 5)
+    };
+  };
+
   const [formData, setFormData] = useState({
     opNumber: generateOP(),
     fullName: "",
@@ -18,8 +30,9 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     address: "",
     department: "",
     doctor: "",
-    complaint: "",
     fee: 500,
+    date: getDefaults().date,
+    time: getDefaults().time,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -41,8 +54,14 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     if (!formData.bloodGroup) {
       newErrors.bloodGroup = "Blood group is required";
     }
-    if (!formData.complaint) {
-      newErrors.complaint = "Patient complaint is required";
+    if (selectedComplaints.length === 0 && !otherComplaint.trim()) {
+      newErrors.complaint = "Select at least one complaint or specify 'Other'";
+    }
+    const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
+    const graceTime = new Date();
+    graceTime.setMinutes(graceTime.getMinutes() - 10);
+    if (selectedDateTime < graceTime) {
+      newErrors.datetime = "Registration date and time cannot be in the past";
     }
     if (formData.fee === undefined || formData.fee === null || Number(formData.fee) < 0) {
       newErrors.fee = "Enter a valid consultation fee";
@@ -75,7 +94,19 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
 
     setLoading(true);
     try {
-      await addPatient(formData);
+      const allPatients = await getPatients();
+      const isAllocated = allPatients.some(
+        (p: any) => p.date === formData.date && p.time === formData.time
+      );
+
+      if (isAllocated) {
+        setErrors((prev) => ({ ...prev, datetime: "Already OP is allocated for this time." }));
+        setLoading(false);
+        return;
+      }
+
+      const finalComplaint = [...selectedComplaints, otherComplaint.trim()].filter(Boolean).join(", ");
+      await addPatient({ ...formData, complaint: finalComplaint });
       alert("Patient Registered Successfully");
       setFormData({
         opNumber: generateOP(),
@@ -87,9 +118,12 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
         address: "",
         department: "",
         doctor: "",
-        complaint: "",
         fee: 500,
+        date: getDefaults().date,
+        time: getDefaults().time,
       });
+      setSelectedComplaints([]);
+      setOtherComplaint("");
       onSuccess?.();
     } catch (error: any) {
       console.log(error);
@@ -127,6 +161,31 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           readOnly
           hint="Auto-generated"
         />
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <Input
+              label="Date"
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              error={errors.datetime}
+              min={getDefaults().date}
+              required
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              label="Time"
+              type="time"
+              name="time"
+              value={formData.time}
+              onChange={handleChange}
+              min={formData.date === getDefaults().date ? getDefaults().time : undefined}
+              required
+            />
+          </div>
+        </div>
         <Input
           label="Patient Name"
           name="fullName"
@@ -189,27 +248,70 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           onChange={handleChange}
           placeholder="e.g. Orthopaedics"
         />
-        <Select
-          label="Patient Complaint"
-          name="complaint"
-          value={formData.complaint}
-          onChange={handleChange}
-          error={errors.complaint}
-          required
-        >
-          <option value="">Select Complaint</option>
-          <option>Neck Pain</option>
-          <option>Shoulder Pain</option>
-          <option>Elbow Pain</option>
-          <option>Wrist Pain</option>
-          <option>Finger Pain</option>
-          <option>Hand Pain</option>
-          <option>Lower Backache (LBA)</option>
-          <option>Hip Pain</option>
-          <option>Knee Pain</option>
-          <option>Ankle Pain</option>
-          <option>Foot Pain</option>
-        </Select>
+        <div className="relative">
+          <label className="block text-[12px] font-bold text-[#1E293B] mb-1.5 uppercase tracking-wider">Patient Complaint</label>
+          <div 
+            onClick={() => setShowDropdown(!showDropdown)}
+            className={`w-full h-11 px-4 bg-white border ${errors.complaint ? 'border-red-300' : 'border-[#E2E8F0]'} rounded-xl text-sm outline-none transition-all flex items-center justify-between cursor-pointer`}
+          >
+            <span className="text-gray-700 truncate">
+              {selectedComplaints.length > 0 || otherComplaint 
+                ? [...selectedComplaints, otherComplaint].filter(Boolean).join(", ") 
+                : "Select Complaints..."}
+            </span>
+            <span className="text-gray-400">▼</span>
+          </div>
+          {errors.complaint && <p className="text-red-500 text-[11px] font-bold mt-1.5">{errors.complaint}</p>}
+          
+          {showDropdown && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-[#E2E8F0] rounded-xl shadow-lg max-h-60 overflow-y-auto p-2">
+              {[
+                "Neck Pain", "Shoulder Pain", "Elbow Pain", "Wrist Pain", "Finger Pain", 
+                "Hand Pain", "Lower Backache (LBA)", "Hip Pain", "Knee Pain", "Ankle Pain", "Foot Pain"
+              ].map(comp => (
+                <label key={comp} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedComplaints.includes(comp)}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedComplaints([...selectedComplaints, comp]);
+                      else setSelectedComplaints(selectedComplaints.filter(c => c !== comp));
+                    }}
+                    className="rounded text-[#2563EB] focus:ring-[#2563EB]"
+                  />
+                  <span className="text-sm text-[#1E293B]">{comp}</span>
+                </label>
+              ))}
+              <div className="p-2 border-t mt-1">
+                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedComplaints.includes("Other")}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedComplaints([...selectedComplaints, "Other"]);
+                      else {
+                        setSelectedComplaints(selectedComplaints.filter(c => c !== "Other"));
+                        setOtherComplaint("");
+                      }
+                    }}
+                    className="rounded text-[#2563EB] focus:ring-[#2563EB]"
+                  />
+                  <span className="text-sm font-bold text-[#1E293B]">Other</span>
+                </label>
+                {selectedComplaints.includes("Other") && (
+                  <input 
+                    type="text"
+                    placeholder="Specify other complaint..."
+                    value={otherComplaint}
+                    onChange={(e) => setOtherComplaint(e.target.value)}
+                    className="w-full h-9 px-3 border border-[#E2E8F0] rounded-lg text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
         <Input
           label="Consulting Doctor"
           name="doctor"
@@ -255,9 +357,12 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
               address: "",
               department: "",
               doctor: "",
-              complaint: "",
               fee: 500,
+              date: getDefaults().date,
+              time: getDefaults().time,
             });
+            setSelectedComplaints([]);
+            setOtherComplaint("");
             setErrors({});
           }}
         >

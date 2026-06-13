@@ -111,10 +111,10 @@ export default function LoginPage() {
             <br />
             Seamless
             <br />
-            <span className="text-[#F04C23]">Management.</span>
+            <span className="text-[#2563EB]">Management.</span>
           </h6>
 
-          <div className="w-24 h-[5px] rounded-full bg-[#F04C23] mt-8 mb-8" />
+          <div className="w-24 h-[5px] rounded-full bg-[#2563EB] mt-8 mb-8" />
 
 
         </div>
@@ -142,7 +142,7 @@ export default function LoginPage() {
               Welcome Back!
             </h1>
 
-            <p className="text-[#888] text-[13px] mt-2">
+            <p className="text-[#64748B] text-[13px] mt-2">
               Please sign in to your account to continue
             </p>
           </div>
@@ -156,7 +156,7 @@ export default function LoginPage() {
                 onClick={() => setRole(r)}
                 className={`h-[88px] rounded-xl border transition-all flex flex-col items-center justify-center ${
                   role === r
-                    ? "border-[#2563EB] bg-[#fff5f6] text-[#0F172A]"
+                    ? "border-[#2563EB] bg-[#F8FAFC] text-[#0F172A]"
                     : "border-[#E2E8F0] text-[#64748B] hover:border-[#2563EB]"
                 }`}
               >
@@ -173,7 +173,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit}>
             {/* Username */}
             <div className="mb-5">
-              <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#a32a2a]">
+              <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
                 Username
               </label>
 
@@ -182,13 +182,13 @@ export default function LoginPage() {
                 placeholder="Enter Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full h-12 px-4 border border-[#FEE2E2] rounded-lg outline-none focus:border-[#a32a2a]"
+                className="w-full h-12 px-4 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
               />
             </div>
 
             {/* Password */}
             <div className="mb-5">
-              <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#a32a2a]">
+              <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
                 Password
               </label>
 
@@ -198,12 +198,12 @@ export default function LoginPage() {
                   placeholder="Enter Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-12 px-4 pr-12 border border-[#FEE2E2] rounded-lg outline-none focus:border-[#a32a2a]"
+                  className="w-full h-12 px-4 pr-12 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
                 />
 
                 <button
                   type="button"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#a32a2a]"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748B]"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -217,7 +217,7 @@ export default function LoginPage() {
 
             {/* Remember Me */}
             <div className="flex justify-between items-center mb-6 text-sm">
-              <label className="flex items-center gap-2 text-[#a32a2a]">
+              <label className="flex items-center gap-2 text-[#1E293B]">
                 <input type="checkbox" />
                 Remember me
               </label>
@@ -225,7 +225,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => toast("Password reset functionality will be available in a future release. Please contact the administrator.")}
-                className="text-[#a32a2a] font-medium"
+                className="text-[#2563EB] font-medium"
               >
                 Forgot Password?
               </button>
@@ -238,9 +238,9 @@ export default function LoginPage() {
               className="w-full h-[54px] rounded-lg text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-[1px]"
               style={{
                 background:
-                  "linear-gradient(90deg,#991B1B 0%,#520b0b 100%)",
+                  "linear-gradient(90deg,#2563EB 0%,#1E40AF 100%)",
                 boxShadow:
-                  "0 4px 12px rgba(124,20,20,0.3)",
+                  "0 4px 12px rgba(37,99,235,0.3)",
               }}
             >
               {loading ? (

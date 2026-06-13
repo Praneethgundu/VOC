@@ -12,6 +12,7 @@ import { RefreshCw, Download } from "lucide-react";
 
 export default function BillingPage() {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [bills, setBills] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
   const [unbilled, setUnbilled] = useState<any[]>([]);
@@ -222,6 +223,7 @@ Thank you!
   const searchLower = search.toLowerCase();
   const filtered = bills.filter(
     (b) => {
+      if (statusFilter !== "All" && b.status !== statusFilter) return false;
       const pName = patients.find(p => p.opNumber === b.opNumber)?.fullName || b.patientName || b.patient || "";
       return pName.toLowerCase().includes(searchLower) ||
              (b.opNumber || b.op || "").toString().toLowerCase().includes(searchLower) ||
@@ -251,19 +253,31 @@ Thank you!
 
           {/* Summary cards */}
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-5">
-            <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm text-center">
+            <div 
+              onClick={() => setStatusFilter("All")}
+              className={`bg-white rounded-xl p-5 shadow-sm text-center cursor-pointer transition-all hover:scale-105 active:scale-95 border ${statusFilter === "All" ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-[#E2E8F0] hover:border-[#2563EB]"}`}
+            >
               <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Today's Revenue</p>
               <p className="text-3xl font-bold text-[#059669]">₹{totalBilledToday.toLocaleString("en-IN")}</p>
             </div>
-            <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm text-center">
+            <div 
+              onClick={() => setStatusFilter("Paid")}
+              className={`bg-white rounded-xl p-5 shadow-sm text-center cursor-pointer transition-all hover:scale-105 active:scale-95 border ${statusFilter === "Paid" ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-[#E2E8F0] hover:border-[#2563EB]"}`}
+            >
               <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Total Collected</p>
               <p className="text-3xl font-bold text-[#1E293B]">₹{collectedToday.toLocaleString("en-IN")}</p>
             </div>
-            <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm text-center">
+            <div 
+              onClick={() => setStatusFilter("Unpaid")}
+              className={`bg-white rounded-xl p-5 shadow-sm text-center cursor-pointer transition-all hover:scale-105 active:scale-95 border ${statusFilter === "Unpaid" ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-[#E2E8F0] hover:border-[#2563EB]"}`}
+            >
               <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Pending Amount</p>
               <p className="text-3xl font-bold text-[#92400E]">₹{pendingToday.toLocaleString("en-IN")}</p>
             </div>
-            <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm text-center">
+            <div 
+              onClick={() => setStatusFilter("Unpaid")}
+              className={`bg-white rounded-xl p-5 shadow-sm text-center cursor-pointer transition-all hover:scale-105 active:scale-95 border ${statusFilter === "Unpaid" ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-[#E2E8F0] hover:border-[#2563EB]"}`}
+            >
               <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Pending Bills</p>
               <p className="text-3xl font-bold text-[#92400E]">{pendingBillsCount}</p>
             </div>
