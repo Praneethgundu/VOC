@@ -328,7 +328,7 @@ export default function LoginPage() {
               {/* Password */}
               <div className="mb-5">
                 <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
-                  Password or Temporary PIN
+                  Password 
                 </label>
 
                 <div className="relative">
