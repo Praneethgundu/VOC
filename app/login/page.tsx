@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { toast } from "sonner";
+import api from "@/services/api";
 
 const roles = ["Admin", "Receptionist", "Doctor", "Pharmacist"] as const;
 type Role = (typeof roles)[number];
