@@ -8,20 +8,21 @@ import { RefreshCw, Trash2 } from "lucide-react";
 export default function ConsultationQueue({ onSelect, selectedId }: { onSelect: (patient: any) => void, selectedId?: string }) {
   const [consultations, setConsultations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 
   useEffect(() => {
     fetchQueue();
-  }, []);
+  }, [selectedDate]);
 
   const fetchQueue = async () => {
     setLoading(true);
     try {
       const data = await getConsultations();
-      const todayStr = new Date().toISOString().split("T")[0];
+      const dateStr = selectedDate;
       // Fallback: If no date is saved, we might miss them, but let's assume they have consultationDate
       const todaysData = data.filter((c: any) => {
         if (!c.consultationDate) return false;
-        return c.consultationDate.startsWith(todayStr);
+        return c.consultationDate.startsWith(dateStr);
       });
       setConsultations(todaysData);
     } catch {
@@ -48,13 +49,25 @@ export default function ConsultationQueue({ onSelect, selectedId }: { onSelect: 
     return "text-[#92400E]"; // WAITING
   };
 
+  const isToday = selectedDate === new Date().toISOString().split("T")[0];
+
   return (
     <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex flex-col h-full" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(15,23,42,0.04)" }}>
       <div className="flex items-center justify-between mb-4 px-2">
-        <div>
-          <h2 className="text-[14px] font-bold text-[#1E293B]">Today's Queue ({consultations.length})</h2>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-[14px] font-bold text-[#1E293B]">
+              {isToday ? "Today's Queue" : "Past Queue"} ({consultations.length})
+            </h2>
+          </div>
+          <input 
+            type="date" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="text-[12px] border border-[#E2E8F0] rounded px-2 py-1 text-[#64748B] outline-none"
+          />
         </div>
-        <button onClick={fetchQueue} className="w-7 h-7 flex items-center justify-center rounded-lg text-[#64748B] hover:bg-gray-100 transition-colors">
+        <button onClick={fetchQueue} className="w-7 h-7 flex items-center justify-center rounded-lg text-[#64748B] hover:bg-gray-100 transition-colors shrink-0">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </button>
       </div>

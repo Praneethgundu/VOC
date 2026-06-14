@@ -63,10 +63,7 @@ export default function PatientRecordsLayout() {
           <p className="text-[14px] text-gray-500">Search and view comprehensive patient history</p>
         </div>
         <div className="flex items-center gap-4">
-          <button className="flex items-center gap-2 px-4 py-2 border border-[#2563EB] text-[#2563EB] rounded-full text-[12px] font-bold tracking-wide hover:bg-red-50 transition-colors">
-            <span className="w-2 h-2 rounded-full bg-[#2563EB]"></span>
-            CONNECT EXCEL DB
-          </button>
+
           <div className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-[13px] font-semibold text-gray-700 bg-white shadow-sm">
             <Calendar size={16} className="text-[#2563EB]" />
             {currentDate}

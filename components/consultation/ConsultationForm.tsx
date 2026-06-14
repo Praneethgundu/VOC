@@ -375,6 +375,12 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         </div>
         <div className="flex gap-8 text-right">
           <div>
+            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider">Date</p>
+            <p className="font-semibold text-sm">
+              {new Date(selectedPatient.consultationDate || selectedPatient.createdAt || Date.now()).toLocaleDateString("en-GB")}
+            </p>
+          </div>
+          <div>
             <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider">Complaint</p>
             <p className="font-semibold text-sm">{selectedPatient.complaint || "N/A"}</p>
           </div>

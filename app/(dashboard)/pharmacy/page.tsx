@@ -110,9 +110,7 @@ export default function PharmacyPage() {
             <p className="text-sm text-[#64748B]">Medicine stock and dispensing management</p>
           </div>
           <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#2563EB] text-[#2563EB] text-xs font-bold hover:bg-[#FEE2E2] transition-colors">
-              <Database size={14} /> CONNECT EXCEL DB
-            </button>
+
             <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-[#E2E8F0] text-xs font-semibold text-gray-700">
               <CalendarDays size={14} className="text-[#0F172A]" />
               {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}

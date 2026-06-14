@@ -326,13 +326,21 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
             </div>
           )}
         </div>
-        <Input
-          label="Consulting Doctor"
-          name="doctor"
-          value={formData.doctor}
-          onChange={handleChange}
-          placeholder="e.g. Dr. Reddy"
-        />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">
+            Consulting Doctor
+          </label>
+          <select
+            name="doctor"
+            value={formData.doctor}
+            onChange={handleChange}
+            className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] outline-none focus:border-[#2563EB] text-[13px] bg-white transition-colors"
+          >
+            <option value="">Select Doctor...</option>
+            <option value="Dr. Vinay">Dr. Vinay</option>
+            <option value="Dr. Reddy">Dr. Reddy</option>
+          </select>
+        </div>
         <div className="md:col-span-2">
           <Input
             label="Address"

@@ -105,9 +105,7 @@ export default function InvestigationPage() {
             <p className="text-sm text-[#64748B]">Lab test orders and results management</p>
           </div>
           <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#2563EB] text-[#2563EB] text-xs font-bold hover:bg-[#FEE2E2] transition-colors">
-              <Database size={14} /> CONNECT EXCEL DB
-            </button>
+
             <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-[#E2E8F0] text-sm font-semibold text-gray-700 shadow-sm relative">
               <CalendarDays size={16} className="text-[#2563EB]" />
               <input 
