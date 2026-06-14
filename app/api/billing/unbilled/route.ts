@@ -61,7 +61,7 @@ export async function GET(req: Request) {
 
     const unbilledMap = new Map<string, any>();
 
-    const getOrInitPatient = (opNumber: string, patientName: string, patientId: string, department: string, complaint: string) => {
+    const getOrInitPatient = (opNumber: string, patientName: string, patientId: string, department: string, complaint: string, registrationDate?: Date) => {
       if (!unbilledMap.has(opNumber)) {
         unbilledMap.set(opNumber, {
           patientName,
@@ -69,6 +69,7 @@ export async function GET(req: Request) {
           patientId,
           department: department || "General",
           complaint: complaint || "N/A",
+          registrationDate: registrationDate || new Date(0),
           items: []
         });
       }
@@ -90,7 +91,7 @@ export async function GET(req: Request) {
     // 1. Process all patients for Registration Fee if never billed
     for (const p of patients) {
       if (!isBilled(p.opNumber, "Registration Fee")) {
-        const entry = getOrInitPatient(p.opNumber, p.fullName, p.patientId, p.department, p.complaint);
+        const entry = getOrInitPatient(p.opNumber, p.fullName, p.patientId, p.department, p.complaint, (p as any).registrationDate);
         entry.items.push({
           serviceName: "Registration Fee",
           category: "Registration",
@@ -104,7 +105,7 @@ export async function GET(req: Request) {
       if (c.status === "Completed" || c.status === "COMPLETED") {
         const serviceName = `Consultation Fee (${c.department || "General"})`;
         if (!isBilled(c.opNumber, serviceName)) {
-           const entry = getOrInitPatient(c.opNumber, c.patient?.fullName || "Unknown", c.patientId, c.department, c.patient?.complaint || "");
+           const entry = getOrInitPatient(c.opNumber, c.patient?.fullName || "Unknown", c.patientId, c.department, c.patient?.complaint || "", (c.patient as any)?.registrationDate);
            entry.items.push({
              serviceName: serviceName,
              category: "Consultation",
@@ -118,7 +119,7 @@ export async function GET(req: Request) {
     for (const tx of investigations) {
       if (!isBilled(tx.opNumber, tx.testName)) {
         const p = patients.find(pat => pat.opNumber === tx.opNumber);
-        const entry = getOrInitPatient(tx.opNumber, p?.fullName || "Unknown", tx.patientId, p?.department || "General", p?.complaint || "");
+        const entry = getOrInitPatient(tx.opNumber, p?.fullName || "Unknown", tx.patientId, p?.department || "General", p?.complaint || "", (p as any)?.registrationDate);
         entry.items.push({
           serviceName: tx.testName,
           category: "Investigation",
@@ -132,7 +133,7 @@ export async function GET(req: Request) {
       const serviceName = `${ph.medicineName} (Pharmacy)`;
       if (!isBilled(ph.opNumber, serviceName)) {
         const p = patients.find(pat => pat.opNumber === ph.opNumber);
-        const entry = getOrInitPatient(ph.opNumber, p?.fullName || "Unknown", ph.patientId, p?.department || "General", p?.complaint || "");
+        const entry = getOrInitPatient(ph.opNumber, p?.fullName || "Unknown", ph.patientId, p?.department || "General", p?.complaint || "", (p as any)?.registrationDate);
         
         entry.items.push({
           serviceName: serviceName,
@@ -147,7 +148,7 @@ export async function GET(req: Request) {
       const serviceName = `${ot.procedureName} (OT)`;
       if (!isBilled(ot.opNumber, serviceName)) {
         const p = patients.find(pat => pat.opNumber === ot.opNumber);
-        const entry = getOrInitPatient(ot.opNumber, p?.fullName || "Unknown", ot.patientId, p?.department || "General", p?.complaint || "");
+        const entry = getOrInitPatient(ot.opNumber, p?.fullName || "Unknown", ot.patientId, p?.department || "General", p?.complaint || "", (p as any)?.registrationDate);
         entry.items.push({
           serviceName: serviceName,
           category: "OT Procedure",
@@ -157,12 +158,13 @@ export async function GET(req: Request) {
     }
 
     // Convert map to array and calculate total, filtering out those with 0 items
-    const unbilled = Array.from(unbilledMap.values()).filter(entry => entry.items.length > 0).map((entry) => {
-      return {
+    const unbilled = Array.from(unbilledMap.values())
+      .filter(entry => entry.items.length > 0)
+      .map((entry) => ({
         ...entry,
         total: entry.items.reduce((acc: number, it: any) => acc + (it.amount || 0), 0),
-      };
-    });
+      }))
+      .sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime());
 
     return NextResponse.json(unbilled);
   } catch (error: any) {

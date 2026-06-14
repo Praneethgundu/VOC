@@ -17,6 +17,7 @@ const PROCEDURES = [
 ];
 
 const DOCTORS = [
+  'Dr. Vinay',
   'Dr. Meera Patel',
   'Dr. Sunitha Devi',
   'Dr. Ramesh Kumar',

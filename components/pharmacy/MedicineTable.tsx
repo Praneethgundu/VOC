@@ -7,7 +7,7 @@ import { Search, RefreshCw, AlertTriangle } from "lucide-react";
 
 function stockStatus(qty: number): { label: string; status: "success" | "warning" | "error" } {
   if (qty <= 0) return { label: "Out of Stock", status: "error" };
-  if (qty < 20) return { label: "Low Stock", status: "warning" };
+  if (qty < 50) return { label: "Low Stock", status: "error" };
   return { label: "In Stock", status: "success" };
 }
 
@@ -110,6 +110,8 @@ export default function MedicineTable() {
               <Th>Medicine ID</Th>
               <Th>Name</Th>
               <Th>Category</Th>
+              <Th>Batch</Th>
+              <Th>Distributor</Th>
               <Th align="center">Qty</Th>
               <Th align="right">Price</Th>
               <Th>Expiry Date</Th>
@@ -119,7 +121,7 @@ export default function MedicineTable() {
           </THead>
           <TBody>
             {filtered.map((m, i) => {
-              const qty = Number(m.quantity ?? 0);
+              const qty = Number(m.stock ?? m.quantity ?? 0);
               const stock = stockStatus(qty);
               return (
                 <Tr key={m.medicineId ?? i} index={i}>
@@ -137,8 +139,14 @@ export default function MedicineTable() {
                       {m.category}
                     </span>
                   </Td>
+                  <Td>
+                    <span className="text-[13px] text-[#64748B]">{m.batch || '-'}</span>
+                  </Td>
+                  <Td>
+                    <span className="text-[13px] text-[#64748B]">{m.distributor || '-'}</span>
+                  </Td>
                   <Td align="center">
-                    <span className="font-mono font-bold text-[14px]">{m.quantity}</span>
+                    <span className="font-mono font-bold text-[14px]">{qty}</span>
                   </Td>
                   <Td align="right">
                     <span className="font-mono text-[14px] font-semibold text-[#059669]">₹{Number(m.price).toFixed(2)}</span>
@@ -174,7 +182,7 @@ export default function MedicineTable() {
             <h3 className="text-lg font-bold mb-4 text-[#1E293B]">Dispense Medicine</h3>
             <div className="mb-4 text-[13px] text-[#64748B]">
               <p>Medicine: <strong className="text-[#1E293B]">{dispenseMedicineData.medicineName}</strong></p>
-              <p>Available: <strong className="text-[#1E293B]">{dispenseMedicineData.quantity}</strong></p>
+              <p>Available: <strong className="text-[#1E293B]">{dispenseMedicineData.stock ?? dispenseMedicineData.quantity}</strong></p>
             </div>
             <div className="space-y-4">
               <div>
@@ -202,7 +210,7 @@ export default function MedicineTable() {
                 <input
                   type="number"
                   min="1"
-                  max={dispenseMedicineData.quantity}
+                  max={dispenseMedicineData.stock ?? dispenseMedicineData.quantity}
                   value={dispenseForm.quantity}
                   onChange={(e) => setDispenseForm({ ...dispenseForm, quantity: Number(e.target.value), amount: Number(e.target.value) * Number(dispenseMedicineData.price) })}
                   className="w-full border border-[#E2E8F0] rounded p-2 text-sm"

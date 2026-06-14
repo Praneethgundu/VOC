@@ -40,7 +40,7 @@ export default function OTProceduresPage() {
 
   const markCompleted = async (id: string) => {
     try {
-      await api.put(`/ot/${id}/status`, { status: "COMPLETED" });
+      await api.put(`/ot/${id}`, { status: "COMPLETED" });
       fetchProcedures();
     } catch (e) {
       alert("Failed to update status");

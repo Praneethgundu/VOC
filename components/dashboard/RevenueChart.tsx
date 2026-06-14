@@ -1,8 +1,9 @@
 "use client";
 
 import {
-  AreaChart,
-  Area,
+  ComposedChart,
+  Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -17,12 +18,14 @@ function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white border border-[#E2E8F0] rounded-xl p-3 shadow-lg text-[13px]">
-        <p className="font-bold text-[#1E293B] mb-1">{label}</p>
-        <p className="text-[#2563EB] font-semibold">
-          ₹{payload[0]?.value?.toLocaleString("en-IN")}
+        <p className="font-bold text-[#1E293B] mb-2">{label}</p>
+        <p className="text-[#2563EB] font-semibold flex items-center justify-between gap-4">
+          <span>Revenue:</span>
+          <span>₹{payload[0]?.value?.toLocaleString("en-IN")}</span>
         </p>
-        <p className="text-[#2563EB] font-medium mt-0.5">
-          {payload[1]?.value} patients
+        <p className="text-[#059669] font-medium flex items-center justify-between gap-4 mt-1">
+          <span>Patients:</span>
+          <span>{payload[1]?.value}</span>
         </p>
       </div>
     );
@@ -89,24 +92,14 @@ export default function RevenueChart() {
             <span className="text-[#64748B] font-medium">Revenue</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#059669]" />
             <span className="text-[#64748B] font-medium">Patients</span>
           </span>
         </div>
       </div>
 
       <ResponsiveContainer width="100%" height={260}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
-          <defs>
-            <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="patientsGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2563EB" stopOpacity={0.1} />
-              <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
-            </linearGradient>
-          </defs>
+        <ComposedChart data={data} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#F8FAFC" vertical={false} />
           <XAxis
             dataKey="day"
@@ -115,31 +108,37 @@ export default function RevenueChart() {
             tickLine={false}
           />
           <YAxis
+            yAxisId="left"
             tick={{ fontSize: 10, fill: "#64748B", fontFamily: "JetBrains Mono" }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
           />
-          <Tooltip content={<CustomTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="revenue"
-            stroke="#2563EB"
-            strokeWidth={2.5}
-            fill="url(#revenueGrad)"
-            dot={{ fill: "#2563EB", strokeWidth: 0, r: 3 }}
-            activeDot={{ r: 5, strokeWidth: 0, fill: "#2563EB" }}
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            tick={{ fontSize: 10, fill: "#64748B", fontFamily: "JetBrains Mono" }}
+            axisLine={false}
+            tickLine={false}
           />
-          <Area
+          <Tooltip content={<CustomTooltip />} />
+          <Bar
+            yAxisId="left"
+            dataKey="revenue"
+            fill="#2563EB"
+            radius={[4, 4, 0, 0]}
+            barSize={30}
+          />
+          <Line
+            yAxisId="right"
             type="monotone"
             dataKey="patients"
-            stroke="#2563EB"
-            strokeWidth={2}
-            fill="url(#patientsGrad)"
-            dot={false}
-            activeDot={{ r: 4, strokeWidth: 0, fill: "#2563EB" }}
+            stroke="#059669"
+            strokeWidth={3}
+            dot={{ fill: "#059669", strokeWidth: 0, r: 4 }}
+            activeDot={{ r: 6, strokeWidth: 0, fill: "#059669" }}
           />
-        </AreaChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

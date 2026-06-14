@@ -45,6 +45,26 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const existingTest = await prisma.investigationTransaction.findFirst({
+      where: {
+        opNumber: body.opNumber,
+        testName: body.testName,
+        orderedDate: {
+          gte: today,
+        },
+      },
+    });
+
+    if (existingTest) {
+      return NextResponse.json(
+        { message: `Duplicate: ${body.testName} is already ordered for this patient today.` },
+        { status: 400 }
+      );
+    }
+
     const newTx = await prisma.investigationTransaction.create({
       data: {
         id: require("crypto").randomBytes(4).toString("hex"),

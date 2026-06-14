@@ -43,7 +43,8 @@ export default function PatientTable() {
     (p) =>
       p.fullName?.toLowerCase().includes(search.toLowerCase()) ||
       p.opNumber?.toLowerCase().includes(search.toLowerCase()) ||
-      p.doctor?.toLowerCase().includes(search.toLowerCase()),
+      p.doctor?.toLowerCase().includes(search.toLowerCase()) ||
+      p.phone?.includes(search)
   );
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -134,6 +135,7 @@ export default function PatientTable() {
           <Table>
             <THead>
               <tr>
+                <Th>Date</Th>
                 <Th>OP Number</Th>
                 <Th>Patient Name</Th>
                 <Th>Age / Gender</Th>
@@ -146,6 +148,11 @@ export default function PatientTable() {
             <TBody>
               {paginated.map((patient, i) => (
                 <Tr key={patient.id || `${patient.opNumber}-${i}`} index={i}>
+                  <Td>
+                    <div className="text-[13px] text-[#1E293B]">
+                      {patient.appointmentDate || new Date(patient.createdAt).toISOString().split('T')[0]}
+                    </div>
+                  </Td>
                   <Td>
                     <span className="font-mono text-[13px] font-semibold text-[#0F172A]">
                       {patient.opNumber}

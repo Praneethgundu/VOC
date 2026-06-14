@@ -28,6 +28,37 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
     ? (patient ? (patient.fullName || patient.patientName || patient.name || 'Unknown Name') : 'Patient not found')
     : '';
 
+  useEffect(() => {
+    if (patient && patient.prescription) {
+      try {
+        const prescs = JSON.parse(patient.prescription);
+        if (Array.isArray(prescs) && prescs.length > 0) {
+          const newItems = prescs.map((p: any) => {
+            // Find medicine by name
+            const med = medicines.find(m => m.medicineName.toLowerCase() === p.medicineName?.toLowerCase());
+            let qty = 1;
+            if (p.frequency && p.days) {
+              const freqParts = String(p.frequency).split('-');
+              const perDay = freqParts.reduce((sum, part) => sum + (Number(part) || 0), 0);
+              const days = Number(p.days) || 1;
+              qty = perDay > 0 ? perDay * days : days;
+            }
+            return {
+              medicineId: med ? med.medicineId : '',
+              quantity: String(qty)
+            };
+          });
+          // Only auto-populate if the items are empty or it's the initial default empty item
+          if (items.length === 0 || (items.length === 1 && !items[0].medicineId)) {
+            setItems(newItems.length > 0 ? newItems : [{ medicineId: '', quantity: '1' }]);
+          }
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }, [patient, medicines]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);

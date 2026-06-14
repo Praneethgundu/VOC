@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { generateOP } from "@/utils/generateOP";
 import { addPatient, getPatients } from "@/services/patientService";
 import { Input, Select } from "@/components/ui/Input";
@@ -11,6 +11,19 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
   const [selectedComplaints, setSelectedComplaints] = useState<string[]>([]);
   const [otherComplaint, setOtherComplaint] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const getDefaults = () => {
     const now = new Date();
@@ -222,6 +235,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           onChange={handleChange}
           placeholder="+91 XXXXX XXXXX"
           error={errors.phone}
+          maxLength={10}
           required
         />
         <Select
@@ -248,7 +262,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           onChange={handleChange}
           placeholder="e.g. Orthopaedics"
         />
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <label className="block text-[12px] font-bold text-[#1E293B] mb-1.5 uppercase tracking-wider">Patient Complaint</label>
           <div 
             onClick={() => setShowDropdown(!showDropdown)}

@@ -73,11 +73,31 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-gray-700">Phone</label>
-              <input name="phone" value={formData.phone || ""} onChange={handleChange} className="border p-2 rounded outline-none" required />
+              <input name="phone" value={formData.phone || ""} onChange={handleChange} className="border p-2 rounded outline-none" maxLength={10} required />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-gray-700">Blood Group</label>
-              <input name="bloodGroup" value={formData.bloodGroup || ""} onChange={handleChange} className="border p-2 rounded outline-none" />
+              <select name="bloodGroup" value={formData.bloodGroup || ""} onChange={handleChange} className="border p-2 rounded outline-none">
+                <option value="">Select Blood Group</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-700">Appointment Date</label>
+              <input type="date" name="date" value={formData.appointmentDate || formData.date || ""} onChange={handleChange} className="border p-2 rounded outline-none" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-700">Appointment Time</label>
+              <input type="time" name="time" value={formData.appointmentTime || formData.time || ""} onChange={handleChange} className="border p-2 rounded outline-none" />
             </div>
           </div>
           <div className="flex flex-col gap-1">

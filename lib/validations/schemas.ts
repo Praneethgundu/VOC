@@ -26,6 +26,8 @@ export const patientSchema = z.object({
   complaint: safeText.optional().or(z.literal("")),
   address: safeText.optional().or(z.literal("")),
   status: safeString.optional().or(z.literal("")),
+  date: safeString.optional().or(z.literal("")),
+  time: safeString.optional().or(z.literal("")),
 });
 
 export const billingSchema = z.object({

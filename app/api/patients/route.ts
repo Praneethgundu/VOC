@@ -41,6 +41,20 @@ export async function POST(req: Request) {
 
     const count = await prisma.patient.count();
     
+    // Double-booking validation
+    if (data.date && data.time) {
+      const existingAppointment = await prisma.patient.findFirst({
+        where: {
+          appointmentDate: data.date,
+          appointmentTime: data.time,
+          status: "Active"
+        }
+      });
+      if (existingAppointment) {
+        return NextResponse.json({ message: "Already OP is allocated for this time." }, { status: 400 });
+      }
+    }
+    
     const opNumber = data.opNumber || `OP/${new Date().getFullYear()}/${String(count + 1).padStart(3, '0')}`;
     const patientId = require("crypto").randomUUID();
 
@@ -58,6 +72,8 @@ export async function POST(req: Request) {
         complaint: data.complaint || "",
         address: data.address || "",
         status: data.status || "Active",
+        appointmentDate: data.date || "",
+        appointmentTime: data.time || "",
       },
     });
 
@@ -153,6 +169,8 @@ export async function PUT(req: Request) {
         complaint: data.complaint !== undefined ? data.complaint : existing.complaint,
         address: data.address !== undefined ? data.address : existing.address,
         status: data.status !== undefined ? data.status : existing.status,
+        appointmentDate: data.date !== undefined ? data.date : existing.appointmentDate,
+        appointmentTime: data.time !== undefined ? data.time : existing.appointmentTime,
       },
     });
 

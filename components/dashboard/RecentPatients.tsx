@@ -46,8 +46,10 @@ export default function RecentPatients() {
       <Table>
         <THead>
           <tr>
+            <Th>Date</Th>
             <Th>OP Number</Th>
             <Th>Patient Name</Th>
+            <Th>Phone</Th>
             <Th>Doctor</Th>
             <Th>Department</Th>
             <Th>Complaint</Th>
@@ -57,6 +59,11 @@ export default function RecentPatients() {
         <TBody>
           {patients.map((p, i) => (
             <Tr key={p.opNumber || i} index={i}>
+              <Td>
+                <div className="text-[13px] text-[#1E293B]">
+                  {p.appointmentDate || new Date(p.createdAt).toISOString().split('T')[0]}
+                </div>
+              </Td>
               <Td>
                 <span className="font-mono text-[13px] font-semibold text-[#0F172A]">
                   {p.opNumber}
@@ -69,6 +76,9 @@ export default function RecentPatients() {
                   </div>
                   <span className="font-medium text-[#1E293B]">{p.fullName}</span>
                 </div>
+              </Td>
+              <Td>
+                <span className="font-mono text-[13px]">{p.phone}</span>
               </Td>
               <Td>{p.doctor}</Td>
               <Td>
@@ -88,7 +98,7 @@ export default function RecentPatients() {
           ))}
           {patients.length === 0 && (
             <Tr index={0}>
-              <Td colSpan={6} align="center">
+              <Td colSpan={8} align="center">
                 <div className="py-8 text-[#64748B] text-[13px]">No recent patients.</div>
               </Td>
             </Tr>

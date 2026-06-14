@@ -446,11 +446,7 @@ Thank you!
                           const p = patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp);
                           if (p) {
                             setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: p.fullName || p.patientName || "Unknown Name" }));
-                          } else {
-                            setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: "Patient not found" }));
                           }
-                        } else {
-                          setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: "" }));
                         }
                       }}
                       className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm bg-white" 
@@ -459,7 +455,13 @@ Thank you!
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-[#64748B] uppercase mb-1">Patient Name</label>
-                    <input type="text" readOnly value={selectedUnbilled?.patientName || ""} className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg bg-gray-50 text-sm" />
+                    <input 
+                      type="text" 
+                      value={selectedUnbilled?.patientName || ""} 
+                      onChange={(e) => setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: e.target.value }))}
+                      className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg bg-white text-sm" 
+                      placeholder="Patient Name"
+                    />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-[#64748B] uppercase mb-1">Bill Number</label>

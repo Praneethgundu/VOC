@@ -9,7 +9,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const inventory = await prisma.inventoryItem.findMany();
+    const inventory = await prisma.inventoryItem.findMany({
+      orderBy: { createdAt: "desc" },
+    });
     return NextResponse.json(inventory);
   } catch (error: any) {
     return NextResponse.json({ message: "Failed to fetch inventory", error: error.message }, { status: 500 });

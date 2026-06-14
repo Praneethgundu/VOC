@@ -75,7 +75,9 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
          advice: "", 
          summary: "", 
          remarks: "", 
-         vitals: { bp: "", pulse: "", temp: "", spo2: "", weight: "", height: "" } 
+         vitals: { bp: "", pulse: "", temp: "", spo2: "", weight: "", height: "" },
+         investigations: [],
+         otProcedures: []
       };
       if (selectedPatient.clinicalNotes) {
          try {
@@ -86,7 +88,9 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
                advice: notes.advice || "",
                summary: notes.summary || "",
                remarks: notes.remarks || "",
-               vitals: notes.vitals || { bp: "", pulse: "", temp: "", spo2: "", weight: "", height: "" }
+               vitals: notes.vitals || { bp: "", pulse: "", temp: "", spo2: "", weight: "", height: "" },
+               investigations: notes.investigations || [],
+               otProcedures: notes.otProcedures || []
             };
          } catch(e) {
             parsedNotes.examination = selectedPatient.clinicalNotes;
@@ -117,8 +121,8 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         remarks: parsedNotes.remarks,
         followUpDate: formattedDate,
         vitals: parsedNotes.vitals,
-        investigations: [],
-        otProcedures: []
+        investigations: parsedNotes.investigations,
+        otProcedures: parsedNotes.otProcedures
       });
       
       api.get(`/patients/record?opNumber=${encodeURIComponent(selectedPatient.opNumber)}`)
@@ -286,6 +290,8 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
           summary: formData.summary,
           remarks: formData.remarks,
           vitals: formData.vitals,
+          investigations: formData.investigations,
+          otProcedures: formData.otProcedures,
           legacyPrescription: formData.legacyPrescription
         }),
         status: "Completed"

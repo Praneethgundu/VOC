@@ -54,6 +54,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Patient not found" }, { status: 404 });
     }
 
+    const procedureName = body.procedureName || body.procedure || "";
+    const requestedDateStr = body.date || new Date().toISOString().split("T")[0];
+
+    const existingProcedure = await prisma.oTProcedure.findFirst({
+      where: {
+        opNumber: body.opNumber,
+        procedureName: procedureName,
+        date: {
+          startsWith: requestedDateStr
+        }
+      }
+    });
+
+    if (existingProcedure) {
+      return NextResponse.json({ message: `Duplicate: ${procedureName} is already scheduled for this patient on this day.` }, { status: 400 });
+    }
+
     const id = "OT-" + require("crypto").randomBytes(3).toString("hex").toUpperCase();
     
     const newProcedure = await prisma.oTProcedure.create({
