@@ -161,7 +161,7 @@ export default function LoginPage() {
 
         {/* Hero Content */}
         <div className="max-w-[500px]">
-          <h6 className="text-white text-[60px] font-extrabold leading-[1.05]">
+          <h6 className="text-white text-[30px] font-extrabold leading-[1.05]">
             Advanced Care,
             <br />
             Seamless
@@ -330,13 +330,13 @@ export default function LoginPage() {
               {/* Password */}
               <div className="mb-5">
                 <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
-                  Password
+                  Password or Temporary PIN
                 </label>
 
                 <div className="relative group">
                   <input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter Password"
+                    placeholder="Enter Password or PIN"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full h-12 px-4 pr-12 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10 transition-all duration-300"
