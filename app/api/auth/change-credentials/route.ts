@@ -1,21 +1,54 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/utils/auth";
+import { prisma } from "@/utils/db";
+import { verifyAccessToken, hashPassword } from "@/utils/auth";
+import { logAuditAction } from "@/lib/utils/auditLogger";
 
 export async function POST(req: Request) {
   try {
-    const session = await getSession(req);
-    if (!session) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    const { resetToken, newPassword } = await req.json();
+
+    if (!resetToken || !newPassword || newPassword.length < 6) {
+      return NextResponse.json(
+        { message: "Invalid request. Password must be at least 6 characters." },
+        { status: 400 }
+      );
     }
 
-    const body = await req.json();
-    if (!body.password && !body.username) {
-      return NextResponse.json({ message: "Username or password is required" }, { status: 400 });
+    const payload = await verifyAccessToken(resetToken) as any;
+
+    if (!payload || !payload.isResetToken) {
+      return NextResponse.json(
+        { message: "Invalid or expired reset session. Please login with your PIN again." },
+        { status: 401 }
+      );
     }
 
-    // Stub logic: return success
-    return NextResponse.json({ message: "Credentials changed successfully (stub)" });
+    const newPasswordHash = await hashPassword(newPassword);
+
+    await prisma.user.update({
+      where: { id: payload.userId },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    await logAuditAction({
+      req,
+      user: payload.username,
+      role: payload.role,
+      module: "AUTH",
+      action: "CHANGE_PASSWORD",
+      recordId: payload.userId,
+      status: "Success"
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Password updated successfully. You can now login with your new password.",
+    });
   } catch (error: any) {
-    return NextResponse.json({ message: "Failed to change credentials", error: error.message }, { status: 500 });
+    console.error("Change Password Error:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

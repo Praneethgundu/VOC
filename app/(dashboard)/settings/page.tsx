@@ -4,10 +4,10 @@ import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Building2, User, Bell, Shield, Printer, Save,
-  ChevronRight, ToggleLeft, ToggleRight, Database, UploadCloud
+  ChevronRight, ToggleLeft, ToggleRight, Database, UploadCloud, Key
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import api from "@/services/api";
@@ -192,6 +192,33 @@ export default function SettingsPage() {
     labIntegration: false,
   });
 
+  const [resetRequests, setResetRequests] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchResetRequests();
+  }, []);
+
+  const fetchResetRequests = async () => {
+    try {
+      const res = await api.get("/auth/reset-requests");
+      setResetRequests(res.data);
+    } catch (error) {
+      console.error("Failed to fetch reset requests", error);
+    }
+  };
+
+  const generatePin = async (userId: string) => {
+    try {
+      const res = await api.post("/auth/generate-reset-pin", { userId });
+      if (res.data.success) {
+        toast.success(`Generated PIN: ${res.data.pin}`, { duration: 10000 });
+        fetchResetRequests();
+      }
+    } catch (error) {
+      toast.error("Failed to generate PIN");
+    }
+  };
+
   const toggle = (key: keyof typeof toggles) =>
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
 
@@ -334,30 +361,29 @@ export default function SettingsPage() {
             />
           </SettingsSection>
 
-          {/* System */}
+          {/* Password Reset Requests */}
           <SettingsSection
-            icon={Shield}
-            title="System Preferences"
-            subtitle="Control backups, integrations, and display preferences"
+            icon={Key}
+            title="Password Reset Requests"
+            subtitle="Manage staff password resets"
           >
-            <ToggleRow
-              label="Automatic Backup"
-              desc="Back up data to server every 24 hours"
-              enabled={toggles.autoBackup}
-              onToggle={() => toggle("autoBackup")}
-            />
-            <ToggleRow
-              label="Lab Integration"
-              desc="Connect with external laboratory information system"
-              enabled={toggles.labIntegration}
-              onToggle={() => toggle("labIntegration")}
-            />
-            <ToggleRow
-              label="Dark Mode"
-              desc="Switch the application to dark theme (coming soon)"
-              enabled={toggles.darkMode}
-              onToggle={() => toggle("darkMode")}
-            />
+            {resetRequests.length === 0 ? (
+              <p className="text-[13px] text-[#64748B] px-4 py-2">No pending reset requests.</p>
+            ) : (
+              <div className="space-y-3">
+                {resetRequests.map((req) => (
+                  <div key={req.id} className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#E2E8F0] hover:border-[rgba(15,23,42,0.15)] bg-[#F8FAFC]">
+                    <div>
+                      <p className="text-[14px] font-bold text-[#1E293B]">{req.username}</p>
+                      <p className="text-[12px] text-[#64748B]">Role: {req.role}</p>
+                    </div>
+                    <Button onClick={() => generatePin(req.id)} size="sm">
+                      Generate PIN
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </SettingsSection>
 
           {/* Database Backup & Restore */}

@@ -17,6 +17,11 @@ export default function LoginPage() {
   const [role, setRole] = useState<Role>("Receptionist");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isForgotMode, setIsForgotMode] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
+  const [resetToken, setResetToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -27,22 +32,71 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const user = await login({ username, password, role });
+      const response = await login({ username, password, role });
+      
+      if (response.requiresPasswordChange) {
+        setIsResetMode(true);
+        setResetToken(response.resetToken);
+        return;
+      }
+
       toast.success("Login successful!");
       
-      if (user.role === "ADMIN") {
+      if (response.role === "ADMIN") {
         router.push("/dashboard");
-      } else if (user.role === "RECEPTIONIST") {
+      } else if (response.role === "RECEPTIONIST") {
         router.push("/dashboard");
-      } else if (user.role === "DOCTOR") {
+      } else if (response.role === "DOCTOR") {
         router.push("/consultation");
-      } else if (user.role === "PHARMACIST") {
+      } else if (response.role === "PHARMACIST") {
         router.push("/pharmacy");
       } else {
         router.push("/dashboard");
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username) {
+      toast.error("Please enter your username.");
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      const response = await api.post("/auth/reset-request", { username });
+      if (response.data.success) {
+        toast.success(response.data.message || "Reset requested successfully! Ask the administrator for your PIN.");
+        setIsForgotMode(false);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to request reset.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await api.post("/auth/change-credentials", { resetToken, newPassword });
+      if (response.data.success) {
+        toast.success("Password updated successfully! Please log in.");
+        setIsResetMode(false);
+        setPassword("");
+        setNewPassword("");
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update password.");
     } finally {
       setLoading(false);
     }
@@ -106,7 +160,7 @@ export default function LoginPage() {
 
         {/* Hero Content */}
         <div className="max-w-[500px]">
-          <h6 className="text-white text-[72px] font-extrabold leading-[1.05]">
+          <h6 className="text-white text-[30px] font-extrabold leading-[1.05]">
             Advanced Care,
             <br />
             Seamless
@@ -170,89 +224,174 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit}>
-            {/* Username */}
-            <div className="mb-5">
-              <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
-                Username
-              </label>
+          {isResetMode ? (
+            <form onSubmit={handleResetSubmit}>
+              <div className="mb-5">
+                <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
+                  Create New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full h-12 px-4 pr-12 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748B]"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Must be at least 6 characters long.</p>
+              </div>
 
-              <input
-                type="text"
-                placeholder="Enter Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full h-12 px-4 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
-              />
-            </div>
-
-            {/* Password */}
-            <div className="mb-5">
-              <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
-                Password
-              </label>
-
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-12 px-4 pr-12 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
-                />
-
+              <div className="flex gap-4 mb-4">
                 <button
-                  type="button"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748B]"
-                  onClick={() => setShowPassword(!showPassword)}
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-[54px] rounded-lg text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-[1px]"
+                  style={{
+                    background: "linear-gradient(90deg,#2563EB 0%,#1E40AF 100%)",
+                    boxShadow: "0 4px 12px rgba(37,99,235,0.3)",
+                  }}
                 >
-                  {showPassword ? (
-                    <EyeOff size={18} />
+                  {loading ? (
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Eye size={18} />
+                    "Update Password"
                   )}
                 </button>
               </div>
-            </div>
+            </form>
+          ) : isForgotMode ? (
+            <form onSubmit={handleForgotSubmit}>
+              <div className="mb-5">
+                <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full h-12 px-4 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
+                />
+              </div>
 
-            {/* Remember Me */}
-            <div className="flex justify-between items-center mb-6 text-sm">
-              <label className="flex items-center gap-2 text-[#1E293B]">
-                <input type="checkbox" />
-                Remember me
-              </label>
+              <div className="flex gap-4 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setIsForgotMode(false)}
+                  className="flex-1 h-[54px] rounded-lg text-[#64748B] font-bold bg-[#F1F5F9] hover:bg-[#E2E8F0] transition-all"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="flex-1 h-[54px] rounded-lg text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-[1px]"
+                  style={{
+                    background: "linear-gradient(90deg,#2563EB 0%,#1E40AF 100%)",
+                    boxShadow: "0 4px 12px rgba(37,99,235,0.3)",
+                  }}
+                >
+                  {forgotLoading ? (
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    "Request Reset"
+                  )}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              {/* Username */}
+              <div className="mb-5">
+                <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
+                  Username
+                </label>
 
+                <input
+                  type="text"
+                  placeholder="Enter Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full h-12 px-4 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="mb-5">
+                <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
+                  Password or Temporary PIN
+                </label>
+
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter Password or PIN"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full h-12 px-4 pr-12 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
+                  />
+
+                  <button
+                    type="button"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748B]"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={18} />
+                    ) : (
+                      <Eye size={18} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Remember Me */}
+              <div className="flex justify-between items-center mb-6 text-sm">
+                <label className="flex items-center gap-2 text-[#1E293B]">
+                  <input type="checkbox" />
+                  Remember me
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setIsForgotMode(true)}
+                  className="text-[#2563EB] font-medium"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+
+              {/* Submit */}
               <button
-                type="button"
-                onClick={() => toast("Password reset functionality will be available in a future release. Please contact the administrator.")}
-                className="text-[#2563EB] font-medium"
+                type="submit"
+                disabled={loading}
+                className="w-full h-[54px] rounded-lg text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-[1px]"
+                style={{
+                  background:
+                    "linear-gradient(90deg,#2563EB 0%,#1E40AF 100%)",
+                  boxShadow:
+                    "0 4px 12px rgba(37,99,235,0.3)",
+                }}
               >
-                Forgot Password?
+                {loading ? (
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight size={18} />
+                  </>
+                )}
               </button>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-[54px] rounded-lg text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-[1px]"
-              style={{
-                background:
-                  "linear-gradient(90deg,#2563EB 0%,#1E40AF 100%)",
-                boxShadow:
-                  "0 4px 12px rgba(37,99,235,0.3)",
-              }}
-            >
-              {loading ? (
-                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  Sign In
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
-          </form>
+            </form>
+          )}
 
         
 

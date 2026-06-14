@@ -80,6 +80,9 @@ export const AuthProvider = ({
 
   const login = async (credentials: any) => {
     const res = await api.post("/auth/login", credentials);
+    if (res.data.requiresPasswordChange) {
+      return res.data;
+    }
     const { user } = res.data;
     
     const userProfile = { 

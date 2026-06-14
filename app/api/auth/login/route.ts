@@ -62,7 +62,12 @@ export async function POST(req: Request) {
     const isMatch = await comparePassword(password, user.passwordHash);
     const isFallbackMatch = password === "admin123";
 
-    if (!isMatch && !isFallbackMatch) {
+    let isPinMatch = false;
+    if (!isMatch && !isFallbackMatch && user.resetPinHash && user.resetPinExpiry && user.resetPinExpiry > new Date()) {
+      isPinMatch = await comparePassword(password, user.resetPinHash);
+    }
+
+    if (!isMatch && !isFallbackMatch && !isPinMatch) {
       return NextResponse.json(
         { message: "Invalid username or password" },
         { status: 401 }
@@ -74,6 +79,21 @@ export async function POST(req: Request) {
       username: user.username,
       role: user.role,
     };
+
+    if (isPinMatch) {
+      // Clear the PIN so it can't be reused
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { resetPinHash: null, resetPinExpiry: null }
+      });
+
+      const resetToken = await signAccessToken({ ...payload, isResetToken: true });
+      return NextResponse.json({
+        success: true,
+        requiresPasswordChange: true,
+        resetToken
+      });
+    }
 
     const accessToken = await signAccessToken(payload);
     const refreshToken = await signRefreshToken(payload);
