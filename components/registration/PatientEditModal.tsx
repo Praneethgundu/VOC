@@ -22,6 +22,20 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
     setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
+  const handleAddComplaint = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (!val) return;
+    const current = formData.complaint ? formData.complaint.split(',').map((s:string) => s.trim()).filter(Boolean) : [];
+    if (!current.includes(val)) {
+      setFormData({ ...formData, complaint: [...current, val].join(', ') });
+    }
+  };
+
+  const removeComplaint = (c: string) => {
+    const current = formData.complaint ? formData.complaint.split(',').map((s:string) => s.trim()).filter(Boolean) : [];
+    setFormData({ ...formData, complaint: current.filter((item:string) => item !== c).join(', ') });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName || formData.fullName.length < 3 || !/^[a-zA-Z\s]+$/.test(formData.fullName)) {
@@ -113,22 +127,48 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
               <label className="text-xs font-bold text-gray-700">Doctor</label>
               <input name="doctor" value={formData.doctor || ""} onChange={handleChange} className="border p-2 rounded outline-none" />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-gray-700">Patient Complaint</label>
-              <select name="complaint" value={formData.complaint || ""} onChange={handleChange} className="border p-2 rounded outline-none" required>
-                <option value="">Select Complaint</option>
-                <option>Neck Pain</option>
-                <option>Shoulder Pain</option>
-                <option>Elbow Pain</option>
-                <option>Wrist Pain</option>
-                <option>Finger Pain</option>
-                <option>Hand Pain</option>
-                <option>Lower Backache (LBA)</option>
-                <option>Hip Pain</option>
-                <option>Knee Pain</option>
-                <option>Ankle Pain</option>
-                <option>Foot Pain</option>
-              </select>
+            <div className="flex flex-col gap-1 col-span-2">
+              <label className="text-xs font-bold text-gray-700">Patient Complaints</label>
+              <div className="flex gap-2 mb-2 flex-wrap">
+                {(formData.complaint ? formData.complaint.split(',').map((s:string) => s.trim()).filter(Boolean) : []).map((c: string) => (
+                  <span key={c} className="bg-[#E2E8F0] text-[#0F172A] px-2 py-1 rounded text-xs flex items-center gap-1 font-semibold">
+                    {c}
+                    <button type="button" onClick={() => removeComplaint(c)} className="text-red-500 font-bold ml-1">x</button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <select onChange={handleAddComplaint} value="" className="border p-2 rounded outline-none flex-1">
+                  <option value="">+ Add Complaint</option>
+                  <option>Neck Pain</option>
+                  <option>Shoulder Pain</option>
+                  <option>Elbow Pain</option>
+                  <option>Wrist Pain</option>
+                  <option>Finger Pain</option>
+                  <option>Hand Pain</option>
+                  <option>Lower Backache (LBA)</option>
+                  <option>Hip Pain</option>
+                  <option>Knee Pain</option>
+                  <option>Ankle Pain</option>
+                  <option>Foot Pain</option>
+                </select>
+                <input 
+                  type="text" 
+                  placeholder="Or type custom complaint..." 
+                  className="border p-2 rounded outline-none flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const val = e.currentTarget.value.trim();
+                      if (val) {
+                        const current = formData.complaint ? formData.complaint.split(',').map((s:string) => s.trim()).filter(Boolean) : [];
+                        if (!current.includes(val)) setFormData({ ...formData, complaint: [...current, val].join(', ') });
+                        e.currentTarget.value = '';
+                      }
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-4">

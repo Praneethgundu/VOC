@@ -10,7 +10,10 @@ export async function GET(req: Request) {
     }
 
     const procedures = await prisma.oTProcedure.findMany({
-      orderBy: { date: "desc" },
+      orderBy: [
+        { date: "desc" },
+        { createdAt: "desc" }
+      ],
     });
 
     const enriched = await Promise.all(
@@ -57,17 +60,18 @@ export async function POST(req: Request) {
     const procedureName = body.procedureName || body.procedure || "";
     const requestedDateStr = body.date || new Date().toISOString().split("T")[0];
 
-    const existingProcedure = await prisma.oTProcedure.findFirst({
+    const proceduresOnDay = await prisma.oTProcedure.findMany({
       where: {
         opNumber: body.opNumber,
-        procedureName: procedureName,
         date: {
           startsWith: requestedDateStr
         }
       }
     });
 
-    if (existingProcedure) {
+    const isDuplicate = proceduresOnDay.some(p => p.procedureName.trim().toLowerCase() === procedureName.trim().toLowerCase());
+
+    if (isDuplicate) {
       return NextResponse.json({ message: `Duplicate: ${procedureName} is already scheduled for this patient on this day.` }, { status: 400 });
     }
 

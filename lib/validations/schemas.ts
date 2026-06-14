@@ -31,14 +31,14 @@ export const patientSchema = z.object({
 });
 
 export const billingSchema = z.object({
-  patientId: z.string().uuid(),
+  patientId: z.string().optional().or(z.literal("")),
   opNumber: safeString,
   items: z.any(), // JSON array
   consultationCharges: z.number().min(0).max(1000000).optional(),
   investigationCharges: z.number().min(0).max(1000000).optional(),
   medicineCharges: z.number().min(0).max(1000000).optional(),
   otCharges: z.number().min(0).max(1000000).optional(),
-  total: z.number().min(0).max(10000000),
-  paidAmount: z.number().min(0).max(10000000),
+  total: z.number().min(0).max(10000000).optional(),
+  paidAmount: z.number().min(0).max(10000000).optional(),
   paymentMode: z.enum(["Cash", "Card", "UPI", "Insurance", "Pending"]),
 });

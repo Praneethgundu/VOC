@@ -11,6 +11,7 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
     medicineName: "",
     category: "",
     quantity: "",
+    mrp: "",
     price: "",
     expiryDate: "",
     batch: "",
@@ -34,8 +35,11 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
     if (!formData.quantity || isNaN(Number(formData.quantity)) || Number(formData.quantity) <= 0) {
       newErrors.quantity = "Initial quantity must be > 0";
     }
+    if (!formData.mrp || isNaN(Number(formData.mrp)) || Number(formData.mrp) <= 0) {
+      newErrors.mrp = "MRP must be > 0";
+    }
     if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = "Price must be > 0";
+      newErrors.price = "Selling Price must be > 0";
     }
     if (!formData.expiryDate) {
       newErrors.expiryDate = "Expiry date is required";
@@ -102,9 +106,10 @@ export default function PharmacyForm({ onClose, onAdd }: { onClose: () => void, 
             </Select>
             <Input label="Expiry Date" type="month" name="expiryDate" value={formData.expiryDate} onChange={handleChange} min={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`} error={errors.expiryDate} required />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Input label="Initial Quantity" type="number" min="0" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="0" error={errors.quantity} required />
-            <Input label="Price per Unit (₹)" type="number" min="0" step="0.01" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" error={errors.price} required />
+            <Input label="MRP (₹)" type="number" min="0" step="0.01" name="mrp" value={formData.mrp} onChange={handleChange} placeholder="0.00" error={errors.mrp} required />
+            <Input label="Selling Price (₹)" type="number" min="0" step="0.01" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" error={errors.price} required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="Batch Number" name="batch" value={formData.batch} onChange={handleChange} placeholder="e.g. BT-2024" />

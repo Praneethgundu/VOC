@@ -21,6 +21,7 @@ export default function PharmacyPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [dispenseMed, setDispenseMed] = useState<any>(null);
   const [restockMed, setRestockMed] = useState<any>(null);
+  const [detailModal, setDetailModal] = useState<any>(null);
 
   const [kpiModal, setKpiModal] = useState<'all' | 'lowStock' | 'categories' | 'expiringSoon' | null>(null);
 
@@ -221,6 +222,7 @@ export default function PharmacyPage() {
                       medicine={m} 
                       onRestock={setRestockMed}
                       onDelete={handleDelete}
+                      onClick={setDetailModal}
                     />
                   ))}
                 </div>
@@ -307,6 +309,56 @@ export default function PharmacyPage() {
         />
       )}
       {restockMed && <RestockModal medicine={restockMed} onClose={() => setRestockMed(null)} onSuccess={fetchMedicines} />}
+
+      {detailModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setDetailModal(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#0F172A] p-5 text-white flex justify-between items-center">
+              <h2 className="text-lg font-bold">{detailModal.medicineName}</h2>
+              <button onClick={() => setDetailModal(null)} className="text-gray-300 hover:text-white">x</button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Medicine ID</p>
+                  <p className="font-semibold">{detailModal.medicineId}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Category</p>
+                  <p className="font-semibold">{detailModal.category}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Stock</p>
+                  <p className="font-semibold">{detailModal.stock ?? detailModal.quantity}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Batch</p>
+                  <p className="font-semibold">{detailModal.batch || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Selling Price</p>
+                  <p className="font-semibold text-green-600">₹{detailModal.price}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">MRP</p>
+                  <p className="font-semibold text-gray-700">₹{detailModal.mrp || detailModal.price}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Expiry Date</p>
+                  <p className="font-semibold">{detailModal.expiryDate || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Distributor</p>
+                  <p className="font-semibold">{detailModal.distributor || "N/A"}</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 bg-gray-50 flex justify-end">
+              <button onClick={() => setDetailModal(null)} className="px-5 py-2 bg-gray-200 font-semibold rounded text-gray-800 hover:bg-gray-300">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Display Modal */}
       {kpiModal && (

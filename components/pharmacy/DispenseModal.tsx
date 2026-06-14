@@ -17,9 +17,11 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
   const [error, setError] = useState<string | null>(null);
   
   const [patients, setPatients] = useState<any[]>([]);
+  const [consultations, setConsultations] = useState<any[]>([]);
 
   useEffect(() => {
     getPatients().then(setPatients).catch(console.error);
+    fetch('/api/consultations').then(res => res.json()).then(setConsultations).catch(console.error);
   }, []);
 
   const searchOp = opNumber ? opNumber.trim().toLowerCase() : "";
@@ -29,11 +31,16 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
     : '';
 
   useEffect(() => {
-    if (patient && patient.prescription) {
-      try {
-        const prescs = JSON.parse(patient.prescription);
-        if (Array.isArray(prescs) && prescs.length > 0) {
-          const newItems = prescs.map((p: any) => {
+    if (patient) {
+      const patientConsultations = consultations.filter(c => c.opNumber && c.opNumber.trim().toLowerCase() === patient.opNumber.trim().toLowerCase());
+      patientConsultations.sort((a, b) => new Date(b.consultationDate).getTime() - new Date(a.consultationDate).getTime());
+      const latestCons = patientConsultations[0];
+
+      if (latestCons && latestCons.prescription) {
+        try {
+          const prescs = JSON.parse(latestCons.prescription);
+          if (Array.isArray(prescs) && prescs.length > 0) {
+            const newItems = prescs.map((p: any) => {
             // Find medicine by name
             const med = medicines.find(m => m.medicineName.toLowerCase() === p.medicineName?.toLowerCase());
             let qty = 1;
@@ -57,7 +64,8 @@ export default function DispenseModal({ initialMedicineId, medicines, onClose, o
         // Ignore parse errors
       }
     }
-  }, [patient, medicines]);
+    }
+  }, [patient, medicines, consultations]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

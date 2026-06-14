@@ -5,14 +5,18 @@ interface MedicineCardProps {
   medicine: any;
   onRestock: (med: any) => void;
   onDelete: (id: string) => void;
+  onClick: (med: any) => void;
 }
 
-export default function MedicineCard({ medicine, onRestock, onDelete }: MedicineCardProps) {
+export default function MedicineCard({ medicine, onRestock, onDelete, onClick }: MedicineCardProps) {
   const qty = Number(medicine.stock) || 0;
   const isLowStock = qty < 50;
   
   return (
-    <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+    <div 
+      className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col cursor-pointer"
+      onClick={() => onClick(medicine)}
+    >
       <div className="flex items-start gap-3 mb-4">
         <div className="bg-[#FEE2E2] text-[#2563EB] p-2 rounded-lg shrink-0">
           <Pill size={20} className="fill-current opacity-20" />
@@ -22,7 +26,7 @@ export default function MedicineCard({ medicine, onRestock, onDelete }: Medicine
           <p className="text-xs text-[#64748B]">{medicine.category}</p>
         </div>
         <button 
-          onClick={() => onDelete(medicine.medicineId)}
+          onClick={(e) => { e.stopPropagation(); onDelete(medicine.medicineId); }}
           className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
           title="Delete Medicine"
         >
@@ -54,7 +58,7 @@ export default function MedicineCard({ medicine, onRestock, onDelete }: Medicine
           {medicine.medicineId}
         </span>
         <button 
-          onClick={() => onRestock(medicine)}
+          onClick={(e) => { e.stopPropagation(); onRestock(medicine); }}
           className="text-xs font-bold text-[#2563EB] border border-[#2563EB]/20 hover:bg-[#FEE2E2] px-3 py-1.5 rounded transition-colors flex items-center gap-1"
         >
           📦 Restock

@@ -299,7 +299,26 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
                     </div>
                     <div className="col-span-2">
                       <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-1">Clinical Notes</p>
-                      <p className="text-[13px] text-gray-800">{c.notes || "N/A"}</p>
+                      <div className="text-[13px] text-gray-800 space-y-1">
+                        {(() => {
+                          if (!c.notes) return "N/A";
+                          try {
+                            const parsed = JSON.parse(c.notes);
+                            if (Array.isArray(parsed)) {
+                              return parsed.map((note, i) => (
+                                <p key={i}>• {note}</p>
+                              ));
+                            } else if (typeof parsed === 'object' && parsed !== null) {
+                              return Object.entries(parsed).map(([key, value]) => (
+                                <p key={key}><span className="font-semibold capitalize">{key}:</span> {String(value)}</p>
+                              ));
+                            }
+                            return String(parsed);
+                          } catch (e) {
+                            return c.notes;
+                          }
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>

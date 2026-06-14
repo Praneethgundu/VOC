@@ -136,6 +136,7 @@ export default function PatientTable() {
             <THead>
               <tr>
                 <Th>Date</Th>
+                <Th>Time</Th>
                 <Th>OP Number</Th>
                 <Th>Patient Name</Th>
                 <Th>Age / Gender</Th>
@@ -151,6 +152,11 @@ export default function PatientTable() {
                   <Td>
                     <div className="text-[13px] text-[#1E293B]">
                       {patient.appointmentDate || new Date(patient.createdAt).toISOString().split('T')[0]}
+                    </div>
+                  </Td>
+                  <Td>
+                    <div className="text-[13px] text-[#64748B]">
+                      {patient.appointmentTime || new Date(patient.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </Td>
                   <Td>

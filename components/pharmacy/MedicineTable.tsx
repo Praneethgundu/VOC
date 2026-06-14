@@ -19,6 +19,7 @@ export default function MedicineTable() {
 
   const [dispenseMedicineData, setDispenseMedicineData] = useState<any>(null);
   const [dispenseForm, setDispenseForm] = useState({ opNumber: "", quantity: 1, amount: 0 });
+  const [detailModal, setDetailModal] = useState<any>(null);
 
   const fetchMedicines = async () => {
     setLoading(true);
@@ -124,7 +125,7 @@ export default function MedicineTable() {
               const qty = Number(m.stock ?? m.quantity ?? 0);
               const stock = stockStatus(qty);
               return (
-                <Tr key={m.medicineId ?? i} index={i}>
+                <Tr key={m.medicineId ?? i} index={i} onClick={() => setDetailModal(m)} className="cursor-pointer hover:bg-gray-50 transition-colors">
                   <Td>
                     <span className="font-mono text-[13px] font-semibold text-[#0F172A]">{m.medicineId}</span>
                   </Td>
@@ -159,7 +160,8 @@ export default function MedicineTable() {
                   </Td>
                   <Td align="right">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setDispenseMedicineData(m);
                         setDispenseForm({ opNumber: "", quantity: 1, amount: Number(m.price) });
                       }}
@@ -239,6 +241,56 @@ export default function MedicineTable() {
               >
                 Confirm Dispense
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {detailModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setDetailModal(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#0F172A] p-5 text-white flex justify-between items-center">
+              <h2 className="text-lg font-bold">{detailModal.medicineName}</h2>
+              <button onClick={() => setDetailModal(null)} className="text-gray-300 hover:text-white">x</button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Medicine ID</p>
+                  <p className="font-semibold">{detailModal.medicineId}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Category</p>
+                  <p className="font-semibold">{detailModal.category}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Stock</p>
+                  <p className="font-semibold">{detailModal.stock ?? detailModal.quantity}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Batch</p>
+                  <p className="font-semibold">{detailModal.batch || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Selling Price</p>
+                  <p className="font-semibold text-green-600">₹{detailModal.price}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">MRP</p>
+                  <p className="font-semibold text-gray-700">₹{detailModal.mrp || detailModal.price}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Expiry Date</p>
+                  <p className="font-semibold">{detailModal.expiryDate || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Distributor</p>
+                  <p className="font-semibold">{detailModal.distributor || "N/A"}</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 bg-gray-50 flex justify-end">
+              <button onClick={() => setDetailModal(null)} className="px-5 py-2 bg-gray-200 font-semibold rounded text-gray-800 hover:bg-gray-300">Close</button>
             </div>
           </div>
         </div>

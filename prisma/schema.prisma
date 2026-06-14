@@ -80,6 +80,7 @@ model InventoryItem {
   batch        String   @default("")
   stock        Int      @default(0)
   price        Float    @default(0)
+  mrp          Float    @default(0)
   expiryDate   String   @default("")
   distributor  String   @default("")
   createdAt    DateTime @default(now())
@@ -126,6 +127,7 @@ model OTProcedure {
   status        String   @default("Scheduled")
   date          String
   notes         String   @default("")
+  createdAt     DateTime @default(now())
 }
 
 model AuditLog {

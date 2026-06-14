@@ -23,6 +23,7 @@ export default function BillingPage() {
   const [showReceiptModal, setShowReceiptModal] = useState<any>(null); // holds bill object
   
   const [selectedUnbilled, setSelectedUnbilled] = useState<any>(null);
+  const [unbilledSearch, setUnbilledSearch] = useState("");
   const [billItems, setBillItems] = useState<any[]>([]);
   const [paymentMode, setPaymentMode] = useState("Cash");
   const [paymentStatus, setPaymentStatus] = useState("Pay");
@@ -134,6 +135,7 @@ Thank you!
     setBillItems([]);
     setPaymentMode("Cash");
     setPaymentStatus("Pay");
+    setUnbilledSearch("");
     setBillError('');
     setShowNewBillModal(true);
   };
@@ -311,6 +313,7 @@ Thank you!
                   <Th>OP No.</Th>
                   <Th>Patient</Th>
                   <Th>Date</Th>
+                  <Th>Time</Th>
                   <Th>Total</Th>
                   <Th>Paid</Th>
                   <Th>Mode</Th>
@@ -327,6 +330,7 @@ Thank you!
                       {patients.find(p => p.opNumber === b.opNumber)?.fullName || b.patientName || b.patient || "Unknown"}
                     </span></Td>
                     <Td><span className="text-[13px] text-[#64748B]">{b.date && !isNaN(new Date(b.date).getTime()) ? new Date(b.date).toISOString().split('T')[0] : "N/A"}</span></Td>
+                    <Td><span className="text-[13px] text-[#64748B]">{b.date && !isNaN(new Date(b.date).getTime()) ? new Date(b.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : "N/A"}</span></Td>
                     <Td><span className="font-bold text-[#1E293B]">₹{(b.total || 0).toLocaleString("en-IN")}</span></Td>
                     <Td><span className="font-bold text-[#059669]">₹{b.status === "Paid" ? (b.total || 0).toLocaleString("en-IN") : "0"}</span></Td>
                     <Td><span className="text-[13px] text-[#64748B]">{b.paymentMode || (b.status === "Paid" ? "Cash" : "Pending")}</span></Td>
@@ -382,12 +386,15 @@ Thank you!
               <div className="p-4 border-b border-[#E2E8F0]">
                 <h3 className="font-bold text-[#0F172A] text-[14px]">UNBILLED PATIENTS</h3>
                 <p className="text-[11px] text-[#64748B]">Select a patient to bill</p>
+                <div className="mt-2">
+                  <input type="text" placeholder="Search OP or Name..." value={unbilledSearch} onChange={(e) => setUnbilledSearch(e.target.value)} className="w-full h-8 px-2 border border-[#E2E8F0] rounded text-sm outline-none bg-white focus:border-[#2563EB]" />
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
                 {unbilled.length === 0 ? (
                   <p className="text-center text-sm text-gray-500 mt-4">No unbilled patients</p>
                 ) : (
-                  unbilled.map((p, idx) => (
+                  unbilled.filter(u => unbilledSearch ? (u.patientName?.toLowerCase().includes(unbilledSearch.toLowerCase()) || u.opNumber?.toLowerCase().includes(unbilledSearch.toLowerCase())) : true).map((p, idx) => (
                     <div 
                       key={idx}
                       draggable
@@ -444,7 +451,10 @@ Thank you!
                         if (val.trim()) {
                           const searchOp = val.trim().toLowerCase();
                           const p = patients.find(p => p.opNumber && p.opNumber.trim().toLowerCase() === searchOp);
-                          if (p) {
+                          const unbilledPatient = unbilled.find(u => u.opNumber && u.opNumber.trim().toLowerCase() === searchOp);
+                          if (unbilledPatient) {
+                            selectPatientForBill(unbilledPatient);
+                          } else if (p) {
                             setSelectedUnbilled((prev: any) => ({ ...(prev || {}), patientName: p.fullName || p.patientName || "Unknown Name" }));
                           }
                         }
