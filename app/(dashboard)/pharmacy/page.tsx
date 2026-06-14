@@ -230,9 +230,7 @@ export default function PharmacyPage() {
 
               {/* Hidden trigger for dispense to select randomly if clicked globally */}
               <button id="dispenseTrigger" className="hidden" onClick={() => {
-                const inStock = medicines.filter(m => Number(m.stock) > 0);
-                if (inStock.length > 0) setDispenseMed(inStock[0]);
-                else alert("No medicines in stock to dispense");
+                setDispenseMed({ medicineId: '' });
               }}></button>
             </>
           ) : (

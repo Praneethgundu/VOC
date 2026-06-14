@@ -69,11 +69,15 @@ export default function PatientTable() {
         <body>
           <h1>Hospital OP Slip</h1>
           <div class="details">
+            <p><strong>Date:</strong> ${new Date(patient.createdAt).toLocaleDateString()}</p>
+            <p><strong>Time:</strong> ${new Date(patient.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
             <p><strong>OP Number:</strong> ${patient.opNumber}</p>
             <p><strong>Patient Name:</strong> ${patient.fullName}</p>
-            <p><strong>Age/Gender:</strong> ${patient.age} / ${patient.gender}</p>
+            <p><strong>Age / Gender:</strong> ${patient.age} / ${patient.gender}</p>
+            <p><strong>Phone:</strong> ${patient.phone || "N/A"}</p>
             <p><strong>Doctor:</strong> ${patient.doctor}</p>
-            <p><strong>Date:</strong> ${new Date(patient.createdAt).toLocaleDateString()}</p>
+            <p><strong>Blood Group:</strong> ${patient.bloodGroup || "N/A"}</p>
+            <p><strong>Patient Complaints:</strong> ${patient.complaint || "N/A"}</p>
           </div>
           <script>
             window.print();

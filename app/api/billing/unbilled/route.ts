@@ -40,18 +40,20 @@ export async function GET(req: Request) {
       prisma.oTProcedure.findMany({ where: { status: { in: ["Completed", "COMPLETED"] } } })
     ]);
 
-    // Map OP Number to a Map of { serviceName: count }
+    // Map OP Number (uppercase) to a Map of { serviceName: count }
     const billedCountsMap = new Map<string, Map<string, number>>();
     bills.forEach(b => {
-      if (!billedCountsMap.has(b.opNumber)) {
-        billedCountsMap.set(b.opNumber, new Map());
+      const bOp = b.opNumber.trim().toUpperCase();
+      if (!billedCountsMap.has(bOp)) {
+        billedCountsMap.set(bOp, new Map());
       }
       try {
         const items = JSON.parse(b.items);
-        const opMap = billedCountsMap.get(b.opNumber)!;
+        const opMap = billedCountsMap.get(bOp)!;
         items.forEach((item: any) => {
           if (item.serviceName) {
-            opMap.set(item.serviceName, (opMap.get(item.serviceName) || 0) + 1);
+            const svc = item.serviceName.trim();
+            opMap.set(svc, (opMap.get(svc) || 0) + 1);
           }
         });
       } catch (e) {
@@ -61,28 +63,36 @@ export async function GET(req: Request) {
 
     const unbilledMap = new Map<string, any>();
 
-    const getOrInitPatient = (opNumber: string, patientName: string, patientId: string, department: string, complaint: string, registrationDate?: Date) => {
-      if (!unbilledMap.has(opNumber)) {
-        unbilledMap.set(opNumber, {
+    const getOrInitPatient = (opNumber: string, patientName: string, patientId: string, department: string, complaint: string, activityDate?: Date) => {
+      const normalizedOp = opNumber.trim().toUpperCase();
+      if (!unbilledMap.has(normalizedOp)) {
+        unbilledMap.set(normalizedOp, {
           patientName,
-          opNumber,
+          opNumber: normalizedOp,
           patientId,
           department: department || "General",
           complaint: complaint || "N/A",
-          registrationDate: registrationDate || new Date(0),
+          latestActivityDate: activityDate || new Date(0),
           items: []
         });
+      } else {
+        const existing = unbilledMap.get(normalizedOp);
+        if (activityDate && new Date(activityDate) > new Date(existing.latestActivityDate)) {
+          existing.latestActivityDate = activityDate;
+        }
       }
-      return unbilledMap.get(opNumber);
+      return unbilledMap.get(normalizedOp);
     };
 
     // Helper to check if an item is billed (and decrement its count if so)
     const isBilled = (opNumber: string, serviceName: string) => {
-      const opMap = billedCountsMap.get(opNumber);
+      const normalizedOp = opNumber.trim().toUpperCase();
+      const svc = serviceName.trim();
+      const opMap = billedCountsMap.get(normalizedOp);
       if (!opMap) return false;
-      const count = opMap.get(serviceName) || 0;
+      const count = opMap.get(svc) || 0;
       if (count > 0) {
-        opMap.set(serviceName, count - 1);
+        opMap.set(svc, count - 1);
         return true;
       }
       return false;
@@ -91,7 +101,7 @@ export async function GET(req: Request) {
     // 1. Process all patients for Registration Fee if never billed
     for (const p of patients) {
       if (!isBilled(p.opNumber, "Registration Fee")) {
-        const entry = getOrInitPatient(p.opNumber, p.fullName, p.patientId, p.department, p.complaint, (p as any).registrationDate);
+        const entry = getOrInitPatient(p.opNumber, p.fullName, p.patientId, p.department, p.complaint, (p as any).createdAt);
         entry.items.push({
           serviceName: "Registration Fee",
           category: "Registration",
@@ -102,10 +112,10 @@ export async function GET(req: Request) {
 
     // 2. Process consultations for Consultation Fee
     for (const c of consultations) {
-      if (c.status === "Completed" || c.status === "COMPLETED") {
+      if (c.status === "Completed" || c.status === "COMPLETED" || c.status === "Waiting") { // Include Waiting to pull pending fees
         const serviceName = `Consultation Fee (${c.department || "General"})`;
         if (!isBilled(c.opNumber, serviceName)) {
-           const entry = getOrInitPatient(c.opNumber, c.patient?.fullName || "Unknown", c.patientId, c.department, c.patient?.complaint || "", (c.patient as any)?.registrationDate);
+           const entry = getOrInitPatient(c.opNumber, c.patient?.fullName || "Unknown", c.patientId, c.department, c.patient?.complaint || "", c.consultationDate);
            entry.items.push({
              serviceName: serviceName,
              category: "Consultation",
@@ -118,10 +128,10 @@ export async function GET(req: Request) {
     // 3. Process completed investigations
     for (const tx of investigations) {
       if (!isBilled(tx.opNumber, tx.testName)) {
-        const p = patients.find(pat => pat.opNumber === tx.opNumber);
-        const entry = getOrInitPatient(tx.opNumber, p?.fullName || "Unknown", tx.patientId, p?.department || "General", p?.complaint || "", (p as any)?.registrationDate);
+        const p = patients.find(pat => pat.opNumber.trim().toUpperCase() === tx.opNumber.trim().toUpperCase());
+        const entry = getOrInitPatient(tx.opNumber, p?.fullName || "Unknown", tx.patientId, p?.department || "General", p?.complaint || "", tx.orderedDate);
         entry.items.push({
-          serviceName: tx.testName,
+          serviceName: tx.testName.trim(),
           category: "Investigation",
           amount: tx.amount,
         });
@@ -130,10 +140,10 @@ export async function GET(req: Request) {
 
     // 4. Process pharmacy dispenses
     for (const ph of pharmacy) {
-      const serviceName = `${ph.medicineName} (Pharmacy)`;
+      const serviceName = `${ph.medicineName.trim()} (Pharmacy)`;
       if (!isBilled(ph.opNumber, serviceName)) {
-        const p = patients.find(pat => pat.opNumber === ph.opNumber);
-        const entry = getOrInitPatient(ph.opNumber, p?.fullName || "Unknown", ph.patientId, p?.department || "General", p?.complaint || "", (p as any)?.registrationDate);
+        const p = patients.find(pat => pat.opNumber.trim().toUpperCase() === ph.opNumber.trim().toUpperCase());
+        const entry = getOrInitPatient(ph.opNumber, p?.fullName || "Unknown", ph.patientId, p?.department || "General", p?.complaint || "", ph.dispensedDate);
         
         entry.items.push({
           serviceName: serviceName,
@@ -145,10 +155,10 @@ export async function GET(req: Request) {
 
     // 5. Process OT Procedures
     for (const ot of otProcedures) {
-      const serviceName = `${ot.procedureName} (OT)`;
+      const serviceName = `${ot.procedureName.trim()} (OT)`;
       if (!isBilled(ot.opNumber, serviceName)) {
-        const p = patients.find(pat => pat.opNumber === ot.opNumber);
-        const entry = getOrInitPatient(ot.opNumber, p?.fullName || "Unknown", ot.patientId, p?.department || "General", p?.complaint || "", (p as any)?.registrationDate);
+        const p = patients.find(pat => pat.opNumber.trim().toUpperCase() === ot.opNumber.trim().toUpperCase());
+        const entry = getOrInitPatient(ot.opNumber, p?.fullName || "Unknown", ot.patientId, p?.department || "General", p?.complaint || "", ot.createdAt);
         entry.items.push({
           serviceName: serviceName,
           category: "OT Procedure",
@@ -164,7 +174,7 @@ export async function GET(req: Request) {
         ...entry,
         total: entry.items.reduce((acc: number, it: any) => acc + (it.amount || 0), 0),
       }))
-      .sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime());
+      .sort((a, b) => new Date(b.latestActivityDate).getTime() - new Date(a.latestActivityDate).getTime());
 
     return NextResponse.json(unbilled);
   } catch (error: any) {
