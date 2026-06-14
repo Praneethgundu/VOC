@@ -105,32 +105,32 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex relative overflow-hidden"
+      className="min-h-screen flex relative overflow-hidden animate-fade-in"
       style={{
         background:
-          "linear-gradient(135deg,#0F172A 0%,#0F172A 45%,#0F172A 100%)",
+          "linear-gradient(135deg, #020617 0%, #0F172A 50%, #0B1120 100%)",
       }}
     >
       {/* Background Shapes */}
       <div
-        className="absolute rounded-full pointer-events-none"
+        className="absolute rounded-full pointer-events-none blur-[120px]"
         style={{
-          width: "1500px",
-          height: "1500px",
-          top: "-700px",
-          left: "-300px",
-          background: "rgba(255,255,255,0.04)",
+          width: "1000px",
+          height: "1000px",
+          top: "-400px",
+          left: "-200px",
+          background: "radial-gradient(circle, rgba(37,99,235,0.08) 0%, rgba(15,23,42,0) 70%)",
         }}
       />
 
       <div
-        className="absolute rounded-full pointer-events-none"
+        className="absolute rounded-full pointer-events-none blur-[100px]"
         style={{
-          width: "1800px",
-          height: "1800px",
-          bottom: "-1200px",
-          right: "-500px",
-          background: "rgba(255,255,255,0.03)",
+          width: "800px",
+          height: "800px",
+          bottom: "-200px",
+          right: "-100px",
+          background: "radial-gradient(circle, rgba(59,130,246,0.06) 0%, rgba(15,23,42,0) 70%)",
         }}
       />
 
@@ -209,17 +209,19 @@ export default function LoginPage() {
                 key={r}
                 type="button"
                 onClick={() => setRole(r)}
-                className={`h-[88px] rounded-xl border transition-all flex flex-col items-center justify-center ${
+                className={`h-[88px] rounded-xl border transition-all duration-300 flex flex-col items-center justify-center hover:-translate-y-1 hover:shadow-md ${
                   role === r
-                    ? "border-[#2563EB] bg-[#F8FAFC] text-[#0F172A]"
-                    : "border-[#E2E8F0] text-[#64748B] hover:border-[#2563EB]"
+                    ? "border-[#2563EB] bg-blue-50/50 text-[#0F172A] shadow-[0_0_0_4px_rgba(37,99,235,0.1)]"
+                    : "border-[#E2E8F0] text-[#64748B] hover:border-[#2563EB]/50"
                 }`}
               >
-                <span className="text-[28px] font-bold">
+                <span className={`text-[28px] font-bold transition-colors duration-300 ${role === r ? "text-[#2563EB]" : ""}`}>
                   {r.charAt(0)}
                 </span>
 
-                <span className="text-[13px] mt-1">{r}</span>
+                <span className={`text-[13px] mt-1 transition-colors duration-300 ${role === r ? "font-bold text-[#1E293B]" : ""}`}>
+                  {r}
+                </span>
               </button>
             ))}
           </div>
@@ -321,23 +323,23 @@ export default function LoginPage() {
                   placeholder="Enter Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full h-12 px-4 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
+                  className="w-full h-12 px-4 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10 transition-all duration-300"
                 />
               </div>
 
               {/* Password */}
               <div className="mb-5">
                 <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
-                  Password 
+                  Password or Temporary PIN
                 </label>
 
-                <div className="relative">
+                <div className="relative group">
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter Password or PIN"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full h-12 px-4 pr-12 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB]"
+                    className="w-full h-12 px-4 pr-12 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10 transition-all duration-300"
                   />
 
                   <button
@@ -374,20 +376,18 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-[54px] rounded-lg text-white font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-[1px]"
+                className="w-full h-[54px] rounded-lg text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)]"
                 style={{
                   background:
-                    "linear-gradient(90deg,#2563EB 0%,#1E40AF 100%)",
-                  boxShadow:
-                    "0 4px 12px rgba(37,99,235,0.3)",
+                    "linear-gradient(90deg, #2563EB 0%, #1D4ED8 100%)",
                 }}
               >
                 {loading ? (
-                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
                     Sign In
-                    <ArrowRight size={18} />
+                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
