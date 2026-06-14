@@ -2,7 +2,7 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 
-const dev = process.env.NODE_ENV !== "production";
+const dev = process.env.NODE_ENV === "development";
 const port = process.env.PORT || 3000;
 
 // Hostinger's Phusion Passenger runs Node apps using a UNIX domain socket path passed in process.env.PORT.
