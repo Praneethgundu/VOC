@@ -16,7 +16,7 @@ interface AuthContextType {
   role: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: any) => Promise<User>;
+  login: (data: any) => Promise<any>;
   logout: () => void;
 }
 
