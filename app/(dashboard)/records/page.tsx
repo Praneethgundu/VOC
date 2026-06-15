@@ -5,9 +5,9 @@ import PatientRecordsLayout from "@/components/patient-records/PatientRecordsLay
 export default function PatientRecordsPage() {
   return (
     <ProtectedRoute>
-      <div className="flex bg-[#F8F9FA] min-h-screen">
+      <div className="flex bg-[#F8F9FA] min-h-screen print:block">
         <Sidebar />
-        <div className="ml-[248px] flex-1 flex flex-col h-screen overflow-hidden">
+        <div className="ml-[248px] flex-1 flex flex-col h-screen overflow-hidden print:ml-0 print:h-auto print:overflow-visible print:w-full">
           <PatientRecordsLayout />
         </div>
       </div>
