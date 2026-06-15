@@ -10,6 +10,7 @@ interface AuditLogOptions {
   status?: "Success" | "Failure";
   patientId?: string;
   remarks?: string;
+  details?: string;
 }
 
 export async function logAuditAction({
@@ -22,6 +23,7 @@ export async function logAuditAction({
   status = "Success",
   patientId,
   remarks,
+  details,
 }: AuditLogOptions) {
   try {
     const ipAddress = req.headers.get("x-forwarded-for") || "Unknown";
@@ -37,6 +39,7 @@ export async function logAuditAction({
         status,
         patientId,
         remarks,
+        details,
       },
     });
   } catch (error) {

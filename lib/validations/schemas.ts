@@ -42,3 +42,7 @@ export const billingSchema = z.object({
   paidAmount: z.number().min(0).max(10000000).optional(),
   paymentMode: z.enum(["Cash", "Card", "UPI", "Insurance", "Pending"]),
 });
+
+export const generatePinSchema = z.object({
+  userId: z.string().uuid("Invalid user ID format"),
+});

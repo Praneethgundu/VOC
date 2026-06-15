@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/utils/db";
 import { getSession, authorizeRole, hashPassword } from "@/utils/auth";
+import { logAuditAction } from "@/lib/utils/auditLogger";
+import { generatePinSchema } from "@/lib/validations/schemas";
 
 export async function POST(req: Request) {
   try {
@@ -9,10 +11,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
-    const { userId } = await req.json();
-    if (!userId) {
-      return NextResponse.json({ message: "User ID is required" }, { status: 400 });
+    const body = await req.json();
+    const validation = generatePinSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ message: "Invalid input data" }, { status: 400 });
     }
+    const { userId } = validation.data;
 
     // Generate 6 digit PIN
     const pin = Math.floor(100000 + Math.random() * 900000).toString();
@@ -26,6 +30,18 @@ export async function POST(req: Request) {
         resetPinHash: pinHash,
         resetPinExpiry: expiry,
       },
+    });
+
+    // Strictly synchronous await
+    await logAuditAction({
+      req,
+      user: session.username,
+      role: session.role,
+      module: "AUTH",
+      action: "GENERATE_PIN",
+      recordId: userId,
+      status: "Success",
+      details: JSON.stringify({ action: "Generated Temporary PIN", expiry: expiry.toISOString() }),
     });
 
     return NextResponse.json({

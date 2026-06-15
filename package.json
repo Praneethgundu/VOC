@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push && next build && node copy-static.js",
+    "build": "prisma generate && prisma migrate deploy && next build && node copy-static.js",
     "start": "next start",
     "lint": "eslint"
   },
@@ -26,7 +26,7 @@
     "sonner": "^2.0.7",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
   },

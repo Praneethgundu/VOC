@@ -4,10 +4,10 @@ import { cookies } from "next/headers";
 
 if (process.env.NODE_ENV === "production") {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET === "fallback_secret_key") {
-    console.warn("\x1b[33m%s\x1b[0m", "SECURITY WARNING: process.env.JWT_SECRET is not configured or uses insecure default in production! Session hijacking is possible.");
+    throw new Error("SECURITY FATAL: process.env.JWT_SECRET is not configured or uses insecure default in production!");
   }
   if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET === "fallback_refresh_secret_key") {
-    console.warn("\x1b[33m%s\x1b[0m", "SECURITY WARNING: process.env.JWT_REFRESH_SECRET is not configured or uses insecure default in production! Refresh token forge is possible.");
+    throw new Error("SECURITY FATAL: process.env.JWT_REFRESH_SECRET is not configured or uses insecure default in production!");
   }
 }
 
