@@ -155,3 +155,20 @@ model ClinicalTemplate {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+model DotPhrase {
+  id        String   @id @default(uuid())
+  shortcut  String   @unique
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SmartChip {
+  id             String   @id @default(uuid())
+  chiefComplaint String   @unique
+  examChips      String   // JSON string array
+  diagnosisChips String   // JSON string array
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

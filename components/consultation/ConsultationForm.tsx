@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { addConsultation, updateConsultationStatus, updateConsultation } from "@/services/consultationService";
 import { addInvestigation } from "@/services/investigationService";
 import { getMedicines } from "@/services/pharmacyService";
@@ -43,13 +43,20 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [pharmacyMedicines, setPharmacyMedicines] = useState<any[]>([]);
+  const [dotPhrases, setDotPhrases] = useState<Record<string, string>>({});
+  const [smartChips, setSmartChips] = useState<Record<string, { exam: string[], diagnosis: string[] }>>({});
   const [currentPrescription, setCurrentPrescription] = useState<PrescriptionData>({ medicineName: "", dose: "1 Tablet", frequency: "1-0-1", timing: "After Food", days: "5" });
   const [templateId, setTemplateId] = useState<string | null>(null);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const vitalsRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const [history, setHistory] = useState<any>(null);
 
   useEffect(() => {
     getMedicines().then(setPharmacyMedicines).catch(console.error);
+    api.get("/macros/dot-phrases").then(res => setDotPhrases(res.data)).catch(console.error);
+    api.get("/macros/smart-chips").then(res => setSmartChips(res.data)).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -143,6 +150,14 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     }
   }, [selectedPatient]);
 
+  const handleVitalKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const nextInput = vitalsRefs.current[index + 1];
+      if (nextInput) nextInput.focus();
+    }
+  };
+
   const handleVitalChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, vitals: { ...prev.vitals, [field]: value } }));
   };
@@ -184,17 +199,30 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     setCurrentPrescription({ medicineName: "", dose: "1 Tablet", frequency: "1-0-1", timing: "After Food", days: "5" });
   };
 
-  const handleSaveTemplate = async () => {
-    if (!formData.chiefComplaints || !formData.examination) {
-      return alert("Chief Complaint and Examination are required to save a template.");
+  const handleTextMacro = (field: "examination" | "diagnosis" | "summary", val: string) => {
+    let newVal = val;
+    for (const [macro, text] of Object.entries(dotPhrases)) {
+      if (newVal.includes(macro)) {
+        newVal = newVal.replace(macro, text);
+      }
     }
+    setFormData(prev => ({ ...prev, [field]: newVal }));
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!templateName) return alert("Template name is required.");
     try {
+      const payload = JSON.stringify({
+        examination: formData.examination,
+        diagnosis: formData.diagnosis,
+        summary: formData.summary
+      });
       await api.post("/templates", {
-        chiefComplaint: formData.chiefComplaints,
-        templateText: formData.examination
+        chiefComplaint: templateName,
+        templateText: payload
       });
       alert("Template Saved!");
-      // Optionally re-fetch to get the ID, or just trust the next auto-load.
+      setShowTemplateModal(false);
     } catch (e) {
       alert("Failed to save template.");
     }
@@ -206,7 +234,6 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     try {
       await api.delete(`/templates/${templateId}`);
       setTemplateId(null);
-      setFormData(prev => ({ ...prev, examination: "" }));
       alert("Template Deleted!");
     } catch (e) {
       alert("Failed to delete template.");
@@ -219,11 +246,22 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
       api.get(`/templates?complaint=${encodeURIComponent(formData.chiefComplaints)}`)
         .then(res => {
           if (res.data && res.data.templateText) {
-            setFormData(prev => ({ ...prev, examination: res.data.templateText }));
+            let parsed = { examination: "", diagnosis: "", summary: "" };
+            try {
+              parsed = JSON.parse(res.data.templateText);
+            } catch (e) {
+              parsed.examination = res.data.templateText; // legacy support
+            }
+            
+            setFormData(prev => ({ 
+              ...prev, 
+              examination: prev.examination && prev.examination !== parsed.examination ? prev.examination + "\n" + parsed.examination : parsed.examination,
+              diagnosis: prev.diagnosis && prev.diagnosis !== parsed.diagnosis ? prev.diagnosis + "\n" + parsed.diagnosis : parsed.diagnosis,
+              summary: prev.summary && prev.summary !== parsed.summary ? prev.summary + "\n" + parsed.summary : parsed.summary
+            }));
             setTemplateId(res.data.id || null);
           } else {
             setTemplateId(null);
-            // Don't wipe if user already typed something manually unless it's a fresh selection
           }
         })
         .catch(console.error);
@@ -400,22 +438,58 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4">
           <Stethoscope size={16} /> Vitals
         </h3>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          {/* Split BP */}
+          <div>
+            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">BP (Sys / Dia)</label>
+            <div className="flex items-center gap-2">
+              <input
+                ref={(el) => { vitalsRefs.current[0] = el; }}
+                type="text"
+                value={formData.vitals.bp?.split("/")[0] || ""}
+                onChange={(e) => {
+                  if (!/^\d{0,3}$/.test(e.target.value)) return;
+                  const d = formData.vitals.bp?.split("/")[1] || "";
+                  handleVitalChange("bp", `${e.target.value}/${d}`);
+                }}
+                onKeyDown={(e) => handleVitalKeyDown(e, 0)}
+                className="w-full h-10 px-3 text-center border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] transition-colors"
+              />
+              <span className="text-[#94A3B8] font-bold">/</span>
+              <input
+                ref={(el) => { vitalsRefs.current[1] = el; }}
+                type="text"
+                value={formData.vitals.bp?.split("/")[1] || ""}
+                onChange={(e) => {
+                  if (!/^\d{0,3}$/.test(e.target.value)) return;
+                  const s = formData.vitals.bp?.split("/")[0] || "";
+                  handleVitalChange("bp", `${s}/${e.target.value}`);
+                }}
+                onKeyDown={(e) => handleVitalKeyDown(e, 1)}
+                className="w-full h-10 px-3 text-center border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] transition-colors"
+              />
+            </div>
+          </div>
+          
+          {/* Other Vitals */}
           {[
-            { label: "BP", field: "bp", placeholder: "120/80" },
-            { label: "PULSE", field: "pulse", placeholder: "72 bpm" },
-            { label: "TEMP", field: "temp", placeholder: "98.6°F" },
-            { label: "SPO2", field: "spo2", placeholder: "99%" },
-            { label: "WEIGHT", field: "weight", placeholder: "70 kg" },
-            { label: "HEIGHT", field: "height", placeholder: "170 cm" },
+            { label: "PULSE (bpm)", field: "pulse", maxLen: 3, index: 2, regex: /^(?:[0-2]?\d{0,2}|300)$/ },
+            { label: "TEMP (°F)", field: "temp", maxLen: 5, index: 3, regex: /^(?:[0-9]{1,2}|10\d|11[0-5])?(?:\.\d?)?$/ },
+            { label: "SPO2 (%)", field: "spo2", maxLen: 3, index: 4, regex: /^(?:[1-9]?\d|100)?$/ },
+            { label: "WEIGHT (kg)", field: "weight", maxLen: 5, index: 5, regex: /^(?:[0-2]?\d{0,2}|3[0-4]\d|350)?(?:\.\d?)?$/ },
+            { label: "HEIGHT (cm)", field: "height", maxLen: 5, index: 6, regex: /^(?:[0-1]?\d{0,2}|2[0-4]\d|250)?(?:\.\d?)?$/ },
           ].map((v) => (
             <div key={v.field}>
               <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">{v.label}</label>
               <input
+                ref={(el) => { vitalsRefs.current[v.index] = el; }}
                 type="text"
                 value={(formData.vitals as any)[v.field]}
-                onChange={(e) => handleVitalChange(v.field, e.target.value)}
-                placeholder={v.placeholder}
+                onChange={(e) => {
+                  if (!v.regex.test(e.target.value)) return;
+                  handleVitalChange(v.field, e.target.value);
+                }}
+                onKeyDown={(e) => handleVitalKeyDown(e, v.index)}
                 className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] transition-colors"
               />
             </div>
@@ -425,9 +499,21 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
       {/* Clinical Notes */}
       <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
-        <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4">
-          <span className="text-xl">📋</span> Clinical Notes
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="flex items-center gap-2 text-[#0F172A] font-bold">
+            <span className="text-xl">📋</span> Clinical Notes
+          </h3>
+          <button
+            type="button"
+            onClick={() => {
+              setTemplateName(formData.chiefComplaints || "");
+              setShowTemplateModal(true);
+            }}
+            className="text-xs font-bold px-3 py-1.5 bg-[#2563EB] text-white rounded-lg shadow-sm hover:bg-[#1D4ED8] transition-colors"
+          >
+            Save as New Template
+          </button>
+        </div>
         
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
@@ -464,49 +550,38 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Examination</label>
-            <div className="flex gap-2 mb-2">
-              <button 
-                type="button" 
-                onClick={handleSaveTemplate}
-                className="text-[10px] font-bold px-2 py-1 bg-white border border-[#E2E8F0] rounded text-gray-700 hover:border-[#2563EB] transition-colors"
-              >
-                Save as Template
-              </button>
-              <button 
-                type="button" 
-                onClick={() => {
-                   if (!formData.chiefComplaints) return alert("Select a Chief Complaint first.");
-                   api.get(`/templates?complaint=${encodeURIComponent(formData.chiefComplaints)}`)
-                     .then(res => {
-                       if (res.data && res.data.templateText) {
-                         setFormData(prev => ({ ...prev, examination: res.data.templateText }));
-                         setTemplateId(res.data.id || null);
-                       } else {
-                         alert("No template found for this complaint.");
-                       }
-                     });
-                }}
-                className="text-[10px] font-bold px-2 py-1 bg-white border border-[#E2E8F0] rounded text-gray-700 hover:border-[#2563EB] transition-colors"
-              >
-                Load Template
-              </button>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Examination</label>
               {templateId && (
                 <button 
                   type="button" 
                   onClick={handleDeleteTemplate}
-                  className="text-[10px] font-bold px-2 py-1 bg-[#FEE2E2] text-[#2563EB] border border-[#2563EB]/30 rounded hover:border-[#2563EB] transition-colors ml-auto"
+                  className="text-[10px] font-bold px-2 py-0.5 bg-[#FEE2E2] text-[#2563EB] border border-[#2563EB]/30 rounded hover:border-[#2563EB] transition-colors"
                 >
-                  Delete Template
+                  Delete Active Template
                 </button>
               )}
             </div>
             <textarea
               value={formData.examination}
-              onChange={(e) => setFormData(prev => ({ ...prev, examination: e.target.value }))}
-              placeholder="Clinical examination findings..."
-              className="w-full h-[calc(100%-2.5rem)] p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none"
+              onChange={(e) => handleTextMacro("examination", e.target.value)}
+              placeholder="Clinical examination findings... (Tip: try typing .normalneck)"
+              className="w-full h-32 p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none"
             />
+            {formData.chiefComplaints && smartChips[formData.chiefComplaints]?.exam && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {smartChips[formData.chiefComplaints].exam.map(chip => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, examination: prev.examination ? prev.examination + ", " + chip : chip }))}
+                    className="text-[10px] font-medium px-2 py-1 bg-[#F1F5F9] text-[#475569] rounded hover:bg-[#E2E8F0] transition-colors"
+                  >
+                    + {chip}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-6 mb-6">
@@ -515,21 +590,38 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
             <textarea
               value={formData.diagnosis}
               onChange={(e) => {
-                 setFormData(prev => ({ ...prev, diagnosis: e.target.value }));
+                 handleTextMacro("diagnosis", e.target.value);
                  if (errors.diagnosis) setErrors(prev => ({ ...prev, diagnosis: "" }));
               }}
               placeholder="Clinical diagnosis..."
-              className={`w-full h-full p-3 border ${errors.diagnosis ? 'border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]' : 'border-[#E2E8F0] focus:border-[#2563EB]'} rounded-lg text-sm outline-none resize-none min-h-[120px]`}
+              className={`w-full h-32 p-3 border ${errors.diagnosis ? 'border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]' : 'border-[#E2E8F0] focus:border-[#2563EB]'} rounded-lg text-sm outline-none resize-none`}
             />
             {errors.diagnosis && <p className="text-[12px] text-[#2563EB] font-medium mt-1">{errors.diagnosis}</p>}
+            {formData.chiefComplaints && smartChips[formData.chiefComplaints]?.diagnosis && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {smartChips[formData.chiefComplaints].diagnosis.map(chip => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, diagnosis: prev.diagnosis ? prev.diagnosis + ", " + chip : chip }));
+                      if (errors.diagnosis) setErrors(prev => ({ ...prev, diagnosis: "" }));
+                    }}
+                    className="text-[10px] font-medium px-2 py-1 bg-[#EFF6FF] text-[#2563EB] rounded hover:bg-[#DBEAFE] transition-colors"
+                  >
+                    + {chip}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Summary</label>
             <textarea
               value={formData.summary}
-              onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
+              onChange={(e) => handleTextMacro("summary", e.target.value)}
               placeholder="Clinical summary..."
-              className="w-full h-full p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none min-h-[120px]"
+              className="w-full h-32 p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] resize-none"
             />
           </div>
         </div>
@@ -813,6 +905,45 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
           Cancel
         </button>
       </div>
+      {showTemplateModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#E2E8F0] flex justify-between items-center bg-[#F8FAFC]">
+              <h3 className="font-bold text-[#0F172A]">Save as New Template</h3>
+              <button type="button" onClick={() => setShowTemplateModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Template Name / Chief Complaint</label>
+              <input 
+                type="text" 
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB]"
+                placeholder="e.g. Neck Pain"
+              />
+              <p className="text-xs text-gray-500 mt-2">This will bundle your current Examination, Diagnosis, and Summary fields.</p>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t border-[#E2E8F0] flex justify-end gap-3">
+              <button 
+                type="button" 
+                onClick={() => setShowTemplateModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleSaveTemplate}
+                className="px-4 py-2 text-sm font-medium text-white bg-[#2563EB] rounded-lg hover:bg-[#1D4ED8]"
+              >
+                Save Template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

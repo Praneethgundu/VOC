@@ -12,6 +12,7 @@ import {
 import * as XLSX from "xlsx";
 import api from "@/services/api";
 import { toast } from "sonner";
+import MacrosSection from "@/components/settings/MacrosSection";
 
 /* ── Toggle helper ─────────────────────────────────────────── */
 function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
@@ -33,7 +34,7 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
 }
 
 /* ── Section wrapper ───────────────────────────────────────── */
-function SettingsSection({
+export function SettingsSection({
   icon: Icon,
   title,
   subtitle,
@@ -385,6 +386,8 @@ export default function SettingsPage() {
               </div>
             )}
           </SettingsSection>
+
+          <MacrosSection />
 
           {/* Database Backup & Restore */}
           <SettingsSection
