@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [isForgotMode, setIsForgotMode] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [isResetMode, setIsResetMode] = useState(false);
+  const [isPinMode, setIsPinMode] = useState(false);
   const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
@@ -327,16 +328,16 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Password */}
+              {/* Password or PIN */}
               <div className="mb-5">
                 <label className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-[#1E293B]">
-                  Password
+                  {isPinMode ? "Temporary PIN" : "Password"}
                 </label>
 
                 <div className="relative group">
                   <input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter Password"
+                    placeholder={isPinMode ? "Enter Temporary PIN" : "Enter Password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full h-12 px-4 pr-12 border border-[#E2E8F0] rounded-lg outline-none focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10 transition-all duration-300"
@@ -356,19 +357,32 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Remember Me */}
-              <div className="flex justify-between items-center mb-6 text-sm">
-                <label className="flex items-center gap-2 text-[#1E293B]">
-                  <input type="checkbox" />
-                  Remember me
-                </label>
+              {/* Remember Me & Links */}
+              <div className="flex flex-col gap-3 mb-6 text-sm">
+                <div className="flex justify-between items-center">
+                  <label className="flex items-center gap-2 text-[#1E293B]">
+                    <input type="checkbox" />
+                    Remember me
+                  </label>
 
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsForgotMode(true);
+                      setIsPinMode(false);
+                    }}
+                    className="text-[#2563EB] font-medium"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                
                 <button
                   type="button"
-                  onClick={() => setIsForgotMode(true)}
-                  className="text-[#2563EB] font-medium"
+                  onClick={() => setIsPinMode(!isPinMode)}
+                  className="text-left text-[#64748B] font-medium hover:text-[#2563EB] transition-colors"
                 >
-                  Forgot Password?
+                  {isPinMode ? "← Back to Normal Login" : "Login with Temporary PIN?"}
                 </button>
               </div>
 
@@ -386,7 +400,7 @@ export default function LoginPage() {
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    Sign In
+                    {isPinMode ? "Verify PIN" : "Sign In"}
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}

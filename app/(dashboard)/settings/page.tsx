@@ -211,7 +211,7 @@ export default function SettingsPage() {
     try {
       const res = await api.post("/auth/generate-reset-pin", { userId });
       if (res.data.success) {
-        toast.success(`Generated PIN: ${res.data.pin}`, { duration: 10000 });
+        toast.success(`Generated PIN: ${res.data.pin}`, { duration: 15000 });
         fetchResetRequests();
       }
     } catch (error) {
