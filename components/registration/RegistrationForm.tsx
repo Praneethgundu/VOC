@@ -67,6 +67,9 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     if (!formData.bloodGroup) {
       newErrors.bloodGroup = "Blood group is required";
     }
+    if (!formData.doctor) {
+      newErrors.doctor = "Please select a consulting doctor";
+    }
     if (selectedComplaints.length === 0 && !otherComplaint.trim()) {
       newErrors.complaint = "Select at least one complaint or specify 'Other'";
     }
@@ -90,6 +93,10 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
 
     if (e.target.name === "fullName") {
       value = value.replace(/[^a-zA-Z\s]/g, ""); // Allow only letters and spaces
+      value = value
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(" ");
     }
 
     if (e.target.name === "age" && value !== "") {
@@ -108,12 +115,17 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     setLoading(true);
     try {
       const allPatients = await getPatients();
-      const isAllocated = allPatients.some(
-        (p: any) => p.date === formData.date && p.time === formData.time
-      );
+      const newMinutes = parseInt(formData.time.split(':')[0]) * 60 + parseInt(formData.time.split(':')[1]);
+      const isAllocated = allPatients.some((p: any) => {
+        if (p.appointmentDate === formData.date && p.doctor === formData.doctor && p.status === "Active" && p.appointmentTime) {
+          const existingMinutes = parseInt(p.appointmentTime.split(':')[0]) * 60 + parseInt(p.appointmentTime.split(':')[1]);
+          return Math.abs(existingMinutes - newMinutes) < 10;
+        }
+        return false;
+      });
 
       if (isAllocated) {
-        setErrors((prev) => ({ ...prev, datetime: "Already OP is allocated for this time." }));
+        setErrors((prev) => ({ ...prev, datetime: "Doctor is already booked within 10 minutes of this time." }));
         setLoading(false);
         return;
       }
@@ -334,12 +346,13 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
             name="doctor"
             value={formData.doctor}
             onChange={handleChange}
-            className="w-full h-10 px-3 rounded-lg border border-[#E2E8F0] outline-none focus:border-[#2563EB] text-[13px] bg-white transition-colors"
+            className={`w-full h-10 px-3 rounded-lg border ${errors.doctor ? 'border-red-500' : 'border-[#E2E8F0]'} outline-none focus:border-[#2563EB] text-[13px] bg-white transition-colors`}
           >
             <option value="">Select Doctor...</option>
             <option value="Dr. Vinay">Dr. Vinay</option>
             <option value="Dr. Reddy">Dr. Reddy</option>
           </select>
+          {errors.doctor && <p className="text-red-500 text-[11px] font-bold mt-1">{errors.doctor}</p>}
         </div>
         <div className="md:col-span-2">
           <Input

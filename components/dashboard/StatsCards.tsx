@@ -37,7 +37,13 @@ export default function StatsCards() {
       setTodayPatientsList(todaysP);
       setTodayOP(todaysP.length);
 
-      const todaysB = bills.filter((b: any) => b.date?.startsWith(todayStr));
+      const todaysB = bills.filter((b: any) => b.date?.startsWith(todayStr)).map((b: any) => {
+        const patient = patients.find((p: any) => p.opNumber === b.opNumber || p.patientId === b.patientId);
+        return {
+          ...b,
+          patientName: patient ? patient.fullName : "Unknown",
+        };
+      });
       setTodayBillsList(todaysB);
       const totalRev = todaysB.reduce((acc: number, b: any) => acc + (Number(b.total) || 0), 0);
       setRevenue(totalRev);

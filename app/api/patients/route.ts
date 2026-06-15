@@ -42,16 +42,25 @@ export async function POST(req: Request) {
     const count = await prisma.patient.count();
     
     // Double-booking validation
-    if (data.date && data.time) {
-      const existingAppointment = await prisma.patient.findFirst({
+    if (data.date && data.time && data.doctor) {
+      const existingAppointments = await prisma.patient.findMany({
         where: {
           appointmentDate: data.date,
-          appointmentTime: data.time,
+          doctor: data.doctor,
           status: "Active"
         }
       });
-      if (existingAppointment) {
-        return NextResponse.json({ message: "Already OP is allocated for this time." }, { status: 400 });
+      
+      const newMinutes = parseInt(data.time.split(':')[0]) * 60 + parseInt(data.time.split(':')[1]);
+
+      const conflict = existingAppointments.find(app => {
+        if (!app.appointmentTime) return false;
+        const existingMinutes = parseInt(app.appointmentTime.split(':')[0]) * 60 + parseInt(app.appointmentTime.split(':')[1]);
+        return Math.abs(existingMinutes - newMinutes) < 10;
+      });
+
+      if (conflict) {
+        return NextResponse.json({ message: "Doctor already has a patient scheduled within 10 minutes of this time." }, { status: 400 });
       }
     }
     
@@ -154,6 +163,33 @@ export async function PUT(req: Request) {
 
     if (!existing) {
       return NextResponse.json({ message: "Patient not found" }, { status: 404 });
+    }
+
+    const checkDate = data.date !== undefined ? data.date : existing.appointmentDate;
+    const checkTime = data.time !== undefined ? data.time : existing.appointmentTime;
+    const checkDoctor = data.doctor !== undefined ? data.doctor : existing.doctor;
+
+    if (checkDate && checkTime && checkDoctor) {
+      const existingAppointments = await prisma.patient.findMany({
+        where: {
+          appointmentDate: checkDate,
+          doctor: checkDoctor,
+          status: "Active",
+          opNumber: { not: opNumber }
+        }
+      });
+      
+      const newMinutes = parseInt(checkTime.split(':')[0]) * 60 + parseInt(checkTime.split(':')[1]);
+
+      const conflict = existingAppointments.find(app => {
+        if (!app.appointmentTime) return false;
+        const existingMinutes = parseInt(app.appointmentTime.split(':')[0]) * 60 + parseInt(app.appointmentTime.split(':')[1]);
+        return Math.abs(existingMinutes - newMinutes) < 10;
+      });
+
+      if (conflict) {
+        return NextResponse.json({ message: "Doctor already has a patient scheduled within 10 minutes of this time." }, { status: 400 });
+      }
     }
 
     const updated = await prisma.patient.update({

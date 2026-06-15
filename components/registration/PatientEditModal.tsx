@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { updatePatient } from "@/services/patientService";
+import { updatePatient, getPatients } from "@/services/patientService";
 
 export default function PatientEditModal({ patient, onClose, onSuccess }: { patient: any; onClose: () => void; onSuccess: () => void }) {
   const [formData, setFormData] = useState(patient);
@@ -12,6 +12,10 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
 
     if (name === "fullName") {
       value = value.replace(/[^a-zA-Z\s]/g, "");
+      value = value
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(" ");
     }
 
     if (name === "age" && value !== "") {
@@ -38,19 +42,75 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName || formData.fullName.length < 3 || !/^[a-zA-Z\s]+$/.test(formData.fullName)) {
-       setError("Patient name must be at least 3 characters and contain no numbers or special characters.");
-       return;
+    if (!formData.fullName || formData.fullName.trim().length < 3) {
+      setError("Patient name must be at least 3 characters");
+      return;
+    }
+    if (!/^[a-zA-Z\s]+$/.test(formData.fullName)) {
+      setError("Patient name cannot contain special characters or numbers");
+      return;
     }
     const ageNum = Number(formData.age);
     if (isNaN(ageNum) || ageNum <= 0 || ageNum > 150) {
-       setError("Enter a valid age between 1 and 150.");
-       return;
+      setError("Enter a valid age between 1 and 150");
+      return;
     }
+    if (!formData.phone || !/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+      setError("Enter a valid 10-digit phone number");
+      return;
+    }
+    if (!formData.bloodGroup) {
+      setError("Blood group is required");
+      return;
+    }
+    if (!formData.doctor) {
+      setError("Please select a consulting doctor");
+      return;
+    }
+    if (!formData.complaint || !formData.complaint.trim()) {
+      setError("Select at least one complaint or specify 'Other'");
+      return;
+    }
+    const activeDate = formData.date || formData.appointmentDate;
+    const activeTime = formData.time || formData.appointmentTime;
+    if (!activeDate || !activeTime) {
+      setError("Appointment date and time are required");
+      return;
+    }
+    const selectedDateTime = new Date(`${activeDate}T${activeTime}`);
+    const graceTime = new Date();
+    graceTime.setMinutes(graceTime.getMinutes() - 10);
+    if (selectedDateTime < graceTime) {
+      setError("Registration date and time cannot be in the past");
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
-      await updatePatient(patient.opNumber, formData);
+      const allPatients = await getPatients();
+      const newMinutes = parseInt(activeTime.split(':')[0]) * 60 + parseInt(activeTime.split(':')[1]);
+      const isAllocated = allPatients.some((p: any) => {
+        if (p.opNumber !== patient.opNumber && p.appointmentDate === activeDate && p.doctor === formData.doctor && p.status === "Active" && p.appointmentTime) {
+          const existingMinutes = parseInt(p.appointmentTime.split(':')[0]) * 60 + parseInt(p.appointmentTime.split(':')[1]);
+          return Math.abs(existingMinutes - newMinutes) < 10;
+        }
+        return false;
+      });
+
+      if (isAllocated) {
+        setError("Doctor is already booked within 10 minutes of this time.");
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        ...formData,
+        date: activeDate,
+        time: activeTime,
+      };
+
+      await updatePatient(patient.opNumber, payload);
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -125,7 +185,11 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-gray-700">Doctor</label>
-              <input name="doctor" value={formData.doctor || ""} onChange={handleChange} className="border p-2 rounded outline-none" />
+              <select name="doctor" value={formData.doctor || ""} onChange={handleChange} className="border p-2 rounded outline-none bg-white">
+                <option value="">Select Doctor...</option>
+                <option value="Dr. Vinay">Dr. Vinay</option>
+                <option value="Dr. Reddy">Dr. Reddy</option>
+              </select>
             </div>
             <div className="flex flex-col gap-1 col-span-2">
               <label className="text-xs font-bold text-gray-700">Patient Complaints</label>

@@ -4,19 +4,22 @@ import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import { Table, THead, TBody, Th, Tr, Td, Badge } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
-import { Search, Printer, Plus, IndianRupee, Trash2, Receipt } from "lucide-react";
+import { Search, Printer, Plus, IndianRupee, Trash2, Receipt, CalendarDays } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getBills, getUnbilledPatients, createBill, updatePaymentStatus, deleteBill } from "@/services/billingService";
 import { getPatients } from "@/services/patientService";
 import { RefreshCw, Download } from "lucide-react";
 
 export default function BillingPage() {
+  const todayStr = new Date().toISOString().split("T")[0];
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [bills, setBills] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
   const [unbilled, setUnbilled] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterDate, setFilterDate] = useState(todayStr);
   
   // Modals
   const [showNewBillModal, setShowNewBillModal] = useState(false);
@@ -226,6 +229,13 @@ Thank you!
   const filtered = bills.filter(
     (b) => {
       if (statusFilter !== "All" && b.status !== statusFilter) return false;
+      if (filterDate) {
+        try {
+          if (!b.date || !new Date(b.date).toISOString().startsWith(filterDate)) return false;
+        } catch {
+          return false;
+        }
+      }
       const pName = patients.find(p => p.opNumber === b.opNumber)?.fullName || b.patientName || b.patient || "";
       return pName.toLowerCase().includes(searchLower) ||
              (b.opNumber || b.op || "").toString().toLowerCase().includes(searchLower) ||
@@ -233,18 +243,17 @@ Thank you!
     }
   );
 
-  const todayStr = new Date().toISOString().split("T")[0];
-  const todayBills = bills.filter((b) => {
+  const selectedDateBills = bills.filter((b) => {
     try {
-      return b.date && new Date(b.date).toISOString().startsWith(todayStr);
+      return b.date && new Date(b.date).toISOString().startsWith(filterDate);
     } catch {
       return false;
     }
   });
-  const totalBilledToday = todayBills.reduce((acc, b) => acc + (Number(b.total) || 0), 0);
-  const collectedToday = todayBills.filter(b => b.status === "Paid").reduce((acc, b) => acc + (Number(b.total) || 0), 0);
-  const pendingToday = todayBills.filter(b => b.status === "Unpaid").reduce((acc, b) => acc + (Number(b.total) || 0), 0);
-  const pendingBillsCount = bills.filter(b => b.status === "Unpaid").length;
+  const totalBilledToday = selectedDateBills.reduce((acc, b) => acc + (Number(b.total) || 0), 0);
+  const collectedToday = selectedDateBills.filter(b => b.status === "Paid").reduce((acc, b) => acc + (Number(b.total) || 0), 0);
+  const pendingToday = selectedDateBills.filter(b => b.status === "Unpaid").reduce((acc, b) => acc + (Number(b.total) || 0), 0);
+  const pendingBillsCount = selectedDateBills.filter(b => b.status === "Unpaid").length;
 
   return (
     <div className="flex bg-[#F8FAFC] min-h-screen">
@@ -259,7 +268,9 @@ Thank you!
               onClick={() => setStatusFilter("All")}
               className={`bg-white rounded-xl p-5 shadow-sm text-center cursor-pointer transition-all hover:scale-105 active:scale-95 border ${statusFilter === "All" ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-[#E2E8F0] hover:border-[#2563EB]"}`}
             >
-              <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Today's Revenue</p>
+              <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                {filterDate === todayStr ? "Today's Revenue" : "Revenue"}
+              </p>
               <p className="text-3xl font-bold text-[#059669]">₹{totalBilledToday.toLocaleString("en-IN")}</p>
             </div>
             <div 
@@ -300,6 +311,17 @@ Thank you!
               <select className="h-10 px-3 bg-white border border-[#E2E8F0] rounded-lg text-sm text-[#64748B] outline-none shadow-sm">
                 <option>-- All Patients --</option>
               </select>
+              <div className="flex items-center gap-2 bg-white px-3 h-10 rounded-lg border border-[#E2E8F0] text-sm font-semibold text-gray-700 shadow-sm relative">
+                <CalendarDays size={16} className="text-[#2563EB]" />
+                <input 
+                  type="date"
+                  value={filterDate}
+                  max={todayStr}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="outline-none text-gray-700 bg-transparent font-semibold cursor-pointer w-[125px]"
+                  title="Filter by Date"
+                />
+              </div>
             </div>
             <Button onClick={openNewBillModal} icon={<Plus size={15} />} size="md">New Bill</Button>
           </div>

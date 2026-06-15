@@ -151,7 +151,18 @@ export default function PatientTable() {
               </tr>
             </THead>
             <TBody>
-              {paginated.map((patient, i) => (
+              {paginated.map((patient, i) => {
+                const formatTime = (timeStr?: string, fallbackDate?: string) => {
+                  if (timeStr) {
+                    const [h, m] = timeStr.split(':');
+                    const d = new Date();
+                    d.setHours(Number(h), Number(m));
+                    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                  }
+                  return new Date(fallbackDate!).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                };
+
+                return (
                 <Tr key={patient.id || `${patient.opNumber}-${i}`} index={i}>
                   <Td>
                     <div className="text-[13px] text-[#1E293B]">
@@ -160,7 +171,7 @@ export default function PatientTable() {
                   </Td>
                   <Td>
                     <div className="text-[13px] text-[#64748B]">
-                      {patient.appointmentTime || new Date(patient.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      {formatTime(patient.appointmentTime, patient.createdAt)}
                     </div>
                   </Td>
                   <Td>
@@ -219,7 +230,8 @@ export default function PatientTable() {
                     </div>
                   </Td>
                 </Tr>
-              ))}
+                );
+              })}
             </TBody>
           </Table>
 
