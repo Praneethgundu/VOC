@@ -50,7 +50,7 @@ export default function MedicineCard({ medicine, onRestock, onDelete, onClick }:
       </div>
 
       <div className="w-full bg-gray-100 rounded-full h-1 mb-4">
-        <div className={`h-1 rounded-full ${isLowStock ? 'bg-[#2563EB]' : 'bg-[#059669]'}`} style={{ width: `${Math.min(100, (qty / 500) * 100)}%` }}></div>
+        <div className={`h-1 rounded-full ${isLowStock ? 'bg-red-500' : 'bg-[#059669]'}`} style={{ width: `${Math.min(100, (qty / 500) * 100)}%` }}></div>
       </div>
       
       <div className="flex justify-between items-center pt-3 border-t border-[#E2E8F0] mt-auto">
