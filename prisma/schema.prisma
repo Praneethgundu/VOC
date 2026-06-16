@@ -172,3 +172,18 @@ model SmartChip {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model Department {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  fee       Float    @default(500)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

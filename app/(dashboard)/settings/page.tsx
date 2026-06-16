@@ -13,6 +13,8 @@ import * as XLSX from "xlsx";
 import api from "@/services/api";
 import { toast } from "sonner";
 import MacrosSection from "@/components/settings/MacrosSection";
+import DepartmentsSection from "@/components/settings/DepartmentsSection";
+import EodWhatsAppSection from "@/components/settings/EodWhatsAppSection";
 
 /* ── Toggle helper ─────────────────────────────────────────── */
 function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
@@ -87,14 +89,6 @@ function ToggleRow({
   );
 }
 
-const departments = [
-  "Orthopaedics",
-  "Spine Surgery",
-  "Physiotherapy",
-  "Sports Medicine",
-  "Paediatric Ortho",
-  "Hand & Wrist",
-];
 
 export default function SettingsPage() {
   const [exporting, setExporting] = useState(false);
@@ -305,36 +299,9 @@ export default function SettingsPage() {
             </div>
           </SettingsSection>
 
-          {/* Departments */}
-          <SettingsSection
-            icon={User}
-            title="Departments"
-            subtitle="Manage active departments and consultation fees"
-          >
-            <div className="space-y-2">
-              {departments.map((dept) => (
-                <div
-                  key={dept}
-                  className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#E2E8F0] hover:border-[rgba(15,23,42,0.15)] hover:bg-[#F8FAFC] transition-all group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                    <span className="text-[14px] font-medium text-[#1E293B]">{dept}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[12px] text-[#64748B]">Fee: ₹500</span>
-                    <ChevronRight
-                      size={14}
-                      className="text-[#64748B] group-hover:text-[#2563EB] transition-colors"
-                    />
-                  </div>
-                </div>
-              ))}
-              <button className="w-full mt-2 py-2.5 rounded-xl border border-dashed border-[rgba(15,23,42,0.25)] text-[#0F172A] text-[13px] font-semibold hover:bg-[#FFF0F2] transition-colors">
-                + Add Department
-              </button>
-            </div>
-          </SettingsSection>
+          <DepartmentsSection />
+
+          <EodWhatsAppSection />
 
 
           {/* Password Reset Requests */}
