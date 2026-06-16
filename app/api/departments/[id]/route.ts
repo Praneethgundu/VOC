@@ -4,13 +4,14 @@ import { getSession, authorizeRole } from "@/utils/auth";
 import { departmentSchema } from "@/lib/validations/schemas";
 import { logAuditAction } from "@/lib/utils/auditLogger";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession(req);
     if (!session || !authorizeRole(session, ["ADMIN"])) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
+    const { id } = await params;
     const body = await req.json();
     const validation = departmentSchema.safeParse(body);
     if (!validation.success) {
@@ -18,7 +19,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     const dept = await prisma.department.update({
-      where: { id: params.id },
+      where: { id },
       data: validation.data,
     });
 
@@ -38,15 +39,17 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession(req);
     if (!session || !authorizeRole(session, ["ADMIN"])) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
+    const { id } = await params;
+
     const dept = await prisma.department.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     await logAuditAction({
