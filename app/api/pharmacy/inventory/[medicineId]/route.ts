@@ -34,6 +34,9 @@ export async function PUT(
         category: body.category !== undefined ? body.category : existing.category,
         stock: body.quantity !== undefined ? Number(body.quantity) : (body.stock !== undefined ? Number(body.stock) : existing.stock),
         price: body.price !== undefined ? Number(body.price) : existing.price,
+        mrp: body.mrp !== undefined ? Number(body.mrp) : existing.mrp,
+        batch: body.batch !== undefined ? body.batch : existing.batch,
+        distributor: body.distributor !== undefined ? body.distributor : existing.distributor,
         expiryDate: body.expiryDate !== undefined ? body.expiryDate : existing.expiryDate,
       },
     });

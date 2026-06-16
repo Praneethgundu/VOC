@@ -41,6 +41,7 @@ export async function POST(req: Request) {
         distributor: body.distributor || "",
         stock: Number(body.quantity || body.stock || 0),
         price: Number(body.price) || 0,
+        mrp: Number(body.mrp) || Number(body.price) || 0,
         expiryDate: body.expiryDate || "",
       },
     });
