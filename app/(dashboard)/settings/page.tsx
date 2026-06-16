@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
 import { useState, useEffect } from "react";
 import {
-  Building2, User, Bell, Save,
-  ChevronRight, Database, UploadCloud, Key, Trash2, Plus
+  Building2, User, Bell, Shield, Printer, Save,
+  ChevronRight, ToggleLeft, ToggleRight, Database, UploadCloud, Key
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import api from "@/services/api";
@@ -64,20 +64,116 @@ export function SettingsSection({
   );
 }
 
+/* ── ToggleRow ─────────────────────────────────────────────── */
+function ToggleRow({
+  label,
+  desc,
+  enabled,
+  onToggle,
+}: {
+  label: string;
+  desc: string;
+  enabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-[#F8FAFC] last:border-b-0">
+      <div>
+        <p className="text-[14px] font-semibold text-[#1E293B]">{label}</p>
+        <p className="text-[12px] text-[#64748B] mt-0.5">{desc}</p>
+      </div>
+      <Toggle enabled={enabled} onToggle={onToggle} />
+    </div>
+  );
+}
+
+const departments = [
+  "Orthopaedics",
+  "Spine Surgery",
+  "Physiotherapy",
+  "Sports Medicine",
+  "Paediatric Ortho",
+  "Hand & Wrist",
+];
+
 export default function SettingsPage() {
   const [exporting, setExporting] = useState(false);
   const [restoring, setRestoring] = useState(false);
 
-  // System Settings state
-  const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(false);
-  const [targetEmail, setTargetEmail] = useState("");
+  const handleExportBackup = async () => {
+    setExporting(true);
+    try {
+      const response = await api.get("/backup");
+      const data = response.data;
 
-  // Departments state
-  const [departments, setDepartments] = useState<any[]>([]);
-  const [newDeptName, setNewDeptName] = useState("");
-  const [newDeptFee, setNewDeptFee] = useState(500);
+      // Create SheetJS workbook
+      const wb = XLSX.utils.book_new();
 
-  // Hospital state (mock UI only)
+      for (const [sheetName, rows] of Object.entries(data)) {
+        const ws = XLSX.utils.json_to_sheet(rows as any[]);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      }
+
+      // Download file
+      XLSX.writeFile(wb, `VOC_Backup_${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success("Database exported successfully!");
+    } catch (error: any) {
+      console.error("Backup export error:", error);
+      toast.error(error.response?.data?.message || "Failed to export backup");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const confirmRestore = window.confirm(
+      "Are you absolutely sure you want to restore the database? This will completely overwrite all current records!"
+    );
+    if (!confirmRestore) {
+      e.target.value = ""; // Clear input
+      return;
+    }
+
+    setRestoring(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const binaryStr = evt.target?.result;
+          const workbook = XLSX.read(binaryStr, { type: "binary" });
+          const payload: Record<string, any[]> = {};
+
+          workbook.SheetNames.forEach((sheetName) => {
+            const worksheet = workbook.Sheets[sheetName];
+            payload[sheetName] = XLSX.utils.sheet_to_json(worksheet);
+          });
+
+          // Send restore payload to backend
+          await api.post("/backup/restore", payload);
+          toast.success("Database restored successfully! Reloading page...");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } catch (err: any) {
+          console.error("Excel parse/restore error:", err);
+          toast.error(err.response?.data?.message || "Failed to process restore file");
+          setRestoring(false);
+        }
+      };
+      reader.onerror = () => {
+        toast.error("Error reading file");
+        setRestoring(false);
+      };
+      reader.readAsBinaryString(file);
+    } catch (error: any) {
+      toast.error("Failed to restore backup");
+      setRestoring(false);
+    }
+  };
+
   const [hospital, setHospital] = useState({
     name: "VOC Orthopaedic Hospital",
     phone: "+91 98765 43210",
@@ -88,72 +184,20 @@ export default function SettingsPage() {
     regFormat: "OP/YYYY/###",
   });
 
+  const [toggles, setToggles] = useState({
+    smsNotifications: true,
+    emailAlerts: false,
+    printReceipt: true,
+    autoBackup: true,
+    darkMode: false,
+    labIntegration: false,
+  });
+
   const [resetRequests, setResetRequests] = useState<any[]>([]);
 
   useEffect(() => {
     fetchResetRequests();
-    fetchSettings();
-    fetchDepartments();
   }, []);
-
-  const fetchSettings = async () => {
-    try {
-      const res = await api.get("/settings");
-      if (res.data) {
-        setEmailAlertsEnabled(res.data.emailAlertsEnabled);
-        setTargetEmail(res.data.targetEmail);
-      }
-    } catch (err) {
-      console.error("Failed to load settings", err);
-    }
-  };
-
-  const fetchDepartments = async () => {
-    try {
-      const res = await api.get("/departments");
-      setDepartments(res.data);
-    } catch (err) {
-      console.error("Failed to load departments", err);
-    }
-  };
-
-  const handleSaveSettings = async () => {
-    try {
-      await api.post("/settings", {
-        emailAlertsEnabled,
-        targetEmail,
-      });
-      toast.success("Settings saved successfully!");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to save settings");
-    }
-  };
-
-  const handleAddDepartment = async () => {
-    if (!newDeptName.trim()) return toast.error("Department name required");
-    try {
-      const res = await api.post("/departments", {
-        name: newDeptName,
-        fee: Number(newDeptFee),
-        isActive: true,
-      });
-      setDepartments([...departments, res.data]);
-      setNewDeptName("");
-      toast.success("Department added!");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to add department");
-    }
-  };
-
-  const handleDeleteDepartment = async (id: string) => {
-    try {
-      await api.delete(`/departments/${id}`);
-      setDepartments(departments.filter(d => d.id !== id));
-      toast.success("Department removed");
-    } catch (err) {
-      toast.error("Failed to remove department");
-    }
-  };
 
   const fetchResetRequests = async () => {
     try {
@@ -176,73 +220,12 @@ export default function SettingsPage() {
     }
   };
 
+  const toggle = (key: keyof typeof toggles) =>
+    setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+
   const handleHospitalChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => setHospital({ ...hospital, [e.target.name]: e.target.value });
-
-  const handleExportBackup = async () => {
-    setExporting(true);
-    try {
-      const response = await api.get("/backup");
-      const data = response.data;
-      const wb = XLSX.utils.book_new();
-      for (const [sheetName, rows] of Object.entries(data)) {
-        const ws = XLSX.utils.json_to_sheet(rows as any[]);
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
-      }
-      XLSX.writeFile(wb, `VOC_Backup_${new Date().toISOString().split("T")[0]}.xlsx`);
-      toast.success("Database exported successfully!");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to export backup");
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const confirmRestore = window.confirm(
-      "Are you absolutely sure you want to restore the database? This will completely overwrite all current records!"
-    );
-    if (!confirmRestore) {
-      e.target.value = ""; 
-      return;
-    }
-
-    setRestoring(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = async (evt) => {
-        try {
-          const binaryStr = evt.target?.result;
-          const workbook = XLSX.read(binaryStr, { type: "binary" });
-          const payload: Record<string, any[]> = {};
-          workbook.SheetNames.forEach((sheetName) => {
-            const worksheet = workbook.Sheets[sheetName];
-            payload[sheetName] = XLSX.utils.sheet_to_json(worksheet);
-          });
-          await api.post("/backup/restore", payload);
-          toast.success("Database restored successfully! Reloading page...");
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-        } catch (err: any) {
-          toast.error(err.response?.data?.message || "Failed to process restore file");
-          setRestoring(false);
-        }
-      };
-      reader.onerror = () => {
-        toast.error("Error reading file");
-        setRestoring(false);
-      };
-      reader.readAsBinaryString(file);
-    } catch (error: any) {
-      toast.error("Failed to restore backup");
-      setRestoring(false);
-    }
-  };
 
   return (
     <div className="flex bg-[#F8FAFC] min-h-screen">
@@ -259,7 +242,7 @@ export default function SettingsPage() {
                 Configure hospital profile, notifications, and system preferences
               </p>
             </div>
-            <Button onClick={handleSaveSettings} icon={<Save size={15} />} size="md">Save Changes</Button>
+            <Button icon={<Save size={15} />} size="md">Save Changes</Button>
           </div>
 
           {/* Hospital Profile */}
@@ -269,19 +252,56 @@ export default function SettingsPage() {
             subtitle="Update your hospital name, contact, and registration info"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Input label="Hospital Name" name="name" value={hospital.name} onChange={handleHospitalChange} />
-              <Input label="Phone Number" name="phone" value={hospital.phone} onChange={handleHospitalChange} />
-              <Input label="Email Address" name="email" type="email" value={hospital.email} onChange={handleHospitalChange} />
-              <Input label="Registration Number" name="registration" value={hospital.registration} onChange={handleHospitalChange} />
+              <Input
+                label="Hospital Name"
+                name="name"
+                value={hospital.name}
+                onChange={handleHospitalChange}
+              />
+              <Input
+                label="Phone Number"
+                name="phone"
+                value={hospital.phone}
+                onChange={handleHospitalChange}
+              />
+              <Input
+                label="Email Address"
+                name="email"
+                type="email"
+                value={hospital.email}
+                onChange={handleHospitalChange}
+              />
+              <Input
+                label="Registration Number"
+                name="registration"
+                value={hospital.registration}
+                onChange={handleHospitalChange}
+              />
               <div className="md:col-span-2">
-                <Input label="Address" name="address" value={hospital.address} onChange={handleHospitalChange} />
+                <Input
+                  label="Address"
+                  name="address"
+                  value={hospital.address}
+                  onChange={handleHospitalChange}
+                />
               </div>
-              <Select label="Currency" name="currency" value={hospital.currency} onChange={handleHospitalChange as any}>
+              <Select
+                label="Currency"
+                name="currency"
+                value={hospital.currency}
+                onChange={handleHospitalChange as any}
+              >
                 <option value="INR">INR — Indian Rupee (₹)</option>
                 <option value="USD">USD — US Dollar ($)</option>
                 <option value="EUR">EUR — Euro (€)</option>
               </Select>
-              <Input label="OP Number Format" name="regFormat" value={hospital.regFormat} onChange={handleHospitalChange} hint="Use YYYY for year, ### for sequence number" />
+              <Input
+                label="OP Number Format"
+                name="regFormat"
+                value={hospital.regFormat}
+                onChange={handleHospitalChange}
+                hint="Use YYYY for year, ### for sequence number"
+              />
             </div>
           </SettingsSection>
 
@@ -291,84 +311,31 @@ export default function SettingsPage() {
             title="Departments"
             subtitle="Manage active departments and consultation fees"
           >
-            <div className="space-y-3">
+            <div className="space-y-2">
               {departments.map((dept) => (
                 <div
-                  key={dept.id}
-                  className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#E2E8F0] hover:border-[rgba(15,23,42,0.15)] bg-white transition-all group"
+                  key={dept}
+                  className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#E2E8F0] hover:border-[rgba(15,23,42,0.15)] hover:bg-[#F8FAFC] transition-all group cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                    <span className="text-[14px] font-medium text-[#1E293B]">{dept.name}</span>
+                    <span className="text-[14px] font-medium text-[#1E293B]">{dept}</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[12px] font-semibold text-[#64748B]">Fee: ₹{dept.fee}</span>
-                    <button 
-                      onClick={() => handleDeleteDepartment(dept.id)}
-                      className="text-[#ef4444] hover:bg-red-50 p-1.5 rounded transition-colors"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] text-[#64748B]">Fee: ₹500</span>
+                    <ChevronRight
+                      size={14}
+                      className="text-[#64748B] group-hover:text-[#2563EB] transition-colors"
+                    />
                   </div>
                 </div>
               ))}
-
-              <div className="flex items-end gap-3 mt-4 pt-4 border-t border-[#E2E8F0]">
-                <div className="flex-1">
-                  <Input 
-                    label="New Department Name" 
-                    value={newDeptName}
-                    onChange={(e) => setNewDeptName(e.target.value)}
-                    placeholder="e.g. Cardiology"
-                  />
-                </div>
-                <div className="w-32">
-                  <Input 
-                    label="Consultation Fee" 
-                    type="number"
-                    value={newDeptFee.toString()}
-                    onChange={(e) => setNewDeptFee(Number(e.target.value))}
-                  />
-                </div>
-                <div className="pb-1.5">
-                  <Button onClick={handleAddDepartment} icon={<Plus size={15} />}>Add</Button>
-                </div>
-              </div>
+              <button className="w-full mt-2 py-2.5 rounded-xl border border-dashed border-[rgba(15,23,42,0.25)] text-[#0F172A] text-[13px] font-semibold hover:bg-[#FFF0F2] transition-colors">
+                + Add Department
+              </button>
             </div>
           </SettingsSection>
 
-          {/* Notifications */}
-          <SettingsSection
-            icon={Bell}
-            title="Notifications"
-            subtitle="Control system-wide email alerts"
-          >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-[#F8FAFC]">
-                <div>
-                  <p className="text-[14px] font-semibold text-[#1E293B]">Daily Email Alerts</p>
-                  <p className="text-[12px] text-[#64748B] mt-0.5">Send a daily summary report of hospital activities</p>
-                </div>
-                <Toggle 
-                  enabled={emailAlertsEnabled} 
-                  onToggle={() => setEmailAlertsEnabled(!emailAlertsEnabled)} 
-                />
-              </div>
-
-              {emailAlertsEnabled && (
-                <div className="pt-2">
-                  <Input 
-                    label="Target Email Address" 
-                    type="email"
-                    value={targetEmail}
-                    onChange={(e) => setTargetEmail(e.target.value)}
-                    placeholder="admin@vocortho.com"
-                    hint="Where should the daily reports be sent?"
-                  />
-                </div>
-              )}
-            </div>
-          </SettingsSection>
 
           {/* Password Reset Requests */}
           <SettingsSection
@@ -410,7 +377,11 @@ export default function SettingsPage() {
                   Generate and download a multi-sheet Microsoft Excel workbook containing all patients, consultations, billing, inventory, and logs.
                 </p>
                 <div className="mt-3">
-                  <Button onClick={handleExportBackup} disabled={exporting} variant="outline">
+                  <Button
+                    onClick={handleExportBackup}
+                    disabled={exporting}
+                    variant="outline"
+                  >
                     {exporting ? "Generating..." : "Download Excel Backup"}
                   </Button>
                 </div>
@@ -447,7 +418,7 @@ export default function SettingsPage() {
           {/* Save row */}
           <div className="flex justify-end gap-3 pb-4">
             <Button variant="outline" size="lg">Reset to Defaults</Button>
-            <Button onClick={handleSaveSettings} size="lg" icon={<Save size={15} />}>Save All Changes</Button>
+            <Button size="lg" icon={<Save size={15} />}>Save All Changes</Button>
           </div>
 
         </main>

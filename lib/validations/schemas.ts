@@ -46,14 +46,3 @@ export const billingSchema = z.object({
 export const generatePinSchema = z.object({
   userId: z.string().min(1, "Invalid user ID format"),
 });
-
-export const settingsSchema = z.object({
-  emailAlertsEnabled: z.boolean(),
-  targetEmail: z.string().email("Invalid email address").or(z.literal("")),
-});
-
-export const departmentSchema = z.object({
-  name: z.string().min(1, "Department name is required").max(100),
-  fee: z.number().min(0, "Fee cannot be negative"),
-  isActive: z.boolean().default(true),
-});
