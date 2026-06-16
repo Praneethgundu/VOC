@@ -44,5 +44,5 @@ export const billingSchema = z.object({
 });
 
 export const generatePinSchema = z.object({
-  userId: z.string().uuid("Invalid user ID format"),
+  userId: z.string().min(1, "Invalid user ID format"),
 });
