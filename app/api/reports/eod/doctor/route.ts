@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/utils/db";
 import { getSession, authorizeRole } from "@/utils/auth";
+import { z } from "zod";
+
+const querySchema = z.object({
+  date: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format" }).nullable(),
+  doctorName: z.string().nullable(),
+});
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,7 +20,16 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const dateStr = searchParams.get("date");
+    const parsedParams = querySchema.safeParse({ 
+      date: searchParams.get("date"),
+      doctorName: searchParams.get("doctorName")
+    });
+    
+    if (!parsedParams.success) {
+      return NextResponse.json({ message: "Invalid parameters", errors: parsedParams.error.format() }, { status: 400 });
+    }
+
+    const dateStr = parsedParams.data.date;
     const targetDate = dateStr ? new Date(dateStr) : new Date();
 
     const startOfDay = new Date(targetDate);
@@ -24,7 +39,7 @@ export async function GET(req: NextRequest) {
     endOfDay.setHours(23, 59, 59, 999);
 
     // If role is DOCTOR, force doctorName to be session.username
-    let doctorName = searchParams.get("doctorName");
+    let doctorName = parsedParams.data.doctorName;
     if (session.role.toUpperCase() === "DOCTOR") {
       doctorName = session.username;
     }

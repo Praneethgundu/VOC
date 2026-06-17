@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/utils/db";
+import { z } from "zod";
+
+const postSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  fee: z.union([z.number(), z.string()]).optional().transform((val) => (val !== undefined ? Number(val) : undefined)),
+});
 
 export async function GET() {
   try {
@@ -15,11 +21,13 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, fee } = body;
-
-    if (!name) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    const parsedBody = postSchema.safeParse(body);
+    
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input", details: parsedBody.error.format() }, { status: 400 });
     }
+
+    const { name, fee } = parsedBody.data;
 
     const dept = await prisma.department.create({
       data: {

@@ -3,8 +3,9 @@ import { cookies } from "next/headers";
 
 export async function POST() {
   const cookieStore = await cookies();
-  cookieStore.delete("accessToken");
-  cookieStore.delete("refreshToken");
+  const options = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict" as const };
+  cookieStore.delete({ name: "accessToken", ...options });
+  cookieStore.delete({ name: "refreshToken", ...options });
 
   return NextResponse.json({ success: true, message: "Logged out successfully" });
 }
