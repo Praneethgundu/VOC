@@ -53,10 +53,25 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
   const [history, setHistory] = useState<any>(null);
 
+  // Print header/footer config fetched from admin settings
+  const [printHeader, setPrintHeader] = useState<{
+    logoUrl: string; clinicName: string; tagline: string;
+    doctorName: string; credentials: string; specialization: string;
+  } | null>(null);
+  const [printFooter, setPrintFooter] = useState<{
+    address: string; phone: string; email: string; website: string;
+  } | null>(null);
+
   useEffect(() => {
     getMedicines().then(setPharmacyMedicines).catch(console.error);
     api.get("/macros/dot-phrases").then(res => setDotPhrases(res.data)).catch(console.error);
     api.get("/macros/smart-chips").then(res => setSmartChips(res.data)).catch(console.error);
+    // Fetch print config
+    api.get("/settings").then(res => {
+      const d = res.data;
+      if (d.printHeader) { try { setPrintHeader(JSON.parse(d.printHeader)); } catch {} }
+      if (d.printFooter) { try { setPrintFooter(JSON.parse(d.printFooter)); } catch {} }
+    }).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -403,38 +418,92 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
   return (
     <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-6 h-full overflow-y-auto print:h-auto print:overflow-visible print:block">
+
+      {/* ── Print-only Header ─────────────────────────────────────── */}
+      {(printHeader?.clinicName || printHeader?.logoUrl || printHeader?.doctorName) && (
+        <div className="hidden print:flex items-start justify-between border-b-2 border-gray-700 pb-3 mb-3">
+          {/* Left: Logo + Clinic Name */}
+          <div className="flex items-center gap-3">
+            {printHeader.logoUrl && (
+              <img
+                src={printHeader.logoUrl}
+                alt="Clinic Logo"
+                className="h-16 w-auto object-contain"
+                style={{ maxWidth: '90px' }}
+              />
+            )}
+            <div>
+              {printHeader.clinicName && (
+                <p className="text-[16px] font-black text-black leading-tight">{printHeader.clinicName}</p>
+              )}
+              {printHeader.tagline && (
+                <p className="text-[11px] text-gray-600 mt-0.5">{printHeader.tagline}</p>
+              )}
+            </div>
+          </div>
+          {/* Right: Doctor Details */}
+          <div className="text-right max-w-[55%]">
+            {printHeader.doctorName && (
+              <p className="text-[14px] font-black text-black">{printHeader.doctorName}</p>
+            )}
+            {printHeader.credentials && (
+              <div className="text-[9px] text-gray-600 whitespace-pre-line leading-snug mt-0.5">
+                {printHeader.credentials}
+              </div>
+            )}
+            {printHeader.specialization && (
+              <div className="text-[9px] font-semibold text-black whitespace-pre-line leading-snug mt-0.5">
+                {printHeader.specialization}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* Header Banner */}
-      <div className="bg-[#0F172A] rounded-xl text-white p-5 flex justify-between items-center shadow-sm">
+      <div className="bg-[#0F172A] rounded-xl text-white p-5 print:p-2 print:bg-transparent print:text-black print:border-b-2 print:border-slate-800 print:rounded-none flex justify-between items-center shadow-sm print:shadow-none print:mb-2">
         <div>
-          <h2 className="text-xl font-bold">{formData.patientName}</h2>
-          <p className="text-[13px] text-white/80 mt-1">
+          <h2 className="text-xl font-bold print:text-lg">{formData.patientName}</h2>
+          <p className="text-[13px] text-white/80 mt-1 print:text-xs print:text-slate-700">
             {formData.opNumber} • {history?.profile?.age || selectedPatient?.age || '--'}y/{history?.profile?.gender || selectedPatient?.gender || '--'} • {history?.profile?.bloodGroup || selectedPatient?.bloodGroup || '--'}
           </p>
         </div>
-        <div className="flex gap-8 text-right">
+        <div className="flex gap-8 text-right print:gap-4">
           <div>
-            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider">Date</p>
-            <p className="font-semibold text-sm">
+            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider print:text-[9px] print:text-slate-500">Date</p>
+            <p className="font-semibold text-sm print:text-xs">
               {new Date(selectedPatient.consultationDate || selectedPatient.createdAt || Date.now()).toLocaleDateString("en-GB")}
             </p>
           </div>
           <div>
-            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider">Complaint</p>
-            <p className="font-semibold text-sm">{selectedPatient.complaint || "N/A"}</p>
+            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider print:text-[9px] print:text-slate-500">Complaint</p>
+            <p className="font-semibold text-sm print:text-xs">{selectedPatient.complaint || "N/A"}</p>
           </div>
           <div>
-            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider">Doctor</p>
-            <p className="font-semibold text-sm">{formData.doctor || "Unassigned"}</p>
+            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider print:text-[9px] print:text-slate-500">Doctor</p>
+            <p className="font-semibold text-sm print:text-xs">{formData.doctor || "Unassigned"}</p>
           </div>
           <div>
-            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider">Dept</p>
-            <p className="font-semibold text-sm">{formData.department}</p>
+            <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider print:text-[9px] print:text-slate-500">Dept</p>
+            <p className="font-semibold text-sm print:text-xs">{formData.department}</p>
           </div>
         </div>
       </div>
 
+      {/* Print-only Vitals */}
+      {(formData.vitals.bp || formData.vitals.pulse || formData.vitals.temp || formData.vitals.spo2 || formData.vitals.weight || formData.vitals.height) && (
+        <div className="hidden print:block mb-2 pb-1.5 border-b border-gray-300 text-[11px] text-gray-800">
+          <strong>Vitals:</strong>
+          {formData.vitals.bp && <span className="ml-2">BP: {formData.vitals.bp}</span>}
+          {formData.vitals.pulse && <span className="ml-2">| Pulse: {formData.vitals.pulse}</span>}
+          {formData.vitals.temp && <span className="ml-2">| Temp: {formData.vitals.temp}</span>}
+          {formData.vitals.spo2 && <span className="ml-2">| SpO2: {formData.vitals.spo2}</span>}
+          {formData.vitals.weight && <span className="ml-2">| Wt: {formData.vitals.weight}kg</span>}
+          {formData.vitals.height && <span className="ml-2">| Ht: {formData.vitals.height}cm</span>}
+        </div>
+      )}
+
       {/* Vitals */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm print:hidden">
         <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4">
           <Stethoscope size={16} /> Vitals
         </h3>
@@ -498,10 +567,10 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
       </div>
 
       {/* Clinical Notes */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="flex items-center gap-2 text-[#0F172A] font-bold">
-            <span className="text-xl">📋</span> Clinical Notes
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm print:p-0 print:border-0 print:shadow-none print:bg-transparent print:rounded-none print:mb-2">
+        <div className="flex items-center justify-between mb-4 print:mb-1">
+          <h3 className="flex items-center gap-2 text-[#0F172A] font-bold print:text-xs">
+            <span className="text-xl print:text-sm">📋</span> Clinical Notes
           </h3>
           <button
             type="button"
@@ -509,13 +578,37 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
               setTemplateName(formData.chiefComplaints || "");
               setShowTemplateModal(true);
             }}
-            className="text-xs font-bold px-3 py-1.5 bg-[#2563EB] text-white rounded-lg shadow-sm hover:bg-[#1D4ED8] transition-colors"
+            className="text-xs font-bold px-3 py-1.5 bg-[#2563EB] text-white rounded-lg shadow-sm hover:bg-[#1D4ED8] transition-colors print:hidden"
           >
             Save as New Template
           </button>
         </div>
         
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        {/* Print-only Clinical Notes Table */}
+        <div className="hidden print:block mb-4 print:mb-2">
+          <table className="w-full text-left border-collapse border border-gray-400">
+            <tbody>
+              <tr>
+                <td className="py-1 px-2 border border-gray-400 text-[10px] w-1/2">
+                  <strong>Chief Complaints:</strong> {formData.chiefComplaints || "NA"}
+                </td>
+                <td className="py-1 px-2 border border-gray-400 text-[10px] w-1/2">
+                  <strong>Examination:</strong> {formData.examination || "NA"}
+                </td>
+              </tr>
+              <tr>
+                <td className="py-1 px-2 border border-gray-400 text-[10px] w-1/2">
+                  <strong>Diagnosis:</strong> {formData.diagnosis || "NA"}
+                </td>
+                <td className="py-1 px-2 border border-gray-400 text-[10px] w-1/2">
+                  <strong>Summary:</strong> {formData.summary || "NA"}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-6 mb-6 print:hidden">
           <div>
             <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Chief Complaints</label>
             <select 
@@ -584,7 +677,9 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
             )}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        {/* Print-only Diagnosis & Summary consolidated into table above */}
+
+        <div className="grid grid-cols-2 gap-6 mb-6 print:hidden">
           <div>
             <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Diagnosis</label>
             <textarea
@@ -627,10 +722,10 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         </div>
 
         <div>
-            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-2">Prescription</label>
+            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-2 print:text-[10px] print:text-gray-800 print:mb-0.5 print:mt-1">Prescription</label>
             
             {/* Add Medicine Inputs */}
-            <div className="flex flex-col gap-4 mb-5 bg-[#F8FAFC] p-4 rounded-xl border border-[#E2E8F0] shadow-sm">
+            <div className="flex flex-col gap-4 mb-5 bg-[#F8FAFC] p-4 rounded-xl border border-[#E2E8F0] shadow-sm print:hidden">
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-[10px] font-bold text-[#64748B] uppercase mb-1">Medicine (From Pharmacy)</label>
@@ -726,7 +821,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
             {/* Prescriptions List */}
             {formData.prescriptions.length > 0 && (
-              <div className="flex flex-col gap-3 mb-4">
+              <div className="flex flex-col gap-3 mb-4 print:hidden">
                 {formData.prescriptions.map((med, idx) => (
                   <div key={idx} className="flex justify-between items-center p-4 border border-[#E2E8F0] rounded-xl bg-white shadow-sm">
                     <div>
@@ -753,6 +848,38 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
               </div>
             )}
 
+            {/* Print-only Medicines Table */}
+            {formData.prescriptions.length > 0 && (
+              <div className="hidden print:block mb-4 print:mb-2">
+                <table className="w-full text-left border-collapse border border-gray-400 mt-2 print:mt-1">
+                  <thead>
+                    <tr>
+                      <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50 w-12">S.No</th>
+                      <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50">Medication Name</th>
+                      <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50 w-24">Dose / Qty</th>
+                      <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50 w-24">Frequency</th>
+                      <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50 w-16">Days</th>
+                      <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50 w-32">Instruction</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.prescriptions.map((med, idx) => (
+                      <tr key={idx}>
+                        <td className="py-1 px-2 border border-gray-400 text-[10px] font-medium text-gray-800 text-center">{idx + 1}</td>
+                        <td className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-800">
+                          {med.medicineName}
+                        </td>
+                        <td className="py-1 px-2 border border-gray-400 text-[10px] text-gray-800">{med.dose}</td>
+                        <td className="py-1 px-2 border border-gray-400 text-[10px] text-gray-800">{med.frequency}</td>
+                        <td className="py-1 px-2 border border-gray-400 text-[10px] text-gray-800 text-center">{med.days}</td>
+                        <td className="py-1 px-2 border border-gray-400 text-[10px] text-gray-800">{med.timing}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             {/* Legacy text area */}
             {formData.legacyPrescription && (
               <div className="mt-3">
@@ -766,7 +893,13 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
             )}
         </div>
 
-        <div>
+        {/* Print-only Advice */}
+        {formData.advice && (
+          <div className="hidden print:block mt-2 mb-1.5 text-[11px] text-gray-800">
+            <strong>Advice & Instructions:</strong> <span className="whitespace-pre-wrap">{formData.advice}</span>
+          </div>
+        )}
+        <div className="print:hidden">
           <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Advice & Instructions</label>
           <textarea
             value={formData.advice}
@@ -777,7 +910,14 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
+      {/* Print-only Follow-up Date */}
+      {formData.followUpDate && (
+        <div className="hidden print:block mb-1.5 text-[11px] text-gray-800">
+          <strong>Follow-up Date:</strong> {new Date(formData.followUpDate).toLocaleDateString("en-GB")}
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm print:hidden">
         <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">FOLLOW-UP DATE (OPTIONAL)</label>
         <div className="relative max-w-xs">
           {(() => {
@@ -801,18 +941,18 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
-        <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4">
-          <span className="text-xl">🔬</span> Order Investigations
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm print:p-0 print:border-0 print:shadow-none print:bg-transparent print:rounded-none print:mb-2">
+        <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4 print:mb-1 print:text-xs">
+          <span className="text-xl print:text-sm">🔬</span> Order Investigations
         </h3>
         
-        <div className="mb-4">
+        <div className="mb-4 print:hidden">
           <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Search & Add Test</label>
           <InvestigationSelect value={null} onChange={handleInvestigationSelect} className="max-w-md" />
         </div>
 
         {formData.investigations.length > 0 && (
-          <div className="flex flex-col gap-2 max-w-md">
+          <div className="flex flex-col gap-2 max-w-md print:hidden">
             {formData.investigations.map((test) => (
               <div key={test.code} className="flex items-center justify-between p-3 border border-[#E2E8F0] bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
@@ -831,14 +971,38 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
             ))}
           </div>
         )}
+
+        {/* Print-only Investigations List */}
+        {formData.investigations.length > 0 && (
+          <div className="hidden print:block mt-2 print:mt-1">
+            <table className="w-full text-left border-collapse border border-gray-400">
+              <thead>
+                <tr>
+                  <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50 w-12 text-center">S.No</th>
+                  <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50">Investigation Name</th>
+                  <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50 w-32 text-right">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {formData.investigations.map((test, idx) => (
+                  <tr key={test.code}>
+                    <td className="py-1 px-2 border border-gray-400 text-[10px] font-medium text-gray-800 text-center">{idx + 1}</td>
+                    <td className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-800">{test.name}</td>
+                    <td className="py-1 px-2 border border-gray-400 text-[10px] font-medium text-gray-800 text-right">₹{test.price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Schedule OT Procedures */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm">
-        <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4">
-          <Scissors size={20} /> Schedule OT Procedure
+      <div className={`bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm print:p-0 print:border-0 print:shadow-none print:bg-transparent print:rounded-none print:mb-2 ${formData.otProcedures.length === 0 ? 'print:hidden' : ''}`}>
+        <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4 print:mb-1 print:text-xs">
+          <Scissors size={20} className="print:w-4 print:h-4" /> Schedule OT Procedure
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 print:hidden">
           {otProceduresList.map((proc) => (
             <label key={proc.name} className="flex items-center justify-between p-3 border border-[#E2E8F0] rounded-lg cursor-pointer hover:border-[#2563EB] transition-colors">
               <div className="flex items-center gap-3">
@@ -854,10 +1018,46 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
             </label>
           ))}
         </div>
+
+        {/* Print-only OT Procedures List */}
+        {formData.otProcedures.length > 0 && (
+          <div className="hidden print:block mt-2 print:mt-1">
+            <table className="w-full text-left border-collapse border border-gray-400">
+              <thead>
+                <tr>
+                  <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50 w-12 text-center">S.No</th>
+                  <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50">Procedure Name</th>
+                  <th className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-700 bg-gray-50 w-32 text-right">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {formData.otProcedures.map((proc, idx) => {
+                  const procData = otProceduresList.find(p => p.name === proc);
+                  return (
+                    <tr key={proc}>
+                      <td className="py-1 px-2 border border-gray-400 text-[10px] font-medium text-gray-800 text-center">{idx + 1}</td>
+                      <td className="py-1 px-2 border border-gray-400 text-[10px] font-bold text-gray-800">{proc}</td>
+                      <td className="py-1 px-2 border border-gray-400 text-[10px] font-medium text-gray-800 text-right">
+                        {procData ? `₹${procData.price}` : '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
+      {/* Print-only Remarks */}
+      {formData.remarks && (
+        <div className="hidden print:block mb-1.5 text-[11px] text-gray-800">
+          <strong>Remarks:</strong> <span className="whitespace-pre-wrap">{formData.remarks}</span>
+        </div>
+      )}
+
       {/* Remarks */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm mb-4">
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-sm mb-4 print:hidden">
         <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">REMARKS / ADDITIONAL NOTES</label>
         <textarea
           value={formData.remarks}
@@ -870,6 +1070,25 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
       {errors.general && (
         <div className="bg-[#FEE2E2] text-[#2563EB] p-3 rounded-lg border border-[#2563EB]/30 text-sm font-medium">
           {errors.general}
+        </div>
+      )}
+
+      {/* ── Print-only Footer ─────────────────────────────────────── */}
+      {(printFooter?.address || printFooter?.phone) && (
+        <div className="hidden print:block mt-4 border-t-2 border-gray-700 pt-3 text-center">
+          {printFooter.address && (
+            <p className="text-[10px] text-gray-600 mb-1">{printFooter.address}</p>
+          )}
+          {printFooter.phone && (
+            <p className="text-[13px] font-black text-black mb-1">📞 {printFooter.phone}</p>
+          )}
+          {(printFooter.email || printFooter.website) && (
+            <p className="text-[10px] text-gray-600">
+              {printFooter.email && `✉ ${printFooter.email}`}
+              {printFooter.email && printFooter.website && "   •   "}
+              {printFooter.website && `🌐 ${printFooter.website}`}
+            </p>
+          )}
         </div>
       )}
 

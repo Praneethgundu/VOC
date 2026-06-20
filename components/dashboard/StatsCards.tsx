@@ -4,8 +4,10 @@ import Link from "next/link";
 import { getPatients } from "@/services/patientService";
 import { getBills } from "@/services/billingService";
 import { getMedicines } from "@/services/pharmacyService";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function StatsCards() {
+  const { role } = useAuth();
   const [patientCount, setPatientCount] = useState(0);
   const [todayOP, setTodayOP] = useState(0);
   const [revenue, setRevenue] = useState(0);
@@ -100,11 +102,16 @@ export default function StatsCards() {
       accentColor: "#92400E",
       modalId: "medicines",
     },
-  ];
+  ].filter(stat => {
+    if (stat.title === "Revenue Today" && role === "RECEPTIONIST") {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${stats.length === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'} gap-5`}>
       {stats.map((item) => {
         const Icon = item.icon;
         const isUp = item.changeDir === "up";

@@ -10,8 +10,8 @@ export async function GET() {
     }, {});
     
     return NextResponse.json(settingsMap);
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: "Failed to fetch settings", details: error.message }, { status: 500 });
   }
 }
 
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     });
     
     return NextResponse.json(setting);
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to update setting" }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: "Failed to update setting", details: error.message }, { status: 500 });
   }
 }

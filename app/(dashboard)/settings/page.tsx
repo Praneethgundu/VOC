@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import MacrosSection from "@/components/settings/MacrosSection";
 import DepartmentsSection from "@/components/settings/DepartmentsSection";
 import EodWhatsAppSection from "@/components/settings/EodWhatsAppSection";
+import PrintHeaderFooterSection from "@/components/settings/PrintHeaderFooterSection";
 
 /* ── Toggle helper ─────────────────────────────────────────── */
 function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
@@ -298,6 +299,8 @@ export default function SettingsPage() {
               />
             </div>
           </SettingsSection>
+
+          <PrintHeaderFooterSection />
 
           <DepartmentsSection />
 
