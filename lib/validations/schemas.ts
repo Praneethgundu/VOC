@@ -41,6 +41,7 @@ export const billingSchema = z.object({
   total: z.number().min(0).max(10000000).optional(),
   paidAmount: z.number().min(0).max(10000000).optional(),
   paymentMode: z.enum(["Cash", "Card", "UPI", "Insurance", "Pending"]),
+  status: safeString.optional(),
 });
 
 export const generatePinSchema = z.object({

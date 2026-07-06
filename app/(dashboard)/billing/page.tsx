@@ -6,7 +6,7 @@ import { Table, THead, TBody, Th, Tr, Td, Badge } from "@/components/ui/Table";
 import { Button } from "@/components/ui/Button";
 import { Search, Printer, Plus, IndianRupee, Trash2, Receipt, CalendarDays } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getBills, getUnbilledPatients, createBill, updatePaymentStatus, deleteBill } from "@/services/billingService";
+import { getBills, getUnbilledPatients, createBill, updatePaymentStatus, deleteBill, updateBill } from "@/services/billingService";
 import { getPatients } from "@/services/patientService";
 import { RefreshCw, Download } from "lucide-react";
 
@@ -32,6 +32,7 @@ export default function BillingPage() {
   const [paymentStatus, setPaymentStatus] = useState("Pay");
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [billError, setBillError] = useState<string>('');
+  const [editingBillId, setEditingBillId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBills();
@@ -140,6 +141,18 @@ Thank you!
     setPaymentStatus("Pay");
     setUnbilledSearch("");
     setBillError('');
+    setEditingBillId(null);
+    setShowNewBillModal(true);
+  };
+
+  const openEditBillModal = (bill: any) => {
+    setEditingBillId(bill.id || bill._id);
+    const patientName = patients.find(p => p.opNumber === bill.opNumber)?.fullName || bill.patientName || bill.patient || "Unknown";
+    setSelectedUnbilled({ opNumber: bill.opNumber, patientName: patientName, fullName: patientName });
+    setBillItems(bill.items ? [...bill.items] : []);
+    setPaymentMode(bill.paymentMode || "Cash");
+    setPaymentStatus(bill.status === "Unpaid" ? "Pending" : "Pay");
+    setBillError('');
     setShowNewBillModal(true);
   };
 
@@ -167,19 +180,27 @@ Thank you!
     
     try {
       const payload = {
-        patientName: selectedUnbilled.patientName,
+        patientName: selectedUnbilled.patientName || selectedUnbilled.fullName,
         opNumber: selectedUnbilled.opNumber,
         items: billItems,
         paymentMode: paymentMode,
         status: paymentStatus === "Pending" ? "Unpaid" : "Paid"
       };
       
-      await createBill(payload);
+      if (editingBillId) {
+        // Also send total and paidAmount for PUT to calculate correctly if items changed
+        const total = billItems.reduce((acc: number, item: any) => acc + (Number(item.amount) || 0), 0);
+        const paidAmount = payload.status === "Unpaid" ? 0 : total;
+        await updateBill(editingBillId, { ...payload, total, paidAmount });
+      } else {
+        await createBill(payload);
+      }
       setShowNewBillModal(false);
+      setEditingBillId(null);
       fetchBills();
     } catch (e) {
       console.error(e);
-      alert("Failed to create bill");
+      alert(editingBillId ? "Failed to update bill" : "Failed to create bill");
     }
   };
 
@@ -374,6 +395,12 @@ Thank you!
                     </Td>
                     <Td align="right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => openEditBillModal(b)}
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#E2E8F0] text-[#1E293B] text-[11px] font-bold hover:bg-gray-50 transition-colors shadow-sm"
+                        >
+                          Edit
+                        </button>
                         <button
                           onClick={() => setShowReceiptModal(b)}
                           className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#E2E8F0] text-[#1E293B] text-[11px] font-bold hover:bg-gray-50 transition-colors shadow-sm"

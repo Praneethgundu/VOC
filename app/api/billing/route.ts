@@ -66,9 +66,9 @@ export async function POST(req: Request) {
                   (data.consultationCharges || 0) + (data.investigationCharges || 0) + 
                   (data.medicineCharges || 0) + (data.otCharges || 0);
 
-    const paidAmount = Number(data.paidAmount) !== undefined && !isNaN(Number(data.paidAmount))
+    const paidAmount = data.paidAmount !== undefined && data.paidAmount !== null
       ? Number(data.paidAmount)
-      : (data.paymentMode === "Pending" ? 0 : total);
+      : ((data.status === "Unpaid" || data.status === "Pending" || data.paymentMode === "Pending") ? 0 : total);
     
     const pendingAmount = Math.max(0, total - paidAmount);
     const billNumber = "BILL-" + require("crypto").randomBytes(3).toString("hex").toUpperCase();
