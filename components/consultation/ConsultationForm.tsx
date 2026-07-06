@@ -59,7 +59,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     doctorName: string; credentials: string; specialization: string;
   } | null>(null);
   const [printFooter, setPrintFooter] = useState<{
-    address: string; phone: string; email: string; website: string;
+    footerUrl: string;
   } | null>(null);
 
   useEffect(() => {
@@ -69,8 +69,20 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     // Fetch print config
     api.get("/settings").then(res => {
       const d = res.data;
-      if (d.printHeader) { try { setPrintHeader(JSON.parse(d.printHeader)); } catch {} }
-      if (d.printFooter) { try { setPrintFooter(JSON.parse(d.printFooter)); } catch {} }
+      if (d.printHeader) { 
+        try { 
+          const parsed = JSON.parse(d.printHeader); 
+          if (parsed.logoUrl && parsed.logoUrl.startsWith('/images/')) parsed.logoUrl = parsed.logoUrl.replace('/images/', '/api/images/');
+          setPrintHeader(parsed); 
+        } catch {} 
+      }
+      if (d.printFooter) { 
+        try { 
+          const parsed = JSON.parse(d.printFooter); 
+          if (parsed.footerUrl && parsed.footerUrl.startsWith('/images/')) parsed.footerUrl = parsed.footerUrl.replace('/images/', '/api/images/');
+          setPrintFooter(parsed); 
+        } catch {} 
+      }
     }).catch(console.error);
   }, []);
 
@@ -1073,22 +1085,10 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         </div>
       )}
 
-      {/* ── Print-only Footer ─────────────────────────────────────── */}
-      {(printFooter?.address || printFooter?.phone) && (
-        <div className="hidden print:block mt-4 border-t-2 border-gray-700 pt-3 text-center">
-          {printFooter.address && (
-            <p className="text-[10px] text-gray-600 mb-1">{printFooter.address}</p>
-          )}
-          {printFooter.phone && (
-            <p className="text-[13px] font-black text-black mb-1">📞 {printFooter.phone}</p>
-          )}
-          {(printFooter.email || printFooter.website) && (
-            <p className="text-[10px] text-gray-600">
-              {printFooter.email && `✉ ${printFooter.email}`}
-              {printFooter.email && printFooter.website && "   •   "}
-              {printFooter.website && `🌐 ${printFooter.website}`}
-            </p>
-          )}
+      {/* Dynamic Footer Image */}
+      {printFooter?.footerUrl && (
+        <div className="hidden print:block mt-8 w-full flex justify-center">
+          <img src={printFooter.footerUrl} alt="Footer" className="max-w-full h-auto object-contain" style={{ maxHeight: '100px', width: '100%' }} />
         </div>
       )}
 

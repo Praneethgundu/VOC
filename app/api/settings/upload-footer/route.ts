@@ -6,7 +6,7 @@ import { existsSync } from "fs";
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const file = formData.get("logo") as File;
+    const file = formData.get("footer") as File;
 
     if (!file || !file.name) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "File type not allowed. Use PNG, JPG, SVG or WEBP." }, { status: 400 });
     }
 
-    const filename = `print-logo.${ext}`;
+    const filename = `print-footer.${ext}`;
     const imagesDir = join(process.cwd(), "public", "images");
 
     // Ensure directory exists
@@ -33,9 +33,9 @@ export async function POST(req: Request) {
     const filePath = join(imagesDir, filename);
     await writeFile(filePath, buffer);
 
-    return NextResponse.json({ url: `/api/images/${filename}?t=${Date.now()}` });
+    return NextResponse.json({ url: `/api/images/${filename}?t=${Date.now()}` }); // Cache buster
   } catch (error) {
-    console.error("Logo upload error:", error);
-    return NextResponse.json({ error: "Failed to upload logo" }, { status: 500 });
+    console.error("Footer upload error:", error);
+    return NextResponse.json({ error: "Failed to upload footer" }, { status: 500 });
   }
 }

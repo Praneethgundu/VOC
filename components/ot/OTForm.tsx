@@ -17,11 +17,7 @@ const PROCEDURES = [
 ];
 
 const DOCTORS = [
-  'Dr. Vinay',
-  'Dr. Meera Patel',
-  'Dr. Sunitha Devi',
-  'Dr. Ramesh Kumar',
-  'Dr. Anil Reddy'
+  'Dr. Vinay'
 ];
 
 export default function OTForm({ onClose, onSuccess }: OTFormProps) {

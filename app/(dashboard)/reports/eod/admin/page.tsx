@@ -14,7 +14,7 @@ export default function AdminEODPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("master");
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [selectedDoctor, setSelectedDoctor] = useState<string>("Dr. Sharma");
+  const [selectedDoctor, setSelectedDoctor] = useState<string>("Dr. Vinay");
 
   useEffect(() => {
     fetchReport();
@@ -84,9 +84,7 @@ export default function AdminEODPage() {
                     onChange={(e) => setSelectedDoctor(e.target.value)}
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#0F172A] bg-white mr-2"
                   >
-                    <option value="Dr. Sharma">Dr. Sharma</option>
-                    <option value="Dr. Reddy">Dr. Reddy</option>
-                    <option value="Dr. Patel">Dr. Patel</option>
+                    <option value="Dr. Vinay">Dr. Vinay</option>
                   </select>
                 </>
               )}

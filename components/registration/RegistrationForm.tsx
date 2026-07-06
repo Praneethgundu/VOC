@@ -350,7 +350,6 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
           >
             <option value="">Select Doctor...</option>
             <option value="Dr. Vinay">Dr. Vinay</option>
-            <option value="Dr. Reddy">Dr. Reddy</option>
           </select>
           {errors.doctor && <p className="text-red-500 text-[11px] font-bold mt-1">{errors.doctor}</p>}
         </div>

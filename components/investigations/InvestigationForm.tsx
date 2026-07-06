@@ -12,10 +12,7 @@ interface InvestigationFormProps {
 
 
 const DOCTORS = [
-  'Dr. Meera Patel',
-  'Dr. Ramesh Kumar',
-  'Dr. Anil Reddy',
-  'Dr. Sarah John'
+  'Dr. Vinay'
 ];
 
 export default function InvestigationForm({ onClose, onSuccess }: InvestigationFormProps) {

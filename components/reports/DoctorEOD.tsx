@@ -28,8 +28,23 @@ OT Procedures Scheduled: ${report.stats.otProceduresScheduled}
 *REVENUE*
 Revenue Generated: ₹${report.stats.revenueGenerated}
 `;
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-    window.open(url, "_blank");
+    const newWindow = window.open("", "_blank");
+    import("@/lib/services/api").then(({ default: api }) => {
+      api.get("/settings").then((res) => {
+        let phoneStr = res.data?.whatsapp_eod_number || "";
+        if (phoneStr && !phoneStr.startsWith('+')) {
+          if (phoneStr.length === 10) phoneStr = '+91' + phoneStr;
+        }
+        const url = phoneStr 
+          ? `https://api.whatsapp.com/send?phone=${encodeURIComponent(phoneStr)}&text=${encodeURIComponent(text)}`
+          : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        if (newWindow) newWindow.location.href = url;
+      }).catch(e => {
+        console.error(e);
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        if (newWindow) newWindow.location.href = url;
+      });
+    });
   };
 
   return (

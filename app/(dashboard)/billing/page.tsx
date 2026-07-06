@@ -102,7 +102,7 @@ export default function BillingPage() {
 
     const receiptContent = `
 VOC Orthopaedic Hospital
-Main Road, Kavali - Ph: 0861-XXXXXX
+House No 23 HIGA, Karur Vysya Bank Road, Gokul Nagar, A. S. Rao Nagar, Secunderabad, Telangana 500062
 ========================================
 RECEIPT
 ========================================
@@ -594,7 +594,7 @@ Thank you!
           <div className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl p-8 flex flex-col">
             <div className="text-center mb-6 border-b border-[#E2E8F0] pb-4">
               <h2 className="text-2xl font-bold text-[#0F172A]">VOC Orthopaedic Hospital</h2>
-              <p className="text-sm text-[#64748B] mt-1">Main Road, Kavali — Ph: 0861-XXXXXX</p>
+              <p className="text-sm text-[#64748B] mt-1">House No 23 HIGA, Karur Vysya Bank Road, Gokul Nagar, A. S. Rao Nagar, Secunderabad, Telangana 500062</p>
               <h3 className="mt-4 font-bold tracking-widest text-[#1E293B]">RECEIPT</h3>
             </div>
             

@@ -16,10 +16,7 @@ interface PrintHeader {
 }
 
 interface PrintFooter {
-  address: string;
-  phone: string;
-  email: string;
-  website: string;
+  footerUrl: string;
 }
 
 const defaultHeader: PrintHeader = {
@@ -32,10 +29,7 @@ const defaultHeader: PrintHeader = {
 };
 
 const defaultFooter: PrintFooter = {
-  address: "",
-  phone: "",
-  email: "",
-  website: "",
+  footerUrl: "",
 };
 
 export default function PrintHeaderFooterSection() {
@@ -43,9 +37,12 @@ export default function PrintHeaderFooterSection() {
   const [footer, setFooter] = useState<PrintFooter>(defaultFooter);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingFooter, setUploadingFooter] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>("");
+  const [footerPreview, setFooterPreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const footerFileInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing settings on mount
   useEffect(() => {
@@ -55,12 +52,20 @@ export default function PrintHeaderFooterSection() {
         try {
           const parsed = JSON.parse(data.printHeader);
           setHeader({ ...defaultHeader, ...parsed });
-          if (parsed.logoUrl) setLogoPreview(parsed.logoUrl);
+          if (parsed.logoUrl) {
+            const url = parsed.logoUrl.startsWith('/images/') ? parsed.logoUrl.replace('/images/', '/api/images/') : parsed.logoUrl;
+            setLogoPreview(url);
+          }
         } catch {}
       }
       if (data.printFooter) {
         try {
-          setFooter({ ...defaultFooter, ...JSON.parse(data.printFooter) });
+          const parsed = JSON.parse(data.printFooter);
+          setFooter({ ...defaultFooter, ...parsed });
+          if (parsed.footerUrl) {
+            const url = parsed.footerUrl.startsWith('/images/') ? parsed.footerUrl.replace('/images/', '/api/images/') : parsed.footerUrl;
+            setFooterPreview(url);
+          }
         } catch {}
       }
     }).catch(console.error);
@@ -101,6 +106,40 @@ export default function PrintHeaderFooterSection() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleFooterUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    setFooterPreview(objectUrl);
+
+    setUploadingFooter(true);
+    try {
+      const formData = new FormData();
+      formData.append("footer", file);
+      const res = await fetch("/api/settings/upload-footer", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setFooter((prev) => ({ ...prev, footerUrl: data.url }));
+      toast.success("Footer image uploaded successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload footer");
+      setFooterPreview(footer.footerUrl);
+    } finally {
+      setUploadingFooter(false);
+      if (footerFileInputRef.current) footerFileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveFooter = () => {
+    setFooter((prev) => ({ ...prev, footerUrl: "" }));
+    setFooterPreview("");
+    if (footerFileInputRef.current) footerFileInputRef.current.value = "";
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -117,7 +156,7 @@ export default function PrintHeaderFooterSection() {
   };
 
   const hasHeaderContent = header.clinicName || header.doctorName || header.logoUrl;
-  const hasFooterContent = footer.address || footer.phone;
+  const hasFooterContent = !!footer.footerUrl;
 
   return (
     <SettingsSection
@@ -271,45 +310,49 @@ export default function PrintHeaderFooterSection() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Address</label>
-              <textarea
-                value={footer.address}
-                onChange={(e) => setFooter((p) => ({ ...p, address: e.target.value }))}
-                placeholder="House No 23 HIGA, Karur Vysya Bank Road, Gokul Nagar, A. S. Rao Nagar, Secunderabad, Telangana 500062"
-                rows={3}
-                className="w-full p-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] transition-colors resize-none"
-              />
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Phone Number(s)</label>
-                <input
-                  type="text"
-                  value={footer.phone}
-                  onChange={(e) => setFooter((p) => ({ ...p, phone: e.target.value }))}
-                  placeholder="6913139999 / 9480771551"
-                  className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Email</label>
-                <input
-                  type="email"
-                  value={footer.email}
-                  onChange={(e) => setFooter((p) => ({ ...p, email: e.target.value }))}
-                  placeholder="drhvinaykumar@gmail.com"
-                  className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Website</label>
-                <input
-                  type="text"
-                  value={footer.website}
-                  onChange={(e) => setFooter((p) => ({ ...p, website: e.target.value }))}
-                  placeholder="www.drvinayorthocare.com"
-                  className="w-full h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm outline-none focus:border-[#2563EB] transition-colors"
-                />
+              <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                Footer Image (Optional)
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="w-48 h-12 rounded-xl border-2 border-dashed border-[#E2E8F0] flex items-center justify-center bg-[#F8FAFC] overflow-hidden flex-shrink-0">
+                  {footerPreview ? (
+                    <img
+                      src={footerPreview}
+                      alt="Footer preview"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <ImageIcon size={24} className="text-[#CBD5E1]" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={footerFileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    className="hidden"
+                    onChange={handleFooterUpload}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => footerFileInputRef.current?.click()}
+                    disabled={uploadingFooter}
+                    className="flex items-center gap-2 px-3 py-2 text-[12px] font-bold bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] rounded-lg hover:bg-[#DBEAFE] transition-colors disabled:opacity-50"
+                  >
+                    <Upload size={13} />
+                    {uploadingFooter ? "Uploading..." : "Upload Footer"}
+                  </button>
+                  {footerPreview && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveFooter}
+                      className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      <X size={12} /> Remove
+                    </button>
+                  )}
+                  <p className="text-[10px] text-[#94A3B8]">Full width image recommended. PNG/JPG.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -380,20 +423,8 @@ export default function PrintHeaderFooterSection() {
 
               {/* Footer Preview */}
               {hasFooterContent ? (
-                <div className="border-t-2 border-gray-700 pt-3">
-                  {footer.address && (
-                    <p className="text-[11px] text-center text-[#475569] mb-1">{footer.address}</p>
-                  )}
-                  {footer.phone && (
-                    <p className="text-[13px] font-black text-center text-[#1E293B] mb-1">📞 {footer.phone}</p>
-                  )}
-                  {(footer.email || footer.website) && (
-                    <p className="text-[10px] text-center text-[#475569]">
-                      {footer.email && `✉ ${footer.email}`}
-                      {footer.email && footer.website && "  •  "}
-                      {footer.website && `🌐 ${footer.website}`}
-                    </p>
-                  )}
+                <div className="mt-8 pt-4 border-t border-gray-400 w-full flex justify-center">
+                  {footerPreview && <img src={footerPreview} alt="Footer" className="max-w-full h-auto object-contain" style={{ maxHeight: '100px' }} />}
                 </div>
               ) : (
                 <div className="border-t border-dashed border-gray-300 pt-3 text-center text-[11px] text-[#94A3B8] italic">
