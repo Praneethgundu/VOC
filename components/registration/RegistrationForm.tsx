@@ -107,7 +107,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
         try {
           const allPatients = await getPatients();
           // Find the most recently registered patient with this phone number
-          const found = [...allPatients].sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0)).find((p: any) => p.phone === value);
+          const found = [...allPatients].sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).find((p: any) => p.phone === value);
           
           if (found && !formData.fullName) {
              // Only auto-fill if the form is currently empty (to prevent overwriting if they already typed a name)
