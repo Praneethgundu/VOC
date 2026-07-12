@@ -64,9 +64,6 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
       newErrors.phone = "Enter a valid 10-digit phone number";
     }
-    if (!formData.bloodGroup) {
-      newErrors.bloodGroup = "Blood group is required";
-    }
     if (!formData.doctor) {
       newErrors.doctor = "Please select a consulting doctor";
     }
@@ -381,15 +378,6 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
             <option value="Dr. H. Vinay Kumar">Dr. H. Vinay Kumar</option>
           </select>
           {errors.doctor && <p className="text-red-500 text-[11px] font-bold mt-1">{errors.doctor}</p>}
-        </div>
-        <div className="md:col-span-2">
-          <Input
-            label="Address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            placeholder="Full address"
-          />
         </div>
         <Input
           label="Consultation Fee (₹)"
