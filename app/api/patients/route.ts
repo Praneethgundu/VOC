@@ -64,6 +64,74 @@ export async function POST(req: Request) {
       }
     }
     
+    // Check if patient already exists by phone number
+    if (data.phone) {
+      const existingPatient = await prisma.patient.findFirst({
+        where: { phone: String(data.phone) }
+      });
+      
+      if (existingPatient) {
+        let consultationDate = new Date();
+        if (data.date && data.time) {
+          consultationDate = new Date(`${data.date}T${data.time}:00`);
+        } else if (data.date) {
+          consultationDate = new Date(`${data.date}T00:00:00`);
+        }
+
+        // Check if there is already a "Waiting" consultation for this patient today
+        const startOfDay = new Date(consultationDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(consultationDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const existingConsultation = await prisma.consultation.findFirst({
+          where: {
+            patientId: existingPatient.patientId,
+            status: "Waiting",
+            consultationDate: {
+              gte: startOfDay,
+              lte: endOfDay
+            }
+          }
+        });
+
+        if (existingConsultation) {
+          // Update existing auto-queued consultation with the new time
+          await prisma.consultation.update({
+            where: { id: existingConsultation.id },
+            data: { consultationDate }
+          });
+        } else {
+          // Create new consultation for returning patient
+          await prisma.consultation.create({
+            data: {
+              patientId: existingPatient.patientId,
+              opNumber: existingPatient.opNumber,
+              doctor: data.doctor || existingPatient.doctor || "",
+              department: data.department || existingPatient.department || "",
+              status: "Waiting",
+              consultationDate
+            }
+          });
+        }
+        
+        await logAuditAction({
+          req,
+          user: session.username,
+          role: session.role,
+          module: "CONSULTATIONS",
+          action: "FOLLOW_UP_QUEUE",
+          recordId: existingPatient.opNumber,
+          patientId: existingPatient.patientId
+        });
+        
+        return NextResponse.json(
+          { message: "Returning patient found. Follow-up consultation added.", patient: existingPatient, returningPatient: true },
+          { status: 201 }
+        );
+      }
+    }
+    
     const opNumber = data.opNumber || `OP/${new Date().getFullYear()}/${String(count + 1).padStart(3, '0')}`;
     const patientId = require("crypto").randomUUID();
 

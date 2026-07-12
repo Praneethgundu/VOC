@@ -33,9 +33,27 @@ export default function BillingPage() {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [billError, setBillError] = useState<string>('');
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState("/images/print-logo.png");
 
   useEffect(() => {
     fetchBills();
+    
+    // Fetch dynamic logo from settings
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(d => {
+        if (d.printHeader) {
+          try {
+            const parsed = JSON.parse(d.printHeader);
+            if (parsed.logoUrl) {
+              let url = parsed.logoUrl;
+              if (url.startsWith('/images/')) url = url.replace('/images/', '/api/images/');
+              setLogoUrl(url);
+            }
+          } catch {}
+        }
+      })
+      .catch(console.error);
   }, []);
 
   const fetchBills = async () => {
@@ -618,9 +636,31 @@ Thank you!
       {/* RECEIPT MODAL */}
       {showReceiptModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl p-8 flex flex-col">
+          <style>{`
+            @media print {
+              @page { size: landscape; margin: 0; }
+              body * {
+                visibility: hidden;
+              }
+              #printable-receipt, #printable-receipt * {
+                visibility: visible;
+              }
+              #printable-receipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                max-width: none;
+                margin: 0;
+                padding: 40px;
+                box-shadow: none;
+                background: white;
+              }
+            }
+          `}</style>
+          <div id="printable-receipt" className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl p-8 flex flex-col">
             <div className="text-center mb-6 border-b border-[#E2E8F0] pb-4">
-              <h2 className="text-2xl font-bold text-[#0F172A]">VOC Orthopaedic Hospital</h2>
+              <img src={logoUrl} alt="Clinic Logo" className="h-16 mx-auto object-contain mb-2" />
               <p className="text-sm text-[#64748B] mt-1">House No 23 HIGA, Karur Vysya Bank Road, Gokul Nagar, A. S. Rao Nagar, Secunderabad, Telangana 500062</p>
               <h3 className="mt-4 font-bold tracking-widest text-[#1E293B]">RECEIPT</h3>
             </div>
@@ -685,7 +725,7 @@ Thank you!
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 print:hidden">
               <button 
                 onClick={downloadReceipt}
                 className="flex items-center justify-center gap-2 h-12 bg-gray-100 text-[#1E293B] font-bold rounded-lg hover:bg-gray-200 transition-colors px-4"

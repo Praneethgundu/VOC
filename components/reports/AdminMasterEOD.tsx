@@ -11,7 +11,7 @@ export default function AdminMasterEOD({ report }: { report: any }) {
   const handlePrint = () => window.print();
 
   const handleWhatsApp = () => {
-    const text = `*VOC Orthopaedic Hospital*
+    const text = `*VOC Vinay Ortho Care Clinic*
 *Admin Master EOD Report*
 Date: ${new Date(report.date).toLocaleDateString("en-GB")}
 
@@ -59,7 +59,7 @@ Pending Bills: ${report.stats.pendingBills}
         <div className="flex justify-center mb-2">
           <Image src="/images/logo.jpeg" alt="VOC Logo" width={40} height={40} className="rounded-lg object-cover" />
         </div>
-        <h2 className="text-2xl font-extrabold text-[#0F172A]">VOC Orthopaedic Hospital</h2>
+        <h2 className="text-2xl font-extrabold text-[#0F172A]">VOC Vinay Ortho Care Clinic</h2>
         <p className="text-[#64748B] text-sm">Master Hospital Summary</p>
         <div className="mt-3 inline-block border border-[#0F172A]/20 text-[#0F172A] rounded-full px-4 py-1 text-sm font-semibold bg-[#0F172A]/5">
           {dateStr}

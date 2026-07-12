@@ -56,10 +56,33 @@ export async function GET(req: Request) {
           unbilledMap.set(c.opNumber, existing);
         }
 
+        // 30-day follow up logic
+        const patientConsultations = consultations
+          .filter(pc => pc.patientId === c.patientId && new Date(pc.consultationDate) <= new Date(c.consultationDate))
+          .sort((a, b) => new Date(a.consultationDate).getTime() - new Date(b.consultationDate).getTime());
+          
+        let shouldCharge = true;
+        if (patientConsultations.length > 1) {
+          const firstDate = new Date(patientConsultations[0].consultationDate).getTime();
+          const currDate = new Date(c.consultationDate).getTime();
+          
+          let lastChargedDate = firstDate;
+          for (const pc of patientConsultations) {
+            const d = new Date(pc.consultationDate).getTime();
+            if ((d - lastChargedDate) / (1000 * 3600 * 24) > 30) {
+              lastChargedDate = d;
+            }
+          }
+          
+          if (lastChargedDate !== currDate) {
+            shouldCharge = false;
+          }
+        }
+
         existing.items.push({
-          serviceName: `Consultation Fee (${c.department || "General"})`,
+          serviceName: shouldCharge ? `Consultation Fee (${c.department || "General"})` : `Follow-up Consultation (${c.department || "General"})`,
           category: "Consultation",
-          amount: 500,
+          amount: shouldCharge ? 500 : 0,
         });
 
         // Add investigations ordered in this consultation

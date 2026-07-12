@@ -43,6 +43,38 @@ export async function PUT(
       },
     });
 
+    // Automatically create future consultation for follow up date
+    if (body.followUpDate && body.followUpDate !== existing.followUpDate) {
+      const followUpDateStr = String(body.followUpDate);
+      if (followUpDateStr) {
+        const nextDate = new Date(`${followUpDateStr}T00:00:00Z`);
+        
+        // Check if one already exists for this date to avoid duplicates
+        const alreadyExists = await prisma.consultation.findFirst({
+          where: {
+            patientId: existing.patientId,
+            consultationDate: {
+              gte: new Date(`${followUpDateStr}T00:00:00Z`),
+              lte: new Date(`${followUpDateStr}T23:59:59Z`)
+            }
+          }
+        });
+
+        if (!alreadyExists) {
+          await prisma.consultation.create({
+            data: {
+              patientId: existing.patientId,
+              opNumber: existing.opNumber,
+              doctor: existing.doctor,
+              department: existing.department,
+              status: "Waiting",
+              consultationDate: nextDate
+            }
+          });
+        }
+      }
+    }
+
     // Write audit log
     await prisma.auditLog.create({
       data: {

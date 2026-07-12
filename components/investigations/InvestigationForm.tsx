@@ -12,7 +12,7 @@ interface InvestigationFormProps {
 
 
 const DOCTORS = [
-  'Dr. Vinay'
+  'Dr. H. Vinay Kumar'
 ];
 
 export default function InvestigationForm({ onClose, onSuccess }: InvestigationFormProps) {

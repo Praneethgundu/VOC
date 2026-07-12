@@ -11,7 +11,7 @@ export default function DoctorEOD({ report }: { report: any }) {
   const handlePrint = () => window.print();
 
   const handleWhatsApp = () => {
-    const text = `*VOC Orthopaedic Hospital*
+    const text = `*VOC Vinay Ortho Care Clinic*
 *Doctor EOD Report*
 Dr. ${report.doctorName}
 Date: ${new Date(report.date).toLocaleDateString("en-GB")}

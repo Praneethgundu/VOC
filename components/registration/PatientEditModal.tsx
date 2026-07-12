@@ -187,7 +187,7 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
               <label className="text-xs font-bold text-gray-700">Doctor</label>
               <select name="doctor" value={formData.doctor || ""} onChange={handleChange} className="border p-2 rounded outline-none bg-white">
                 <option value="">Select Doctor...</option>
-                <option value="Dr. Vinay">Dr. Vinay</option>
+                <option value="Dr. H. Vinay Kumar">Dr. H. Vinay Kumar</option>
               </select>
             </div>
             <div className="flex flex-col gap-1 col-span-2">

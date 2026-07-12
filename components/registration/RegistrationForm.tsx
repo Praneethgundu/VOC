@@ -41,7 +41,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     phone: "",
     bloodGroup: "",
     address: "",
-    department: "",
+    department: "Orthopaedics",
     doctor: "",
     fee: 500,
     date: getDefaults().date,
@@ -92,11 +92,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     let value = e.target.value;
 
     if (e.target.name === "fullName") {
-      value = value.replace(/[^a-zA-Z\s]/g, ""); // Allow only letters and spaces
-      value = value
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(" ");
+      value = value.replace(/[^a-zA-Z\s]/g, "").toUpperCase(); // Allow only letters and spaces, and convert to uppercase
     }
 
     if (e.target.name === "age" && value !== "") {
@@ -131,8 +127,12 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
       }
 
       const finalComplaint = [...selectedComplaints, otherComplaint.trim()].filter(Boolean).join(", ");
-      await addPatient({ ...formData, complaint: finalComplaint });
-      alert("Patient Registered Successfully");
+      const response = await addPatient({ ...formData, complaint: finalComplaint });
+      if (response && response.returningPatient) {
+        alert("Returning patient found! Follow-up consultation added.");
+      } else {
+        alert("Patient Registered Successfully");
+      }
       setFormData({
         opNumber: generateOP(),
         fullName: "",
@@ -141,7 +141,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
         phone: "",
         bloodGroup: "",
         address: "",
-        department: "",
+        department: "Orthopaedics",
         doctor: "",
         fee: 500,
         date: getDefaults().date,
@@ -349,7 +349,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
             className={`w-full h-10 px-3 rounded-lg border ${errors.doctor ? 'border-red-500' : 'border-[#E2E8F0]'} outline-none focus:border-[#2563EB] text-[13px] bg-white transition-colors`}
           >
             <option value="">Select Doctor...</option>
-            <option value="Dr. Vinay">Dr. Vinay</option>
+            <option value="Dr. H. Vinay Kumar">Dr. H. Vinay Kumar</option>
           </select>
           {errors.doctor && <p className="text-red-500 text-[11px] font-bold mt-1">{errors.doctor}</p>}
         </div>

@@ -476,7 +476,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         <div>
           <h2 className="text-xl font-bold print:text-lg">{formData.patientName}</h2>
           <p className="text-[13px] text-white/80 mt-1 print:text-xs print:text-slate-700">
-            {formData.opNumber} • {history?.profile?.age || selectedPatient?.age || '--'}y/{history?.profile?.gender || selectedPatient?.gender || '--'} • {history?.profile?.bloodGroup || selectedPatient?.bloodGroup || '--'}
+            OP: {formData.opNumber} • Age: {history?.profile?.age || selectedPatient?.age || '--'}y
           </p>
         </div>
         <div className="flex gap-8 text-right print:gap-4">
@@ -486,7 +486,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
               {new Date(selectedPatient.consultationDate || selectedPatient.createdAt || Date.now()).toLocaleDateString("en-GB")}
             </p>
           </div>
-          <div>
+          <div className="print:hidden">
             <p className="text-[11px] text-white/70 font-bold uppercase tracking-wider print:text-[9px] print:text-slate-500">Complaint</p>
             <p className="font-semibold text-sm print:text-xs">{selectedPatient.complaint || "N/A"}</p>
           </div>

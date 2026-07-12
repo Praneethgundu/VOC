@@ -11,7 +11,7 @@ export default function PharmacyEOD({ report }: { report: any }) {
   const handlePrint = () => window.print();
 
   const handleWhatsApp = () => {
-    const text = `*VOC Orthopaedic Hospital*
+    const text = `*VOC Vinay Ortho Care Clinic*
 *Pharmacy EOD Report*
 Date: ${new Date(report.date).toLocaleDateString("en-GB")}
 
