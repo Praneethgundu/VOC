@@ -44,7 +44,7 @@ export async function PUT(
     });
 
     // Automatically create future consultation for follow up date
-    if (body.followUpDate && body.followUpDate !== existing.followUpDate) {
+    if (body.followUpDate) {
       const followUpDateStr = String(body.followUpDate);
       if (followUpDateStr) {
         const nextDate = new Date(`${followUpDateStr}T00:00:00Z`);
