@@ -86,7 +86,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (
+  const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     let value = e.target.value;
@@ -101,7 +101,36 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
       if (numVal < 0) return; // Block typing negative numbers
     }
 
-    setFormData({ ...formData, [e.target.name]: value });
+    if (e.target.name === "phone") {
+      value = value.replace(/[^0-9]/g, ""); // Allow only numbers
+      setFormData(prev => ({ ...prev, phone: value }));
+      
+      // Auto-fill details for returning patients (walk-ins)
+      if (value.length === 10) {
+        try {
+          const allPatients = await getPatients();
+          // Find the most recently registered patient with this phone number
+          const found = [...allPatients].sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0)).find((p: any) => p.phone === value);
+          
+          if (found && !formData.fullName) {
+             // Only auto-fill if the form is currently empty (to prevent overwriting if they already typed a name)
+             setFormData(prev => ({
+               ...prev,
+               fullName: found.fullName,
+               age: found.age?.toString() || prev.age,
+               gender: found.gender || prev.gender,
+               bloodGroup: found.bloodGroup || prev.bloodGroup,
+               address: found.address || prev.address
+             }));
+          }
+        } catch (error) {
+          console.error("Failed to auto-fetch returning patient:", error);
+        }
+      }
+      return;
+    }
+
+    setFormData(prev => ({ ...prev, [e.target.name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

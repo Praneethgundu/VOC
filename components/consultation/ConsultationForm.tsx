@@ -1087,9 +1087,16 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
       {/* Dynamic Footer Image */}
       {printFooter?.footerUrl && (
-        <div className="hidden print:block mt-8 w-full flex justify-center">
-          <img src={printFooter.footerUrl} alt="Footer" className="max-w-full h-auto object-contain" style={{ maxHeight: '100px', width: '100%' }} />
-        </div>
+        <>
+          <style>{`
+            @media print {
+              @page { size: portrait; }
+            }
+          `}</style>
+          <div className="hidden print:flex fixed bottom-0 left-0 right-0 w-full justify-center bg-white z-50 pb-2">
+            <img src={printFooter.footerUrl} alt="Footer" className="max-w-full h-auto object-contain" style={{ maxHeight: '100px', width: '100%' }} />
+          </div>
+        </>
       )}
 
       <div className="pb-8 flex gap-4 print:hidden">
