@@ -583,8 +583,15 @@ Thank you!
                       {item.category === "Investigation" && (
                         <input
                           type="number"
+                          min="0"
+                          max="100"
                           value={item.discount || ''}
-                          onChange={(e) => updateItem(idx, "discount", Number(e.target.value))}
+                          onChange={(e) => {
+                            let val = Number(e.target.value);
+                            if (val < 0) val = 0;
+                            if (val > 100) val = 100;
+                            updateItem(idx, "discount", val);
+                          }}
                           className="w-24 h-10 px-3 border border-green-200 bg-green-50 rounded-lg text-sm text-right text-green-700"
                           placeholder="Disc (%)"
                           title="Discount Percentage"
