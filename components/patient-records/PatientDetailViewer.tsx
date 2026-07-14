@@ -277,7 +277,13 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
             <p className="text-gray-500 text-sm text-center py-4">No Consultations Available</p>
           ) : (
             <div className="space-y-4">
-              {record.consultations.map(c => (
+              {record.consultations.map(c => {
+                const consDateStr = new Date(c.consultationDate).toDateString();
+                const matchedInvestigations = record.investigations.filter(i => new Date(i.orderedDate).toDateString() === consDateStr);
+                const matchedProcedures = record.procedures.filter(p => new Date(p.date).toDateString() === consDateStr);
+                const matchedPharmacy = record.pharmacy.filter(ph => new Date(ph.dispensedDate).toDateString() === consDateStr);
+                
+                return (
                 <div key={c.id} className="border border-[#E2E8F0] rounded-lg p-5 bg-white">
                   <div className="flex justify-between mb-4 border-b border-gray-100 pb-3">
                     <div>
@@ -309,9 +315,35 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
                                 <p key={i}>• {note}</p>
                               ));
                             } else if (typeof parsed === 'object' && parsed !== null) {
-                              return Object.entries(parsed).map(([key, value]) => (
-                                <p key={key}><span className="font-semibold capitalize">{key}:</span> {String(value)}</p>
-                              ));
+                              return Object.entries(parsed).map(([key, value]) => {
+                                let displayValue = String(value);
+                                if (typeof value === 'object' && value !== null) {
+                                  if (Array.isArray(value)) {
+                                    displayValue = value.join(', ');
+                                  } else {
+                                    displayValue = Object.entries(value)
+                                      .filter(([_, v]) => v !== "" && v !== null && v !== undefined)
+                                      .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
+                                      .join(', ');
+                                  }
+                                }
+                                
+                                const isNA = !displayValue || displayValue === 'N/A';
+                                
+                                if (key.toLowerCase() === 'investigations' && isNA && matchedInvestigations.length > 0) {
+                                  displayValue = matchedInvestigations.map((i: any) => i.testName + (i.result && i.result !== 'Pending' ? ` (${i.result})` : '')).join(', ');
+                                }
+                                if (key.toLowerCase() === 'otprocedures' && isNA && matchedProcedures.length > 0) {
+                                  displayValue = matchedProcedures.map((p: any) => p.procedureName || p.procedure).join(', ');
+                                }
+                                if (key.toLowerCase() === 'legacyprescription' && isNA && matchedPharmacy.length > 0) {
+                                  displayValue = matchedPharmacy.map((ph: any) => `${ph.medicineName || ph.medicineId} (${ph.quantity})`).join(', ');
+                                }
+
+                                return (
+                                  <p key={key}><span className="font-semibold capitalize">{key}:</span> {displayValue || 'N/A'}</p>
+                                );
+                              });
                             }
                             return String(parsed);
                           } catch (e) {
@@ -322,7 +354,7 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
                     </div>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           )}
         </div>
@@ -378,7 +410,7 @@ export default function PatientDetailViewer({ record }: PatientDetailViewerProps
               {record.procedures.map(p => (
                 <div key={p.id} className="border border-[#E2E8F0] rounded-lg p-4 bg-white flex justify-between items-center">
                   <div>
-                    <p className="font-bold text-[#1E293B] text-[15px]">{p.procedure}</p>
+                    <p className="font-bold text-[#1E293B] text-[15px]">{p.procedureName}</p>
                     <p className="text-[13px] text-gray-500 mt-1">{new Date(p.date).toLocaleDateString()} at {p.time} • Dr. {p.doctor}</p>
                     <p className="text-[13px] text-gray-700 mt-2">Notes: {p.notes}</p>
                   </div>

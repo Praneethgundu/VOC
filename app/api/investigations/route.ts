@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       data: {
         id: require("crypto").randomBytes(4).toString("hex"),
         patientId: body.patientId || "",
-        opNumber: body.opNumber,
+        opNumber: body.opNumber.trim(),
         testName: body.testName,
         amount: Number(body.amount) || 0,
         doctor: body.doctor || session.username,

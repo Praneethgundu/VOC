@@ -14,6 +14,37 @@ export interface PrescriptionData {
   days: string;
 }
 
+const otProceduresList = [
+  { name: "Wound Suturing", price: 800 },
+  { name: "Joint Aspiration", price: 1200 },
+  { name: "Casting / Splinting", price: 1500 },
+  { name: "Tendon Repair", price: 5000 },
+  { name: "Hardware Removal", price: 8000 },
+  { name: "Carpal Tunnel Release", price: 6000 },
+  { name: "POP Below Knee Charges", price: 0 },
+  { name: "POP Above Knee Charges", price: 0 },
+  { name: "POP Elbow Charges", price: 0 },
+  { name: "Knee Aspiration", price: 0 },
+  { name: "Dressing Charges (Minor)", price: 0 },
+  { name: "Dressing Charges (Major)", price: 0 },
+  { name: "Suture Removal", price: 0 },
+  { name: "AK - Slab", price: 0 },
+  { name: "BK - Slab", price: 0 },
+  { name: "Elbow - Slab", price: 0 },
+  { name: "Cock-up - Splint", price: 0 },
+  { name: "Major Suturing", price: 0 },
+  { name: "Minor Suturing", price: 0 },
+  { name: "Knee Injection", price: 0 },
+  { name: "Shoulder Injection", price: 0 },
+  { name: "Elbow Injection", price: 0 },
+  { name: "Ankle Injection", price: 0 },
+  { name: "Shoulder Reduction Charges", price: 0 },
+  { name: "PRP Charges", price: 0 },
+  { name: "IM Injection", price: 0 },
+  { name: "IV Injection", price: 0 },
+  { name: "Procedure Charges", price: 0 }
+];
+
 export default function ConsultationForm({ selectedPatient, onSave }: { selectedPatient: any, onSave: () => void }) {
   const [formData, setFormData] = useState({
     opNumber: "",
@@ -50,6 +81,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const vitalsRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [otSearchQuery, setOtSearchQuery] = useState("");
 
   const [history, setHistory] = useState<any>(null);
 
@@ -411,14 +443,7 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
 
 
 
-  const otProceduresList = [
-    { name: "Wound Suturing", price: 800 },
-    { name: "Joint Aspiration", price: 1200 },
-    { name: "Casting / Splinting", price: 1500 },
-    { name: "Tendon Repair", price: 5000 },
-    { name: "Hardware Removal", price: 8000 },
-    { name: "Carpal Tunnel Release", price: 6000 }
-  ];
+
 
   if (!selectedPatient) {
     return (
@@ -1014,8 +1039,17 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         <h3 className="flex items-center gap-2 text-[#0F172A] font-bold mb-4 print:mb-1 print:text-xs">
           <Scissors size={20} className="print:w-4 print:h-4" /> Schedule OT Procedure
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 print:hidden">
-          {otProceduresList.map((proc) => (
+        <div className="mb-4 print:hidden">
+          <input
+            type="text"
+            placeholder="Search procedures..."
+            value={otSearchQuery}
+            onChange={(e) => setOtSearchQuery(e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#2563EB] text-sm bg-white"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 print:hidden max-h-64 overflow-y-auto pr-2">
+          {otProceduresList.filter(proc => proc.name.toLowerCase().includes(otSearchQuery.toLowerCase())).map((proc) => (
             <label key={proc.name} className="flex items-center justify-between p-3 border border-[#E2E8F0] rounded-lg cursor-pointer hover:border-[#2563EB] transition-colors">
               <div className="flex items-center gap-3">
                 <input

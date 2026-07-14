@@ -60,7 +60,7 @@ Revenue Generated: ₹${report.stats.revenueGenerated}
         <div className="flex justify-center mb-2">
           <Image src="/images/logo.jpeg" alt="VOC Logo" width={40} height={40} className="rounded-lg object-cover" />
         </div>
-        <h2 className="text-2xl font-extrabold text-[#0F172A]">Dr. {report.doctorName}</h2>
+        <h2 className="text-2xl font-extrabold text-[#0F172A]">{report.doctorName}</h2>
         <p className="text-[#64748B] text-sm">Daily Performance Summary</p>
         <div className="mt-3 inline-block border border-[#0F172A]/20 text-[#0F172A] rounded-full px-4 py-1 text-sm font-semibold bg-[#0F172A]/5">
           {dateStr}

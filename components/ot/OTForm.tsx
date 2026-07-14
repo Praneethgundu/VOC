@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Scissors, X, Clock } from 'lucide-react';
 import { getPatients } from '@/services/patientService';
 
@@ -13,7 +13,29 @@ const PROCEDURES = [
   'Casting / Splinting',
   'Tendon Repair',
   'Hardware Removal',
-  'Carpal Tunnel Release'
+  'Carpal Tunnel Release',
+  'POP Below Knee Charges',
+  'POP Above Knee Charges',
+  'POP Elbow Charges',
+  'Knee Aspiration',
+  'Dressing Charges (Minor)',
+  'Dressing Charges (Major)',
+  'Suture Removal',
+  'AK - Slab',
+  'BK - Slab',
+  'Elbow - Slab',
+  'Cock-up - Splint',
+  'Major Suturing',
+  'Minor Suturing',
+  'Knee Injection',
+  'Shoulder Injection',
+  'Elbow Injection',
+  'Ankle Injection',
+  'Shoulder Reduction Charges',
+  'PRP Charges',
+  'IM Injection',
+  'IV Injection',
+  'Procedure Charges'
 ];
 
 const DOCTORS = [
@@ -28,12 +50,25 @@ export default function OTForm({ onClose, onSuccess }: OTFormProps) {
   const initDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const [date, setDate] = useState(initDate);
   const [time, setTime] = useState('');
-  const [procedure, setProcedure] = useState(PROCEDURES[0]);
+  const [procedure, setProcedure] = useState('');
   const [doctor, setDoctor] = useState(DOCTORS[0]);
   const [fee, setFee] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  
+  const [showProcedureDropdown, setShowProcedureDropdown] = useState(false);
+  const procedureRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (procedureRef.current && !procedureRef.current.contains(event.target as Node)) {
+        setShowProcedureDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   
   const [patients, setPatients] = useState<any[]>([]);
 
@@ -189,16 +224,40 @@ export default function OTForm({ onClose, onSuccess }: OTFormProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5 mb-4">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Procedure</label>
-            <select 
+          <div className="flex flex-col gap-1.5 mb-4 relative" ref={procedureRef}>
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Procedure *</label>
+            <input 
+              type="text"
               value={procedure} 
-              onChange={(e) => setProcedure(e.target.value)} 
+              onChange={(e) => {
+                setProcedure(e.target.value);
+                setShowProcedureDropdown(true);
+              }}
+              onFocus={() => setShowProcedureDropdown(true)}
+              placeholder="Search or enter procedure..."
               className="h-10 px-3 rounded-lg border border-gray-200 outline-none focus:border-[#2563EB] text-sm bg-white"
               required
-            >
-              {PROCEDURES.map((p, i) => <option key={i} value={p}>{p}</option>)}
-            </select>
+            />
+            {showProcedureDropdown && (
+              <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-xl z-[60]">
+                {PROCEDURES.filter(p => p.toLowerCase().includes(procedure.toLowerCase())).length > 0 ? (
+                  PROCEDURES.filter(p => p.toLowerCase().includes(procedure.toLowerCase())).map((p, i) => (
+                    <div 
+                      key={i} 
+                      className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        setProcedure(p);
+                        setShowProcedureDropdown(false);
+                      }}
+                    >
+                      {p}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-3 py-2 text-sm text-gray-500">Press enter to use custom procedure</div>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col gap-1.5 mb-4">
