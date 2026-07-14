@@ -109,7 +109,11 @@ export default function BillingPage() {
     let itemsText = "";
     if (bill.items && bill.items.length > 0) {
       bill.items.forEach((item: any) => {
-        itemsText += `${item.serviceName.padEnd(30)} Rs.${item.amount}\n`;
+        const amt = Number(item.amount) || 0;
+        const discPercent = Number(item.discount) || 0;
+        const finalAmt = Math.max(0, amt - (amt * discPercent / 100));
+        const amtStr = discPercent > 0 ? `Rs.${amt} (Disc: ${discPercent}%) -> Rs.${finalAmt}` : `Rs.${amt}`;
+        itemsText += `${item.serviceName.padEnd(30)} ${amtStr}\n`;
       });
     } else {
       itemsText += `Consultation Fee`.padEnd(30) + ` Rs.${bill.consultation || 0}\n`;
@@ -207,7 +211,11 @@ Thank you!
       
       if (editingBillId) {
         // Also send total and paidAmount for PUT to calculate correctly if items changed
-        const total = billItems.reduce((acc: number, item: any) => acc + (Number(item.amount) || 0), 0);
+        const total = billItems.reduce((acc: number, item: any) => {
+          const amt = Number(item.amount) || 0;
+          const disc = Number(item.discount) || 0;
+          return acc + Math.max(0, amt - (amt * disc / 100));
+        }, 0);
         const paidAmount = payload.status === "Unpaid" ? 0 : total;
         await updateBill(editingBillId, { ...payload, total, paidAmount });
       } else {
@@ -572,6 +580,16 @@ Thank you!
                         className="w-24 h-10 px-3 border border-[#E2E8F0] rounded-lg text-sm text-right" 
                         placeholder="Amount"
                       />
+                      {item.category === "Investigation" && (
+                        <input
+                          type="number"
+                          value={item.discount || ''}
+                          onChange={(e) => updateItem(idx, "discount", Number(e.target.value))}
+                          className="w-24 h-10 px-3 border border-green-200 bg-green-50 rounded-lg text-sm text-right text-green-700"
+                          placeholder="Disc (%)"
+                          title="Discount Percentage"
+                        />
+                      )}
                       <button onClick={() => removeItem(idx)} className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg">
                         <Trash2 size={16} />
                       </button>
@@ -582,7 +600,11 @@ Thank you!
 
                 <div className="bg-[#0F172A] rounded-xl p-5 flex justify-between items-center text-white shadow-sm mb-6">
                   <span className="font-bold text-lg">Total Amount</span>
-                  <span className="text-3xl font-bold">₹{billItems.reduce((acc, it) => acc + (Number(it.amount) || 0), 0).toLocaleString("en-IN")}</span>
+                  <span className="text-3xl font-bold">₹{billItems.reduce((acc, it) => {
+                    const amt = Number(it.amount) || 0;
+                    const disc = Number(it.discount) || 0;
+                    return acc + Math.max(0, amt - (amt * disc / 100));
+                  }, 0).toLocaleString("en-IN")}</span>
                 </div>
 
                 <div className="mb-6 grid grid-cols-2 gap-4">
@@ -688,12 +710,20 @@ Thank you!
 
             <div className="border-t border-b border-dashed border-[#E2E8F0] py-4 mb-6 space-y-2">
               {showReceiptModal.items && showReceiptModal.items.length > 0 ? (
-                showReceiptModal.items.map((item: any, idx: number) => (
-                  <div key={idx} className="flex justify-between text-[13px]">
-                    <span className="text-[#1E293B]">{item.serviceName}</span>
-                    <span className="font-bold text-[#1E293B]">₹{item.amount}</span>
-                  </div>
-                ))
+                showReceiptModal.items.map((item: any, idx: number) => {
+                  const amt = Number(item.amount) || 0;
+                  const discPercent = Number(item.discount) || 0;
+                  const finalAmt = Math.max(0, amt - (amt * discPercent / 100));
+                  return (
+                    <div key={idx} className="flex justify-between text-[13px]">
+                      <span className="text-[#1E293B]">
+                        {item.serviceName}
+                        {discPercent > 0 && <span className="text-xs text-green-600 ml-1">(Disc: {discPercent}%)</span>}
+                      </span>
+                      <span className="font-bold text-[#1E293B]">₹{finalAmt}</span>
+                    </div>
+                  );
+                })
               ) : (
                 <>
                   <div className="flex justify-between text-[13px]">

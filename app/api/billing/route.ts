@@ -62,7 +62,11 @@ export async function POST(req: Request) {
     const data = validation.data;
 
     const items = Array.isArray(data.items) ? data.items : [];
-    const total = items.reduce((acc: number, item: any) => acc + (Number(item.amount) || 0), 0) + 
+    const total = items.reduce((acc: number, item: any) => {
+      const amt = Number(item.amount) || 0;
+      const disc = Number(item.discount) || 0;
+      return acc + Math.max(0, amt - (amt * disc / 100));
+    }, 0) + 
                   (data.consultationCharges || 0) + (data.investigationCharges || 0) + 
                   (data.medicineCharges || 0) + (data.otCharges || 0);
 
