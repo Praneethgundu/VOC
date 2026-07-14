@@ -36,12 +36,12 @@ export default function ReportsPage() {
     { label: "Lab Orders", value: "0", icon: Microscope, color: "#7C3AED", bg: "#F5F3FF" },
   ]);
 
-  const [monthlyData, setMonthlyData] = useState([
-    { month: "Jan", revenue: 420000, patients: 310 },
-    { month: "Feb", revenue: 380000, patients: 280 },
-    { month: "Mar", revenue: 510000, patients: 390 },
-    { month: "Apr", revenue: 460000, patients: 345 },
-    { month: "May", revenue: 530000, patients: 412 },
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [monthlyGlance, setMonthlyGlance] = useState([
+    { label: "Total Patients", value: "0", pct: "0%" },
+    { label: "Revenue", value: "₹0", pct: "0%" },
+    { label: "Lab Revenue", value: "₹0", pct: "0%" },
+    { label: "Pharmacy Sales", value: "₹0", pct: "0%" },
   ]);
 
   const [recentEOD, setRecentEOD] = useState<any[]>([]);
@@ -112,6 +112,20 @@ export default function ReportsPage() {
         });
       }
       setRecentEOD(history);
+
+      const currentMonthPrefix = new Date().toISOString().substring(0, 7);
+      const monthPatients = patients.filter((p: any) => p.createdAt?.startsWith(currentMonthPrefix)).length;
+      const monthBills = bills.filter((b: any) => b.date?.startsWith(currentMonthPrefix));
+      const monthTotalRev = monthBills.reduce((acc: number, b: any) => acc + (Number(b.total) || 0), 0);
+      const monthLabRev = monthBills.reduce((acc: number, b: any) => acc + (Number(b.lab) || 0), 0);
+      const monthPharmRev = monthBills.reduce((acc: number, b: any) => acc + (Number(b.pharmacy) || 0), 0);
+      
+      setMonthlyGlance([
+        { label: "Total Patients", value: monthPatients.toString(), pct: "0%" },
+        { label: "Revenue", value: `₹${monthTotalRev.toLocaleString("en-IN")}`, pct: "0%" },
+        { label: "Lab Revenue", value: `₹${monthLabRev.toLocaleString("en-IN")}`, pct: "0%" },
+        { label: "Pharmacy Sales", value: `₹${monthPharmRev.toLocaleString("en-IN")}`, pct: "0%" },
+      ]);
 
     } catch {
       // ignore
@@ -249,12 +263,7 @@ export default function ReportsPage() {
             >
               <h2 className="section-heading mb-5">This Month at a Glance</h2>
               <div className="space-y-4">
-                {[
-                  { label: "Total Patients", value: "412", pct: "82%" },
-                  { label: "Revenue", value: "₹5.3L", pct: "67%" },
-                  { label: "Lab Revenue", value: "₹68,400", pct: "54%" },
-                  { label: "Pharmacy Sales", value: "₹41,200", pct: "45%" },
-                ].map((item) => (
+                {monthlyGlance.map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between text-[13px] mb-1.5">
                       <span className="text-[#64748B]">{item.label}</span>
