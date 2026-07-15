@@ -687,7 +687,7 @@ Thank you!
               }
             }
           `}</style>
-          <div id="printable-receipt" className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl p-8 flex flex-col">
+          <div id="printable-receipt" className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl p-8 flex flex-col max-h-[85vh] overflow-y-auto">
             <div className="text-center mb-6 border-b border-[#E2E8F0] pb-4">
               <img src={logoUrl} alt="Clinic Logo" className="h-16 mx-auto object-contain mb-2" />
               <p className="text-sm text-[#64748B] mt-1">House No 23 HIGA, Karur Vysya Bank Road, Gokul Nagar, A. S. Rao Nagar, Secunderabad, Telangana 500062</p>
