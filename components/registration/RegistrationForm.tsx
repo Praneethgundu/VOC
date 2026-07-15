@@ -156,7 +156,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
       
       let cleanBloodGroup = formData.bloodGroup;
       if (!cleanBloodGroup || cleanBloodGroup === "Select Blood Group") {
-        cleanBloodGroup = null as any;
+        cleanBloodGroup = "";
       }
 
       const response = await addPatient({ 
