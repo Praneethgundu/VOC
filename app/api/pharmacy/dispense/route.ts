@@ -42,6 +42,9 @@ export async function POST(req: Request) {
     }
 
     // 3. Update Inventory & Log Dispense atomically using Prisma transactions
+    // Moved crypto generation outside the transaction to reduce lock duration (Async Bottlenecks)
+    const dispenseId = "DSP-" + require("crypto").randomBytes(4).toString("hex").toUpperCase();
+
     const result = await prisma.$transaction(async (tx) => {
       const updatedMed = await tx.inventoryItem.update({
         where: { medicineId },
@@ -52,13 +55,12 @@ export async function POST(req: Request) {
         },
       });
 
-      const dispenseId = "DSP-" + require("crypto").randomBytes(4).toString("hex").toUpperCase();
       const dispenseRecord = await tx.pharmacyDispense.create({
         data: {
           id: dispenseId,
           patientId: patient.patientId,
           opNumber: patient.opNumber,
-          billId: "",
+          billId: "", // Bill logic is currently handled separately or decoupled
           medicineName: medicine.medicineName,
           batch: medicine.batch || "",
           quantity: dispenseQty,
@@ -69,6 +71,9 @@ export async function POST(req: Request) {
       });
 
       return { updatedMed, dispenseRecord };
+    }, {
+      maxWait: 5000,
+      timeout: 10000
     });
 
     // Write audit log

@@ -33,7 +33,7 @@ const projectRoot = findProjectRoot();
 let absoluteDbUrl: string;
 
 let pathPart = "dev.db";
-let queryParams = "?connection_limit=5";
+let queryParams = "?connection_limit=1&socket_timeout=15";
 
 if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")) {
   const filePath = process.env.DATABASE_URL.substring(5); // remove 'file:'
