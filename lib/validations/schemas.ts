@@ -20,7 +20,7 @@ export const patientSchema = z.object({
   age: z.string().max(3).regex(/^[0-9]+$/, "Age must be a number").optional().or(z.literal("")),
   gender: z.enum(["Male", "Female", "Other", ""]).optional(),
   phone: z.string().max(15).regex(/^[0-9+\-\s()]*$/, "Invalid phone format").optional().or(z.literal("")),
-  bloodGroup: z.string().max(5).optional().or(z.literal("")),
+  bloodGroup: z.string().max(5).nullish().or(z.literal("")),
   department: safeString.optional().or(z.literal("")),
   doctor: safeString.optional().or(z.literal("")),
   complaint: safeText.optional().or(z.literal("")),

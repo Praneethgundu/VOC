@@ -101,8 +101,14 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
         return;
       }
 
+      let cleanBloodGroup = formData.bloodGroup;
+      if (!cleanBloodGroup || cleanBloodGroup === "Select Blood Group") {
+        cleanBloodGroup = null as any;
+      }
+
       const payload = {
         ...formData,
+        bloodGroup: cleanBloodGroup,
         date: activeDate,
         time: activeTime,
       };
