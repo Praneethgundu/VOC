@@ -336,9 +336,6 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
     if (!selectedPatient) return alert("Please select a patient from the queue");
 
     const newErrors: Record<string, string> = {};
-    if (!formData.diagnosis.trim()) {
-      newErrors.diagnosis = "Diagnosis is required before saving.";
-    }
     if (formData.followUpDate) {
       const d = new Date();
       const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -347,7 +344,9 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
       }
     }
 
-    if (formData.vitals.bp && !/^\d{2,3}\/\d{2,3}$/.test(formData.vitals.bp)) {
+    const bp = formData.vitals.bp || "";
+    const [sys, dia] = bp.split("/");
+    if (sys && dia && !/^\d{2,3}\/\d{2,3}$/.test(bp)) {
       newErrors.general = "BP must be in standard format (e.g. 120/80)";
     }
     if (formData.vitals.pulse && (isNaN(Number(formData.vitals.pulse)) || Number(formData.vitals.pulse) < 0 || Number(formData.vitals.pulse) > 300)) {
@@ -723,12 +722,10 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
               value={formData.diagnosis}
               onChange={(e) => {
                  handleTextMacro("diagnosis", e.target.value);
-                 if (errors.diagnosis) setErrors(prev => ({ ...prev, diagnosis: "" }));
               }}
               placeholder="Clinical diagnosis..."
-              className={`w-full h-32 p-3 border ${errors.diagnosis ? 'border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]' : 'border-[#E2E8F0] focus:border-[#2563EB]'} rounded-lg text-sm outline-none resize-none`}
+              className="w-full h-32 p-3 border border-[#E2E8F0] focus:border-[#2563EB] rounded-lg text-sm outline-none resize-none"
             />
-            {errors.diagnosis && <p className="text-[12px] text-[#2563EB] font-medium mt-1">{errors.diagnosis}</p>}
             {formData.chiefComplaints && smartChips[formData.chiefComplaints]?.diagnosis && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {smartChips[formData.chiefComplaints].diagnosis.map(chip => (
@@ -737,7 +734,6 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
                     type="button"
                     onClick={() => {
                       setFormData(prev => ({ ...prev, diagnosis: prev.diagnosis ? prev.diagnosis + ", " + chip : chip }));
-                      if (errors.diagnosis) setErrors(prev => ({ ...prev, diagnosis: "" }));
                     }}
                     className="text-[10px] font-medium px-2 py-1 bg-[#EFF6FF] text-[#2563EB] rounded hover:bg-[#DBEAFE] transition-colors"
                   >
