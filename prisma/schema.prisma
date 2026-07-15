@@ -27,7 +27,7 @@ model Patient {
   age              String
   gender           String
   phone            String
-  bloodGroup       String
+  bloodGroup       String?
   department       String
   doctor           String
   complaint        String   @default("")

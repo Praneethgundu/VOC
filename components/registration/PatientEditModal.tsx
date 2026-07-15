@@ -59,10 +59,7 @@ export default function PatientEditModal({ patient, onClose, onSuccess }: { pati
       setError("Enter a valid 10-digit phone number");
       return;
     }
-    if (!formData.bloodGroup) {
-      setError("Blood group is required");
-      return;
-    }
+    // Blood group is optional now
     if (!formData.doctor) {
       setError("Please select a consulting doctor");
       return;

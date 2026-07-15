@@ -34,7 +34,7 @@ export async function GET(req: Request) {
       complaint: c.patient ? c.patient.complaint : "N/A",
       age: c.patient ? c.patient.age : "",
       gender: c.patient ? c.patient.gender : "",
-      bloodGroup: c.patient ? c.patient.bloodGroup : "",
+      bloodGroup: c.patient?.bloodGroup || "",
     }));
 
     return NextResponse.json(enriched);
