@@ -664,58 +664,36 @@ Thank you!
 
       {/* RECEIPT MODAL */}
       {showReceiptModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <style>{`
-            @media print {
-              @page { size: landscape; margin: 0; }
-              body * {
-                visibility: hidden;
-              }
-              #printable-receipt, #printable-receipt * {
-                visibility: visible;
-              }
-              #printable-receipt {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                max-width: none;
-                margin: 0;
-                padding: 40px;
-                box-shadow: none;
-                background: white;
-              }
-            }
-          `}</style>
-          <div id="printable-receipt" className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl p-8 flex flex-col">
-            <div className="text-center mb-6 border-b border-[#E2E8F0] pb-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 print:p-0 print:bg-transparent print:backdrop-blur-none">
+          <div id="printable-receipt" className="bg-white rounded-2xl w-full max-w-[450px] shadow-2xl p-8 flex flex-col max-h-[85vh] overflow-y-auto print:absolute print:inset-0 print:w-full print:h-auto print:max-w-none print:m-0 print:p-8 print:shadow-none print:rounded-none print:border-none print:bg-white print:overflow-visible">
+            <div className="text-center mb-6 border-b border-[#E2E8F0] print:border-black pb-4">
               <img src={logoUrl} alt="Clinic Logo" className="h-16 mx-auto object-contain mb-2" />
-              <p className="text-sm text-[#64748B] mt-1">House No 23 HIGA, Karur Vysya Bank Road, Gokul Nagar, A. S. Rao Nagar, Secunderabad, Telangana 500062</p>
-              <h3 className="mt-4 font-bold tracking-widest text-[#1E293B]">RECEIPT</h3>
+              <p className="text-sm text-[#64748B] print:text-black mt-1">House No 23 HIGA, Karur Vysya Bank Road, Gokul Nagar, A. S. Rao Nagar, Secunderabad, Telangana 500062</p>
+              <h3 className="mt-4 font-bold tracking-widest text-[#1E293B] print:text-black">RECEIPT</h3>
             </div>
             
-            <div className="space-y-2 text-[13px] mb-6">
+            <div className="space-y-2 text-[13px] mb-6 print:gap-4 print:py-2">
               <div className="flex justify-between">
-                <span className="text-[#64748B]">Bill No.</span>
-                <span className="font-bold text-[#1E293B]">{showReceiptModal.id || showReceiptModal._id}</span>
+                <span className="text-[#64748B] print:text-black">Bill No.</span>
+                <span className="font-bold text-[#1E293B] print:text-black">{showReceiptModal.id || showReceiptModal._id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#64748B]">Patient</span>
-                <span className="font-bold text-[#1E293B]">
+                <span className="text-[#64748B] print:text-black">Patient</span>
+                <span className="font-bold text-[#1E293B] print:text-black">
                   {patients.find(p => p.opNumber === showReceiptModal.opNumber)?.fullName || showReceiptModal.patientName || showReceiptModal.patient || "Unknown"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#64748B]">OP No.</span>
-                <span className="font-bold text-[#1E293B]">{showReceiptModal.opNumber || showReceiptModal.op}</span>
+                <span className="text-[#64748B] print:text-black">OP No.</span>
+                <span className="font-bold text-[#1E293B] print:text-black">{showReceiptModal.opNumber || showReceiptModal.op}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#64748B]">Date</span>
-                <span className="font-bold text-[#1E293B]">{showReceiptModal.date && !isNaN(new Date(showReceiptModal.date).getTime()) ? new Date(showReceiptModal.date).toISOString().split('T')[0] : "N/A"}</span>
+                <span className="text-[#64748B] print:text-black">Date</span>
+                <span className="font-bold text-[#1E293B] print:text-black">{showReceiptModal.date && !isNaN(new Date(showReceiptModal.date).getTime()) ? new Date(showReceiptModal.date).toISOString().split('T')[0] : "N/A"}</span>
               </div>
             </div>
 
-            <div className="border-t border-b border-dashed border-[#E2E8F0] py-4 mb-6 space-y-2">
+            <div className="border-t border-b border-dashed border-[#E2E8F0] print:border-black py-4 mb-6 space-y-2 print:gap-4 print:py-4">
               {showReceiptModal.items && showReceiptModal.items.length > 0 ? (
                 showReceiptModal.items.map((item: any, idx: number) => {
                   const amt = Number(item.amount) || 0;
@@ -723,27 +701,27 @@ Thank you!
                   const finalAmt = Math.max(0, amt - (amt * discPercent / 100));
                   return (
                     <div key={idx} className="flex justify-between text-[13px]">
-                      <span className="text-[#1E293B]">
+                      <span className="text-[#1E293B] print:text-black">
                         {item.serviceName}
-                        {discPercent > 0 && <span className="text-xs text-green-600 ml-1">(Disc: {discPercent}%)</span>}
+                        {discPercent > 0 && <span className="text-xs text-green-600 print:text-black ml-1">(Disc: {discPercent}%)</span>}
                       </span>
-                      <span className="font-bold text-[#1E293B]">₹{finalAmt}</span>
+                      <span className="font-bold text-[#1E293B] print:text-black">₹{finalAmt}</span>
                     </div>
                   );
                 })
               ) : (
                 <>
                   <div className="flex justify-between text-[13px]">
-                    <span className="text-[#1E293B]">Consultation Fee</span>
-                    <span className="font-bold text-[#1E293B]">₹{showReceiptModal.consultation || 0}</span>
+                    <span className="text-[#1E293B] print:text-black">Consultation Fee</span>
+                    <span className="font-bold text-[#1E293B] print:text-black">₹{showReceiptModal.consultation || 0}</span>
                   </div>
                   <div className="flex justify-between text-[13px]">
-                    <span className="text-[#1E293B]">Pharmacy Charges</span>
-                    <span className="font-bold text-[#1E293B]">₹{showReceiptModal.pharmacy || 0}</span>
+                    <span className="text-[#1E293B] print:text-black">Pharmacy Charges</span>
+                    <span className="font-bold text-[#1E293B] print:text-black">₹{showReceiptModal.pharmacy || 0}</span>
                   </div>
                   <div className="flex justify-between text-[13px]">
-                    <span className="text-[#1E293B]">Lab Charges</span>
-                    <span className="font-bold text-[#1E293B]">₹{showReceiptModal.lab || 0}</span>
+                    <span className="text-[#1E293B] print:text-black">Lab Charges</span>
+                    <span className="font-bold text-[#1E293B] print:text-black">₹{showReceiptModal.lab || 0}</span>
                   </div>
                 </>
               )}
@@ -751,12 +729,12 @@ Thank you!
 
             <div className="flex justify-between items-end mb-8">
               <div>
-                <span className="text-xl font-bold text-[#1E293B]">TOTAL</span>
-                <p className="text-[11px] text-[#64748B] mt-1">Payment: {showReceiptModal.paymentMode || (showReceiptModal.status === "Paid" ? "Cash" : "Pending")}</p>
+                <span className="text-xl font-bold text-[#1E293B] print:text-black">TOTAL</span>
+                <p className="text-[11px] text-[#64748B] print:text-black mt-1">Payment: {showReceiptModal.paymentMode || (showReceiptModal.status === "Paid" ? "Cash" : "Pending")}</p>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-bold text-[#0F172A]">₹{showReceiptModal.total.toLocaleString("en-IN")}</span>
-                <p className={`text-[12px] font-bold mt-1 ${showReceiptModal.status === "Paid" ? "text-[#059669]" : "text-[#92400E]"}`}>
+                <span className="text-2xl font-bold text-[#0F172A] print:text-black">₹{showReceiptModal.total.toLocaleString("en-IN")}</span>
+                <p className={`text-[12px] font-bold mt-1 ${showReceiptModal.status === "Paid" ? "text-[#059669] print:text-black" : "text-[#92400E] print:text-black"}`}>
                   {showReceiptModal.status || "PENDING"}
                 </p>
               </div>

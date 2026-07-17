@@ -153,7 +153,17 @@ export default function RegistrationForm({ onSuccess }: { onSuccess?: () => void
       }
 
       const finalComplaint = [...selectedComplaints, otherComplaint.trim()].filter(Boolean).join(", ");
-      const response = await addPatient({ ...formData, complaint: finalComplaint });
+      
+      let cleanBloodGroup = formData.bloodGroup;
+      if (!cleanBloodGroup || cleanBloodGroup === "Select Blood Group") {
+        cleanBloodGroup = "";
+      }
+
+      const response = await addPatient({ 
+        ...formData, 
+        complaint: finalComplaint,
+        bloodGroup: cleanBloodGroup
+      });
       if (response && response.returningPatient) {
         alert("Returning patient found! Follow-up consultation added.");
       } else {
