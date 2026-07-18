@@ -42,7 +42,16 @@ export default function BillingPage() {
     fetch('/api/settings')
       .then(res => res.json())
       .then(d => {
-        if (d.printHeader) {
+        if (d.billingHeader) {
+          try {
+            const parsed = JSON.parse(d.billingHeader);
+            if (parsed.logoUrl) {
+              let url = parsed.logoUrl;
+              if (url.startsWith('/images/')) url = url.replace('/images/', '/api/images/');
+              setLogoUrl(url);
+            }
+          } catch {}
+        } else if (d.printHeader) {
           try {
             const parsed = JSON.parse(d.printHeader);
             if (parsed.logoUrl) {
@@ -132,6 +141,7 @@ RECEIPT
 Bill No. : ${bill.id || bill._id}
 Patient  : ${patientName}
 OP No.   : ${bill.opNumber || bill.op}
+Phone    : ${patients.find(p => p.opNumber === bill.opNumber)?.phone || "N/A"}
 Date     : ${bill.date ? new Date(bill.date).toISOString().split('T')[0] : "N/A"}
 ========================================
 ITEMS:
@@ -686,6 +696,12 @@ Thank you!
               <div className="flex justify-between">
                 <span className="text-[#64748B] print:text-black">OP No.</span>
                 <span className="font-bold text-[#1E293B] print:text-black">{showReceiptModal.opNumber || showReceiptModal.op}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#64748B] print:text-black">Phone</span>
+                <span className="font-bold text-[#1E293B] print:text-black">
+                  {patients.find(p => p.opNumber === showReceiptModal.opNumber)?.phone || "N/A"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#64748B] print:text-black">Date</span>

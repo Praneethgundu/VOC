@@ -19,6 +19,10 @@ interface PrintFooter {
   footerUrl: string;
 }
 
+interface BillingHeader {
+  logoUrl: string;
+}
+
 const defaultHeader: PrintHeader = {
   logoUrl: "",
   clinicName: "",
@@ -32,17 +36,25 @@ const defaultFooter: PrintFooter = {
   footerUrl: "",
 };
 
+const defaultBillingHeader: BillingHeader = {
+  logoUrl: "",
+};
+
 export default function PrintHeaderFooterSection() {
   const [header, setHeader] = useState<PrintHeader>(defaultHeader);
   const [footer, setFooter] = useState<PrintFooter>(defaultFooter);
+  const [billingHeader, setBillingHeader] = useState<BillingHeader>(defaultBillingHeader);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingFooter, setUploadingFooter] = useState(false);
+  const [uploadingBillingLogo, setUploadingBillingLogo] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [footerPreview, setFooterPreview] = useState<string>("");
+  const [billingLogoPreview, setBillingLogoPreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const footerFileInputRef = useRef<HTMLInputElement>(null);
+  const billingFileInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing settings on mount
   useEffect(() => {
@@ -65,6 +77,16 @@ export default function PrintHeaderFooterSection() {
           if (parsed.footerUrl) {
             const url = parsed.footerUrl.startsWith('/images/') ? parsed.footerUrl.replace('/images/', '/api/images/') : parsed.footerUrl;
             setFooterPreview(url);
+          }
+        } catch {}
+      }
+      if (data.billingHeader) {
+        try {
+          const parsed = JSON.parse(data.billingHeader);
+          setBillingHeader({ ...defaultBillingHeader, ...parsed });
+          if (parsed.logoUrl) {
+            const url = parsed.logoUrl.startsWith('/images/') ? parsed.logoUrl.replace('/images/', '/api/images/') : parsed.logoUrl;
+            setBillingLogoPreview(url);
           }
         } catch {}
       }
@@ -140,12 +162,47 @@ export default function PrintHeaderFooterSection() {
     if (footerFileInputRef.current) footerFileInputRef.current.value = "";
   };
 
+  const handleBillingLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    setBillingLogoPreview(objectUrl);
+
+    setUploadingBillingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append("logo", file); // can reuse upload-logo endpoint
+      const res = await fetch("/api/settings/upload-logo", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setBillingHeader((prev) => ({ ...prev, logoUrl: data.url }));
+      toast.success("Billing logo uploaded successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload billing logo");
+      setBillingLogoPreview(billingHeader.logoUrl);
+    } finally {
+      setUploadingBillingLogo(false);
+      if (billingFileInputRef.current) billingFileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveBillingLogo = () => {
+    setBillingHeader((prev) => ({ ...prev, logoUrl: "" }));
+    setBillingLogoPreview("");
+    if (billingFileInputRef.current) billingFileInputRef.current.value = "";
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
       await Promise.all([
         api.post("/settings", { key: "printHeader", value: JSON.stringify(header) }),
         api.post("/settings", { key: "printFooter", value: JSON.stringify(footer) }),
+        api.post("/settings", { key: "billingHeader", value: JSON.stringify(billingHeader) }),
       ]);
       toast.success("Print header & footer saved! Changes will reflect on all new prints.");
     } catch {
@@ -352,6 +409,64 @@ export default function PrintHeaderFooterSection() {
                     </button>
                   )}
                   <p className="text-[10px] text-[#94A3B8]">Full width image recommended. PNG/JPG.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-[#E2E8F0]" />
+
+        {/* ── Billing Config ─────────────────────────────── */}
+        <div>
+          <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider mb-3">
+            Billing Print Configuration
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                Billing Logo
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="w-20 h-20 rounded-xl border-2 border-dashed border-[#E2E8F0] flex items-center justify-center bg-[#F8FAFC] overflow-hidden flex-shrink-0">
+                  {billingLogoPreview ? (
+                    <img
+                      src={billingLogoPreview}
+                      alt="Billing Logo preview"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <ImageIcon size={24} className="text-[#CBD5E1]" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={billingFileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    className="hidden"
+                    onChange={handleBillingLogoUpload}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => billingFileInputRef.current?.click()}
+                    disabled={uploadingBillingLogo}
+                    className="flex items-center gap-2 px-3 py-2 text-[12px] font-bold bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] rounded-lg hover:bg-[#DBEAFE] transition-colors disabled:opacity-50"
+                  >
+                    <Upload size={13} />
+                    {uploadingBillingLogo ? "Uploading..." : "Upload Billing Logo"}
+                  </button>
+                  {billingLogoPreview && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveBillingLogo}
+                      className="flex items-center gap-1 px-3 py-1.5 text-[11px] font-bold text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      <X size={12} /> Remove
+                    </button>
+                  )}
+                  <p className="text-[10px] text-[#94A3B8]">PNG, JPG, SVG or WEBP. Max 5 MB.</p>
                 </div>
               </div>
             </div>

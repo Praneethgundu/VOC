@@ -105,7 +105,7 @@ export async function GET(req: Request) {
         entry.items.push({
           serviceName: "Registration Fee",
           category: "Registration",
-          amount: 200,
+          amount: 100,
         });
       }
     }
@@ -113,7 +113,7 @@ export async function GET(req: Request) {
     // 2. Process consultations for Consultation Fee
     for (const c of consultations) {
       if (c.status === "Completed" || c.status === "COMPLETED" || c.status === "Waiting") { // Include Waiting to pull pending fees
-        // 30-day follow up logic
+        // 10-day follow up logic
         const patientConsultations = consultations
           .filter(pc => pc.patientId === c.patientId && new Date(pc.consultationDate) <= new Date(c.consultationDate))
           .sort((a, b) => new Date(a.consultationDate).getTime() - new Date(b.consultationDate).getTime());
@@ -126,7 +126,7 @@ export async function GET(req: Request) {
           let lastChargedDate = firstDate;
           for (const pc of patientConsultations) {
             const d = new Date(pc.consultationDate).getTime();
-            if ((d - lastChargedDate) / (1000 * 3600 * 24) > 30) {
+            if ((d - lastChargedDate) / (1000 * 3600 * 24) > 10) {
               lastChargedDate = d;
             }
           }

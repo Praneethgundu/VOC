@@ -455,52 +455,56 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
   return (
     <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-6 h-full overflow-y-auto print:h-auto print:overflow-visible print:block">
 
-      {/* ── Print-only Header ─────────────────────────────────────── */}
-      {(printHeader?.clinicName || printHeader?.logoUrl || printHeader?.doctorName) && (
-        <div className="hidden print:flex items-start justify-between border-b-2 border-gray-700 pb-3 mb-3">
-          {/* Left: Logo + Clinic Name */}
-          <div className="flex items-center gap-3">
-            {printHeader.logoUrl && (
-              <img
-                src={printHeader.logoUrl}
-                alt="Clinic Logo"
-                className="h-16 w-auto object-contain"
-                style={{ maxWidth: '90px' }}
-              />
-            )}
-            <div>
-              {printHeader.clinicName && (
-                <p className="text-[16px] font-black text-black leading-tight">{printHeader.clinicName}</p>
+      {/* ── Print-only Header (Preserves space for pre-printed letterheads) ─────────────────────────────────────── */}
+      <div className="hidden print:flex flex-col min-h-[140px]">
+        {(printHeader?.clinicName || printHeader?.logoUrl || printHeader?.doctorName) ? (
+          <div className="flex items-start justify-between border-b-2 border-gray-700 pb-3 mb-3 flex-1">
+            {/* Left: Logo + Clinic Name */}
+            <div className="flex items-center gap-3">
+              {printHeader.logoUrl && (
+                <img
+                  src={printHeader.logoUrl}
+                  alt="Clinic Logo"
+                  className="h-16 w-auto object-contain"
+                  style={{ maxWidth: '90px' }}
+                />
               )}
-              {printHeader.tagline && (
-                <p className="text-[11px] text-gray-600 mt-0.5">{printHeader.tagline}</p>
+              <div>
+                {printHeader.clinicName && (
+                  <p className="text-[16px] font-black text-black leading-tight">{printHeader.clinicName}</p>
+                )}
+                {printHeader.tagline && (
+                  <p className="text-[11px] text-gray-600 mt-0.5">{printHeader.tagline}</p>
+                )}
+              </div>
+            </div>
+            {/* Right: Doctor Details */}
+            <div className="text-right max-w-[55%]">
+              {printHeader.doctorName && (
+                <p className="text-[14px] font-black text-black">{printHeader.doctorName}</p>
+              )}
+              {printHeader.credentials && (
+                <div className="text-[9px] text-gray-600 whitespace-pre-line leading-snug mt-0.5">
+                  {printHeader.credentials}
+                </div>
+              )}
+              {printHeader.specialization && (
+                <div className="text-[9px] font-semibold text-black whitespace-pre-line leading-snug mt-0.5">
+                  {printHeader.specialization}
+                </div>
               )}
             </div>
           </div>
-          {/* Right: Doctor Details */}
-          <div className="text-right max-w-[55%]">
-            {printHeader.doctorName && (
-              <p className="text-[14px] font-black text-black">{printHeader.doctorName}</p>
-            )}
-            {printHeader.credentials && (
-              <div className="text-[9px] text-gray-600 whitespace-pre-line leading-snug mt-0.5">
-                {printHeader.credentials}
-              </div>
-            )}
-            {printHeader.specialization && (
-              <div className="text-[9px] font-semibold text-black whitespace-pre-line leading-snug mt-0.5">
-                {printHeader.specialization}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex-1" />
+        )}
+      </div>
       {/* Header Banner */}
       <div className="bg-[#0F172A] rounded-xl text-white p-5 print:p-2 print:bg-transparent print:text-black print:border-b-2 print:border-slate-800 print:rounded-none flex justify-between items-center shadow-sm print:shadow-none print:mb-2">
         <div>
           <h2 className="text-xl font-bold print:text-lg">{formData.patientName}</h2>
           <p className="text-[13px] text-white/80 mt-1 print:text-xs print:text-slate-700">
-            OP: {formData.opNumber} • Age: {history?.profile?.age || selectedPatient?.age || '--'}y
+            OP: {formData.opNumber} • Age: {history?.profile?.age || selectedPatient?.age || '--'}y • Phone: {history?.profile?.phone || selectedPatient?.phone || '--'}
           </p>
         </div>
         <div className="flex gap-8 text-right print:gap-4">
@@ -1115,19 +1119,20 @@ export default function ConsultationForm({ selectedPatient, onSave }: { selected
         </div>
       )}
 
-      {/* Dynamic Footer Image */}
-      {printFooter?.footerUrl && (
-        <>
-          <style>{`
-            @media print {
-              @page { size: portrait; }
-            }
-          `}</style>
-          <div className="hidden print:flex fixed bottom-0 left-0 right-0 w-full justify-center bg-white z-50 pb-2">
+      {/* Dynamic Footer Image & Padding for pre-printed letterheads */}
+      <>
+        <style>{`
+          @media print {
+            @page { size: portrait; }
+            body { padding-bottom: 100px; } /* Ensure content doesn't overflow into footer space */
+          }
+        `}</style>
+        <div className="hidden print:flex fixed bottom-0 left-0 right-0 w-full justify-center bg-white z-50 pb-2 h-[100px]">
+          {printFooter?.footerUrl && (
             <img src={printFooter.footerUrl} alt="Footer" className="max-w-full h-auto object-contain" style={{ maxHeight: '100px', width: '100%' }} />
-          </div>
-        </>
-      )}
+          )}
+        </div>
+      </>
 
       <div className="pb-8 flex gap-4 print:hidden">
         <button
