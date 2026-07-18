@@ -12,6 +12,7 @@ import {
 import * as XLSX from "xlsx";
 import api from "@/services/api";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/hooks/useAuth";
 import MacrosSection from "@/components/settings/MacrosSection";
 import DepartmentsSection from "@/components/settings/DepartmentsSection";
 import EodWhatsAppSection from "@/components/settings/EodWhatsAppSection";
@@ -92,8 +93,27 @@ function ToggleRow({
 
 
 export default function SettingsPage() {
+  const { role, isLoading } = useAuth();
   const [exporting, setExporting] = useState(false);
   const [restoring, setRestoring] = useState(false);
+
+  if (!isLoading && role !== "ADMIN") {
+    return (
+      <div className="flex h-screen bg-[#F8FAFC]">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Navbar />
+          <div className="flex-1 p-8 flex items-center justify-center">
+            <div className="text-center">
+              <Shield size={48} className="mx-auto text-red-500 mb-4" />
+              <h2 className="text-2xl font-bold text-[#1E293B]">Access Denied</h2>
+              <p className="text-[#64748B] mt-2">Only administrators can access the settings page.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleExportBackup = async () => {
     setExporting(true);
